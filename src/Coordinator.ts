@@ -3,7 +3,7 @@ import * as deepstream from "deepstream.io-client-js";
 
 export class Coordinator {
     deepstreamConnection: deepstreamIO.deepstreamQuarantine;
-    constructor(url: string, credentials: any) {
+    constructor(url: string, credentials: object) {
         this.deepstreamConnection = deepstream(url);
         this.deepstreamConnection.login(credentials, (success, data) => {
             if (success) {

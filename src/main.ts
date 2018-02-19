@@ -1,4 +1,4 @@
-import * as yxc from "./Coordinator"
-export { yxc };
+import { Coordinator } from "./Coordinator"
+export { Coordinator };
 
-//var coordinator = new yxc.Coordinator("ws://localhost:6020/deepstream", { username: "john", password: "doe" });
+//var coordinator = new Coordinator("ws://localhost:6020/deepstream", { username: "john", password: "doe" });

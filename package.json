@@ -2,11 +2,12 @@
   "name": "@yanux/coordinator",
   "version": "1.0.0",
   "description": "YanuX Coordinator",
+  "repository": "github:YanuX-Framework/YanuX-Coordinator",
   "main": "build/main.js",
   "types": "build/main.d.ts",
   "scripts": {
-    "typescript": "npx tsc",
-    "webpack": "npx webpack",
+    "build": "npx tsc",
+    "package": "npx webpack",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Pedro Albuquerque Santos <pedro@albuquerques.net> (https://pedro.albuquerques.net)",
