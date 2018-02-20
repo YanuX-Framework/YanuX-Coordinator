@@ -1,4 +1,13 @@
-import { Coordinator } from "./Coordinator"
-export { Coordinator };
+import Coordinator from "./Coordinator";
+import AbstractCoordinator from "./AbstractCoordinator";
+import DeepstreamCoordinator from "./DeepstreamCoordinator";
+import App from "./App";
+import User from "./User";
 
-//var coordinator = new Coordinator("ws://localhost:6020/deepstream", { username: "john", password: "doe" });
+export {
+    Coordinator,
+    AbstractCoordinator,
+    DeepstreamCoordinator,
+    App,
+    User
+};
