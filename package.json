@@ -14,9 +14,10 @@
   "license": "LGPL-3.0",
   "devDependencies": {
     "source-map-loader": "^0.2.3",
-    "ts-loader": "^3.5.0",
+    "ts-loader": "^4.0.0",
     "typescript": "^2.7.2",
-    "webpack": "^3.11.0"
+    "webpack": "^4.0.1",
+    "webpack-cli": "^2.0.9"
   },
   "dependencies": {
     "deepstream.io-client-js": "^2.3.0"
