@@ -3,6 +3,7 @@ const path = require("path");
 module.exports = function (env, argv) {
   return {
     entry: "./src/main.ts",
+    mode: "development",
     devtool: "source-map",
     output: {
       filename: "lib.js",
