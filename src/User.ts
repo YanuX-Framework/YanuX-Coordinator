@@ -11,10 +11,10 @@ export default class User {
     public set username(username: string) {
         this._username = username;
     }
-    public get credentials(): object {
+    public get credentials(): any {
         return this._credentials;
     }
-    public set credentials(credentials: object) {
+    public set credentials(credentials: any) {
         this._credentials = credentials;
         if (this._credentials.username === undefined) {
             this._credentials.username = this.username;

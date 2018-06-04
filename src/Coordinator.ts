@@ -1,3 +1,4 @@
 export default interface Coordinator {
-    getUiState(): any;
+    getState(): any;
+    setState(state: any): void;
 }

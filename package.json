@@ -14,12 +14,21 @@
   "license": "LGPL-3.0",
   "devDependencies": {
     "source-map-loader": "^0.2.3",
-    "ts-loader": "^4.1.0",
-    "typescript": "^2.7.2",
-    "webpack": "^4.1.1",
-    "webpack-cli": "^2.0.12"
+    "ts-loader": "^4.3.1",
+    "typescript": "^2.8.3",
+    "webpack": "^4.10.2",
+    "webpack-cli": "^3.0.1"
   },
   "dependencies": {
-    "deepstream.io-client-js": "^2.3.0"
+    "@feathersjs/authentication-client": "^1.0.2",
+    "@feathersjs/errors": "^3.3.0",
+    "@feathersjs/feathers": "^3.1.6",
+    "@feathersjs/socketio-client": "^1.1.0",
+    "@types/feathersjs__authentication-client": "^1.0.3",
+    "@types/feathersjs__errors": "^3.2.1",
+    "@types/feathersjs__feathers": "^3.0.3",
+    "@types/feathersjs__socketio-client": "^1.0.1",
+    "@types/socket.io-client": "^1.4.32",
+    "socket.io-client": "^2.1.1"
   }
 }
