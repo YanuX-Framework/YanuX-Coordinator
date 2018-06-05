@@ -7,17 +7,14 @@ import FeathersCoordinator from "./FeathersCoordinator";
 
 let url : string = "http://localhost:3030";
 let app : App = new App("demo");
-console.log('App: ', app);
-let user : User = new User("pedro@albuquerques.net", { password: "topsecret" });
-console.log('User: ', user);
-
+let user : User = new User("pedro@albuquerques.net", "topsecret");
 let coordinator : FeathersCoordinator = new FeathersCoordinator(url, app, user);
-//var coordinator = new DeepstreamCoordinator("ws://localhost:6020/deepstream", new App("demo"), new User("jonhdoe", { password: "password123456" }));
+coordinator.init().then(result => console.log(result));
 
 export {
     Coordinator,
     AbstractCoordinator,
-    //DeepstreamCoordinator,
+    FeathersCoordinator,
     App,
     User
 };

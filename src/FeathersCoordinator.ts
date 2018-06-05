@@ -1,3 +1,4 @@
+/// <reference types="bluebird" />
 /// <reference types="socket.io-client" />
 /// <reference types="@feathersjs/feathers" />
 /// <reference types="@feathersjs/errors" />
@@ -9,42 +10,57 @@ import AbstractCoordinator from "./AbstractCoordinator";
 import User from "./User";
 import App from "./App";
 
+import * as Promise from 'bluebird';
 import * as io from "socket.io-client";
 import feathers, { Application, ServiceOverloads, ServiceAddons, ServiceMethods } from "@feathersjs/feathers";
 import { Conflict } from "@feathersjs/errors";
 import socketio from "@feathersjs/socketio-client";
 import feathersAuthClient from "@feathersjs/authentication-client";
+import { promises } from "fs";
 
 export default class FeathersCoordinator { //extends AbstractCoordinator {
-    private _socket: SocketIOClient.Socket;
-    private _client: Application<object>;
-    private _service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private app: App;
+    private user: User;
+    private socket: SocketIOClient.Socket;
+    private client: Application<object>;
+    private service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
     constructor(url: string, app: App, user: User) {
         //super();
-        this._socket = io(url);
-        this._client = feathers();
-        this._client.configure(socketio(this._socket));
-        this._service = this._client.service('resources');
-        this._client.configure(feathersAuthClient())
-        this._client.authenticate({
-            strategy: 'local',
-            email: user.username,
-            password: user.credentials.password
-        }).then(response => {
-            console.log('Login: ', response);
-            return this._service.create({
-                app: app.name,
-                user: user.username
-            })
-        }).then(result => {
-            console.log('Result: ', result);
-        }).catch(err => {
-            if (err instanceof Conflict) {
-                console.log('This is not the first time that you are using this application.', err);
-            } else {
-                console.error(err)
-            }
+        this.app = app;
+        this.user = user;
+        this.socket = io(url);
+        this.client = feathers();
+        this.client.configure(socketio(this.socket));
+        this.service = this.client.service('resources');
+        this.client.configure(feathersAuthClient())
+    }
+
+    public init(): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.client.authenticate({
+                strategy: 'local',
+                email: this.user.username,
+                password: this.user.credentials
+            }).then(response => this.service.create({
+                app: this.app.name,
+                user: this.user.username
+            })).then(response => resolve())
+                .catch(err => {
+                    if (!(err instanceof Conflict)) {
+                        reject(err);
+                    } else {
+                        resolve();
+                    }
+                })
+        });
+    }
+
+    public getState(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.service.find({ query: { user: this.user.username, app: this.app.name } }).then(response => {
+                return resolve((<any>response)[0]);
+            }).catch(err => reject(err));
         });
     }
 }

@@ -6,7 +6,7 @@ export default class App {
     public get name(): string {
         return this._name;
     }
-    public set username(name: string) {
+    public set name(name: string) {
         this._name = name;
     }
 }

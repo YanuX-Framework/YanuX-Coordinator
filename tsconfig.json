@@ -5,6 +5,7 @@
     "compilerOptions": {
         "outDir": "build/",
         "target": "es5",
+        "lib": ["es6","dom","es5","scripthost"],
         "noImplicitAny": true,
         "sourceMap": true,
         "declaration": true,

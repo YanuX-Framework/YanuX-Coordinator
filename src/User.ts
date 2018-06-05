@@ -1,7 +1,7 @@
 export default class User {
     private _username: string;
     private _credentials: any;
-    constructor(username: string, credentials: any = {}) {
+    constructor(username: string, credentials: any) {
         this.username = username;
         this.credentials = credentials;
     }
@@ -16,8 +16,5 @@ export default class User {
     }
     public set credentials(credentials: any) {
         this._credentials = credentials;
-        if (this._credentials.username === undefined) {
-            this._credentials.username = this.username;
-        }
     }
 }
