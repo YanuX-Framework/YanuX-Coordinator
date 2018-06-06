@@ -1,17 +1,21 @@
+import * as Promise from 'bluebird';
 import Coordinator from "./Coordinator";
 
 export default abstract class AbstractCoordinator implements Coordinator {
-    private _state: any;
+    private _resource: any;
 
-    protected get state(): any {
-        return this._state;
+    public get resource() {
+        return this.getResource();
     }
 
-    protected set state(uiState: any) {
-        this._state = uiState;
+    public set resource(resource: any) {
+        this.setResource(resource);
     }
 
-    public abstract getState(): any;
-
-    public abstract setState(state: any): void;
+    public getResource(): Promise<any> {
+        return Promise.resolve(this._resource);
+    }
+    public setResource(data: any): void {
+        this._resource = data;
+    }
 }

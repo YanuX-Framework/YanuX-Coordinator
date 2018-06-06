@@ -1,34 +1,23 @@
-/// <reference types="bluebird" />
-/// <reference types="socket.io-client" />
-/// <reference types="@feathersjs/feathers" />
-/// <reference types="@feathersjs/errors" />
-/// <reference types="@feathersjs/socketio-client" />
-/// <reference types="@feathersjs/authentication-client" />
-
-
-import AbstractCoordinator from "./AbstractCoordinator";
-import User from "./User";
-import App from "./App";
-
+import feathersAuthClient from "@feathersjs/authentication-client";
+import { Conflict } from "@feathersjs/errors";
+import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from "@feathersjs/feathers";
+import socketio from "@feathersjs/socketio-client";
 import * as Promise from 'bluebird';
 import * as io from "socket.io-client";
-import feathers, { Application, ServiceOverloads, ServiceAddons, ServiceMethods } from "@feathersjs/feathers";
-import { Conflict } from "@feathersjs/errors";
-import socketio from "@feathersjs/socketio-client";
-import feathersAuthClient from "@feathersjs/authentication-client";
-import { promises } from "fs";
+import App from "./App";
+import User from "./User";
+import Resource from "./Resource";
+import ResourceNotFound from "./errors/ResourceNotFoundError";
 
 export default class FeathersCoordinator { //extends AbstractCoordinator {
-    private app: App;
-    private user: User;
+    private resource: Resource;
     private socket: SocketIOClient.Socket;
     private client: Application<object>;
     private service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
     constructor(url: string, app: App, user: User) {
         //super();
-        this.app = app;
-        this.user = user;
+        this.resource = new Resource(app, user);
         this.socket = io(url);
         this.client = feathers();
         this.client.configure(socketio(this.socket));
@@ -36,60 +25,74 @@ export default class FeathersCoordinator { //extends AbstractCoordinator {
         this.client.configure(feathersAuthClient())
     }
 
-    public init(): Promise<any> {
+    public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.client.authenticate({
                 strategy: 'local',
-                email: this.user.username,
-                password: this.user.credentials
-            }).then(response => this.service.create({
-                app: this.app.name,
-                user: this.user.username
-            })).then(response => resolve())
+                email: this.resource.user.username,
+                password: this.resource.user.credentials
+            }).then(response => {
+                if (subscriberFunction) {
+                    this.subscribe(subscriberFunction);
+                }
+                return this.service.create({
+                    app: this.resource.app.name,
+                    user: this.resource.user.username
+                });
+            }).then(resource => resolve(this.getResource()))
                 .catch(err => {
                     if (!(err instanceof Conflict)) {
                         reject(err);
                     } else {
-                        resolve();
+                        return resolve(this.getResource());
                     }
-                })
+                });
         });
     }
 
-    public getState(): Promise<any> {
+    private getResource(): Promise<Resource> {
         return new Promise((resolve, reject) => {
-            this.service.find({ query: { user: this.user.username, app: this.app.name } }).then(response => {
-                return resolve((<any>response)[0]);
+            this.service.find({
+                query: {
+                    user: this.resource.user.username,
+                    app: this.resource.app.name
+                }
+            }).then(resources => {
+                if ((<Array<any>>resources).length === 1) {
+                    this.resource.update((<any>resources)[0])
+                    return resolve(this.resource);
+                } else {
+                    reject(new ResourceNotFound('Could not find the resource associated with the current application/user pair.'))
+                }
             }).catch(err => reject(err));
         });
     }
-}
-// TODO: This is the old DeepStream based prototypical implementation. I'm just pasting it here for reference until I finish porting everything to FeathersJS.
-/*export default class DeepstreamCoordinator extends AbstractCoordinator {
-    private _deepstreamConnection: deepstreamIO.deepstreamQuarantine;
-    constructor(url: string, app: App, user: User) {
-        super();
-        this._deepstreamConnection = deepstream(url);
-        this.getDeepstreamConnection().login(user, (success, data) => {
-            if (success) {
-                console.debug("Login Successful: " + this.getDeepstreamConnection().getConnectionState());
-            } else {
-                console.debug("Login Unsuccessful: " + this.getDeepstreamConnection().getConnectionState());
-            }
-        });
-        this.uiState = this.getDeepstreamConnection().record.getRecord("/record/user/" + user.username + "/app/" + app.name);
-    }
-    public getUiState(): any {
-        return this.uiState.get();
-    }
-    public setUiState(uiState: any) {
-        this.uiState.set(uiState);
-    }
-    public subscribeUiState(subscriberFunction: (data: any) => void) {
-        this.uiState.subscribe(subscriberFunction);
-    }
-    public getDeepstreamConnection(): deepstreamIO.deepstreamQuarantine {
-        return this._deepstreamConnection;
-    }
-}*/
 
+    public getData(): Promise<any> {
+        return this.getResource().then(resource => resource.data).catch(err => Promise.reject(err));
+    }
+
+    public setData(data: any): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.service.patch(this.resource.id, { data: data })
+                .then(resource => {
+                    resolve(resource.data)
+                }).catch(err => reject(err));
+        })
+    }
+
+    public subscribe(subscriberFunction: (data: any, eventType: string) => void): void {
+        let eventListener = (resource: any, eventType: string = 'updated') => {
+            // TODO: This should be enforced at the Broker level.
+            if (this.resource.app.name === resource.app
+                && this.resource.user.username === resource.user) {
+                this.resource.update(resource);
+                subscriberFunction(this.resource.data, eventType);
+            } else {
+                console.error('I\'m getting events that I shouldn\'t have heard about.');
+            }
+        };
+        this.service.on('updated', resource => eventListener(resource, 'updated'));
+        this.service.on('patched', resource => eventListener(resource, 'patched'));
+    }
+}
