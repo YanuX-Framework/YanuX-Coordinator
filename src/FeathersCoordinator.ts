@@ -4,25 +4,38 @@ import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads 
 import socketio from "@feathersjs/socketio-client";
 import * as Promise from 'bluebird';
 import * as io from "socket.io-client";
+import AbstractCoordinator from "./AbstractCoordinator";
 import App from "./App";
 import User from "./User";
 import Resource from "./Resource";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 
-export default class FeathersCoordinator { //extends AbstractCoordinator {
+import { LocalStorage as NodeLocalStorage } from "node-localstorage";
+var localStorage: Storage;
+if (typeof localStorage === "undefined" || localStorage === null) {
+    let LocalStorage = require('node-localstorage').LocalStorage;
+    localStorage = new LocalStorage('./data/localstorage');
+}
+
+export default class FeathersCoordinator extends AbstractCoordinator {
     private resource: Resource;
     private socket: SocketIOClient.Socket;
     private client: Application<object>;
     private service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
     constructor(url: string, app: App, user: User) {
-        //super();
+        super();
         this.resource = new Resource(app, user);
         this.socket = io(url);
         this.client = feathers();
         this.client.configure(socketio(this.socket));
         this.service = this.client.service('resources');
-        this.client.configure(feathersAuthClient())
+        this.client.configure(feathersAuthClient({ storage: localStorage }));
+        // TODO: Implement a proper generic logger system that I can use across this whole project (perhaps across all my projects).
+        let eventCallback: any = (evenType: string) => (event: any) => console.log(evenType + ":", event);
+        this.client.on('authenticated', eventCallback('authenticated'));
+        this.client.on('logout', eventCallback('logout'))
+        this.client.on('reauthentication-error', eventCallback('reauthentication-error'))
     }
 
     public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
@@ -39,12 +52,12 @@ export default class FeathersCoordinator { //extends AbstractCoordinator {
                     app: this.resource.app.name,
                     user: this.resource.user.username
                 });
-            }).then(resource => resolve(this.getResource()))
+            }).then(resource => resolve(this.getData()))
                 .catch(err => {
                     if (!(err instanceof Conflict)) {
                         reject(err);
                     } else {
-                        return resolve(this.getResource());
+                        return resolve(this.getData());
                     }
                 });
         });
@@ -84,7 +97,8 @@ export default class FeathersCoordinator { //extends AbstractCoordinator {
     public subscribe(subscriberFunction: (data: any, eventType: string) => void): void {
         let eventListener = (resource: any, eventType: string = 'updated') => {
             // TODO: This should be enforced at the Broker level.
-            if (this.resource.app.name === resource.app
+            if (this.resource.id === resource._id
+                && this.resource.app.name === resource.app
                 && this.resource.user.username === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);

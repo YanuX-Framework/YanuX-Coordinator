@@ -8,10 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Launch YanuX Coordinator",
-            "program": "${workspaceFolder}\\build\\main.js",
-            "outFiles": [
-                "${workspaceFolder}/**/*.js"
-            ]
+            "program": "${workspaceFolder}/lib/index.js"
         }
     ]
 }

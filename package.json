@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "YanuX Coordinator",
   "repository": "github:YanuX-Framework/YanuX-Coordinator",
-  "main": "build/main.js",
-  "types": "build/main.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "npx tsc",
     "package": "npx webpack",
@@ -16,8 +16,8 @@
     "source-map-loader": "^0.2.3",
     "ts-loader": "^4.3.1",
     "typescript": "^2.8.3",
-    "webpack": "^4.10.2",
-    "webpack-cli": "^3.0.1"
+    "webpack": "^4.11.1",
+    "webpack-cli": "^3.0.3"
   },
   "dependencies": {
     "@feathersjs/authentication-client": "^1.0.2",
@@ -31,6 +31,7 @@
     "@types/feathersjs__socketio-client": "^1.0.1",
     "@types/socket.io-client": "^1.4.32",
     "bluebird": "^3.5.1",
+    "node-localstorage": "^1.3.1",
     "socket.io-client": "^2.1.1"
   }
 }

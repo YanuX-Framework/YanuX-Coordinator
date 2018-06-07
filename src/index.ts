@@ -1,6 +1,5 @@
 import Coordinator from "./Coordinator";
 import AbstractCoordinator from "./AbstractCoordinator";
-import DeepstreamCoordinator from "./FeathersCoordinator";
 import App from "./App";
 import User from "./User";
 import FeathersCoordinator from "./FeathersCoordinator";

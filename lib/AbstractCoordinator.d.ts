@@ -1,7 +1,6 @@
 import * as Promise from 'bluebird';
 import Coordinator from "./Coordinator";
-
 export default abstract class AbstractCoordinator implements Coordinator {
-    public abstract getData(): Promise<any>
-    public abstract setData(data: any): Promise<any>
+    abstract getData(): Promise<any>;
+    abstract setData(data: any): Promise<any>;
 }

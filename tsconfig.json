@@ -1,9 +1,10 @@
 {
     "files": [
-        "src/main.ts"
+        "src/index.ts",
+        "src/index.d.ts"
     ],
     "compilerOptions": {
-        "outDir": "build/",
+        "outDir": "lib/",
         "target": "es5",
         "lib": ["es6","dom","es5","scripthost"],
         "noImplicitAny": true,
