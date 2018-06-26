@@ -24,7 +24,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.client.configure(socketio(this.socket));
         this.service = this.client.service('resources');
 
-        if (typeof window.localStorage === "undefined" || window.localStorage === null) {
+        if ((typeof window === "undefined" || window === null) ||
+            (typeof window.localStorage === "undefined" || window.localStorage === null)) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
         } else {
