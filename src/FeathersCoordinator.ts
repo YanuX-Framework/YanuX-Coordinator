@@ -9,28 +9,29 @@ import App from "./App";
 import User from "./User";
 import Resource from "./Resource";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
-
-import { LocalStorage as NodeLocalStorage } from "node-localstorage";
-var localStorage: Storage;
-if (typeof localStorage === "undefined" || localStorage === null) {
-    let LocalStorage = require('node-localstorage').LocalStorage;
-    localStorage = new LocalStorage('./data/localstorage');
-}
-
 export default class FeathersCoordinator extends AbstractCoordinator {
     private resource: Resource;
     private socket: SocketIOClient.Socket;
     private client: Application<object>;
     private service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private storage: Storage;
 
-    constructor(url: string, app: App, user: User) {
+    constructor(url: string, app: App, user: User, localStorageLocation: string = "./data/localstorage") {
         super();
         this.resource = new Resource(app, user);
         this.socket = io(url);
         this.client = feathers();
         this.client.configure(socketio(this.socket));
         this.service = this.client.service('resources');
-        this.client.configure(feathersAuthClient({ storage: localStorage }));
+
+        if (typeof window.localStorage === "undefined" || window.localStorage === null) {
+            let NodeLocalStorage = require('node-localstorage').LocalStorage
+            this.storage = new NodeLocalStorage(localStorageLocation);
+        } else {
+            this.storage = window.localStorage;
+        }
+        this.client.configure(feathersAuthClient({ storage: this.storage }));
+
         // TODO: Implement a proper generic logger system that I can use across this whole project (perhaps across all my projects).
         let eventCallback: any = (evenType: string) => (event: any) => console.log(evenType + ":", event);
         this.client.on('authenticated', eventCallback('authenticated'));

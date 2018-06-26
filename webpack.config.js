@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = function (env, argv) {
   return {
-    entry: "./src/main.ts",
+    entry: "./src/index.ts",
     mode: "development",
     devtool: "source-map",
     output: {
@@ -18,5 +18,8 @@ module.exports = function (env, argv) {
         { enforce: "pre", test: /\.js$/, loader: "source-map-loader", exclude: [/node_modules/] }
       ]
     },
+    node: {
+      fs: 'empty'
+    }
   }
 };

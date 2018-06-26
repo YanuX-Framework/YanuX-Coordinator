@@ -8,26 +8,27 @@
   "scripts": {
     "build": "npx tsc",
     "package": "npx webpack",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node lib/index.js",
+    "test": "node lib/test.js"
   },
   "author": "Pedro Albuquerque Santos <pedro@albuquerques.net> (https://pedro.albuquerques.net)",
   "license": "LGPL-3.0",
   "devDependencies": {
     "source-map-loader": "^0.2.3",
-    "ts-loader": "^4.3.1",
-    "typescript": "^2.8.3",
-    "webpack": "^4.11.1",
-    "webpack-cli": "^3.0.3"
+    "ts-loader": "^4.4.1",
+    "typescript": "^2.9.2",
+    "webpack": "^4.12.1",
+    "webpack-cli": "^3.0.8"
   },
   "dependencies": {
     "@feathersjs/authentication-client": "^1.0.2",
     "@feathersjs/errors": "^3.3.0",
-    "@feathersjs/feathers": "^3.1.6",
+    "@feathersjs/feathers": "^3.1.7",
     "@feathersjs/socketio-client": "^1.1.0",
-    "@types/bluebird": "^3.5.20",
-    "@types/feathersjs__authentication-client": "^1.0.3",
+    "@types/bluebird": "^3.5.21",
+    "@types/feathersjs__authentication-client": "^1.0.4",
     "@types/feathersjs__errors": "^3.2.1",
-    "@types/feathersjs__feathers": "^3.0.3",
+    "@types/feathersjs__feathers": "^3.0.4",
     "@types/feathersjs__socketio-client": "^1.0.1",
     "@types/socket.io-client": "^1.4.32",
     "bluebird": "^3.5.1",

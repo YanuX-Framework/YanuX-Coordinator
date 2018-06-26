@@ -1,3 +1,6 @@
 declare module 'node-localstorage' {
-    export var LocalStorage : Storage;
+    var LocalStorage: {
+        new(location: string): Storage;
+        new(location: string, quota: number): Storage;
+    };
 }

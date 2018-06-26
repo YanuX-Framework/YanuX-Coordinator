@@ -7,7 +7,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private socket;
     private client;
     private service;
-    constructor(url: string, app: App, user: User);
+    private storage;
+    constructor(url: string, app: App, user: User, localStorageLocation?: string);
     init(subscriberFunction?: (resource: any, eventType: string) => void): Promise<any>;
     private getResource;
     getData(): Promise<any>;

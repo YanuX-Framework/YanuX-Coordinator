@@ -1,14 +1,15 @@
 {
     "files": [
         "src/index.ts",
-        "src/index.d.ts"
+        "src/index.d.ts",
+        "src/test.ts"
     ],
     "compilerOptions": {
         "outDir": "lib/",
         "target": "es5",
-        "lib": ["es6","dom","es5","scripthost"],
+        "lib": ["es6", "dom", "es5", "scripthost"],
         "noImplicitAny": true,
         "sourceMap": true,
-        "declaration": true,
+        "declaration": true
     }
 }
