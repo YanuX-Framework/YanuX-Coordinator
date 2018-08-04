@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch YanuX Coordinator",
+            "name": "Debug YanuX Coordinator",
             "program": "${workspaceFolder}/lib/test.js",
             "outputCapture": "std"
         }

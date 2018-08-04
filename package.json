@@ -3,17 +3,19 @@
   "version": "1.0.0",
   "description": "YanuX Coordinator",
   "repository": "github:YanuX-Framework/YanuX-Coordinator",
+  "private": true,
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "npx tsc",
     "package": "npx webpack",
+    "watch:build": "npx tsc --watch",
+    "watch:package": "npx webpack --watch",
     "start": "node lib/index.js",
     "test": "node lib/test.js"
   },
   "author": "Pedro Albuquerque Santos <pedro@albuquerques.net> (https://pedro.albuquerques.net)",
   "license": "LGPL-3.0",
-  "private": true,
   "devDependencies": {
     "source-map-loader": "^0.2.3",
     "ts-loader": "^4.4.2",
