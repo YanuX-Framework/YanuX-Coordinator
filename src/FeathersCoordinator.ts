@@ -42,10 +42,20 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.client.authenticate({
+            /** 
+             * this.client.authenticate({
                 strategy: 'local',
                 email: this.resource.user.username,
                 password: this.resource.user.credentials
+            })
+            **/
+           /** TODO: Working on YanuX Integration. That's the reason why the
+            *  code above is commented and the code below is unfinished.
+            *  In fact, I may have to accomodate all authentication strategies
+            *  gracefully: "jwt", "local" and "yanux".
+            */
+            this.client.authenticate({
+                strategy: 'yanux'
             }).then(response => {
                 if (subscriberFunction) {
                     this.subscribe(subscriberFunction);
