@@ -42,29 +42,29 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            /** 
-             * this.client.authenticate({
+            this.client.authenticate({
                 strategy: 'local',
                 email: this.resource.user.username,
                 password: this.resource.user.credentials
-            })
-            **/
-           /** TODO: Working on YanuX Integration. That's the reason why the
-            *  code above is commented and the code below is unfinished.
-            *  In fact, I may have to accomodate all authentication strategies
-            *  gracefully: "jwt", "local" and "yanux".
-            */
-            this.client.authenticate({
-                strategy: 'yanux'
-            }).then(response => {
-                if (subscriberFunction) {
-                    this.subscribe(subscriberFunction);
-                }
-                return this.service.create({
-                    app: this.resource.app.name,
-                    user: this.resource.user.username
-                });
-            }).then(resource => resolve(this.getData()))
+            })/** 
+                * TODO: Working on YanuX Integration. That's the reason why
+                * this area is a mess and is unfinished. In fact, I may
+                * accomodate all authentication strategies gracefully: 
+                * "jwt", "local" and "yanux/OAuth 2 Token Verification". 
+                */
+                /* this.client.authenticate({
+                    strategy: 'yanux',
+                    acessToken: 'TEST_ACCESS_TOKEN'
+                }) */
+                .then(response => {
+                    if (subscriberFunction) {
+                        this.subscribe(subscriberFunction);
+                    }
+                    return this.service.create({
+                        app: this.resource.app.name,
+                        user: this.resource.user.username
+                    });
+                }).then(resource => resolve(this.getData()))
                 .catch(err => {
                     if (!(err instanceof Conflict)) {
                         reject(err);
