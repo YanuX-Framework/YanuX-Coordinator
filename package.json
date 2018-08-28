@@ -28,7 +28,7 @@
     "@feathersjs/errors": "^3.3.0",
     "@feathersjs/feathers": "^3.1.7",
     "@feathersjs/socketio-client": "^1.1.0",
-    "@types/bluebird": "^3.5.23",
+    "@types/bluebird": "^3.5.24",
     "@types/feathersjs__authentication-client": "^1.0.4",
     "@types/feathersjs__errors": "^3.2.1",
     "@types/feathersjs__feathers": "^3.0.4",
