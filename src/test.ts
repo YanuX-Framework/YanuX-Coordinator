@@ -1,15 +1,15 @@
 import {
-    App,
-    User,
+    Client,
+    Credentials,
     FeathersCoordinator
 } from "./index";
 
 /** TODO: Create "proper" tests. */
 function test(): void {
-    let url: string = "http://localhost:3030";
-    let app: App = new App("demo");
-    let user: User = new User("pedro@albuquerques.net", "topsecret");
-    let coordinator: FeathersCoordinator = new FeathersCoordinator(url, app, user);
+    const url: string = "http://localhost:3002";
+    const clientName: string = "demo";
+    const credentials: Credentials = new Credentials("local", ["test_user_0@yanux.org", "topsecret"]);
+    const coordinator: FeathersCoordinator = new FeathersCoordinator(url, clientName, credentials);
     coordinator.init()
         .then(result => {
             console.log('State:', result);

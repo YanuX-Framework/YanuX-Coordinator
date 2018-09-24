@@ -1,25 +1,26 @@
-import App from "./App";
-import User from "./User";
+import Credentials from "./Credentials";
 
 export default class Resource {
     public id: string;
-    public app: App;
-    public user: User;
+    public clientId: string;
+    public clientName: string;
+    public userId: any;
+    public credentials: Credentials;
     public data: any;
     public createdAt: Date;
     public updatedAt: Date;
     private lastResourceChange: any;
 
-    constructor(app: App, user: User, resource: any = {}) {
-        this.app = app;
-        this.user = user;
+    constructor(clientName: string, credentials: Credentials, resource: any = {}) {
+        this.clientName = clientName;
+        this.credentials = credentials;
         this.update(resource);
     }
 
     public update(resource: any): void {
         this.id = resource._id;
-        this.app.name = resource.app ? resource.app : this.app.name;
-        this.user.username = resource.user ? resource.user : this.user.username;
+        this.userId = resource.user || this.userId;
+        this.clientId = resource.client || this.clientId;
         this.data = resource.data;
         this.createdAt = new Date(resource.createdAt);
         this.updatedAt = new Date(resource.updatedAt);

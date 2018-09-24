@@ -11,14 +11,14 @@
 
 import Coordinator from "./Coordinator";
 import AbstractCoordinator from "./AbstractCoordinator";
-import App from "./App";
-import User from "./User";
+import Client from "./Client";
+import Credentials from "./Credentials";
 import FeathersCoordinator from "./FeathersCoordinator";
 
 export {
     Coordinator,
     AbstractCoordinator,
     FeathersCoordinator,
-    App,
-    User
+    Client,
+    Credentials
 };
