@@ -11,7 +11,6 @@
 
 import Coordinator from "./Coordinator";
 import AbstractCoordinator from "./AbstractCoordinator";
-import Client from "./Client";
 import Credentials from "./Credentials";
 import FeathersCoordinator from "./FeathersCoordinator";
 
@@ -19,6 +18,5 @@ export {
     Coordinator,
     AbstractCoordinator,
     FeathersCoordinator,
-    Client,
     Credentials
 };

@@ -11,17 +11,17 @@ import ResourceNotFound from "./errors/ResourceNotFoundError";
 export default class FeathersCoordinator extends AbstractCoordinator {
     private resource: Resource;
     private socket: SocketIOClient.Socket;
-    private client: Application<object>;
-    private service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private feathersClient: Application<object>;
+    private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(url: string, clientName: string, credentials: Credentials, localStorageLocation: string = "./data/localstorage") {
         super();
         this.resource = new Resource(clientName, credentials);
         this.socket = io(url);
-        this.client = feathers();
-        this.client.configure(socketio(this.socket));
-        this.service = this.client.service('resources');
+        this.feathersClient = feathers();
+        this.feathersClient.configure(socketio(this.socket));
+        this.resourcesService = this.feathersClient.service('resources');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -30,13 +30,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         } else {
             this.storage = window.localStorage;
         }
-        this.client.configure(feathersAuthClient({ storage: this.storage }));
+        this.feathersClient.configure(feathersAuthClient({ storage: this.storage }));
 
         // TODO: Implement a proper generic logger system that I can use across this whole project (perhaps across all my projects).
         let eventCallback: any = (evenType: string) => (event: any) => console.log(evenType + ":", event);
-        this.client.on('authenticated', eventCallback('authenticated'));
-        this.client.on('logout', eventCallback('logout'))
-        this.client.on('reauthentication-error', eventCallback('reauthentication-error'))
+        this.feathersClient.on('authenticated', eventCallback('authenticated'));
+        this.feathersClient.on('logout', eventCallback('logout'))
+        this.feathersClient.on('reauthentication-error', eventCallback('reauthentication-error'))
     }
 
     public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
@@ -46,6 +46,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 case 'yanux':
                     auth['strategy'] = 'yanux';
                     auth['accessToken'] = this.resource.credentials.values[0];
+                    auth['clientId'] = this.resource.credentials.values[1];
                     break;
                 case 'local':
                 default:
@@ -54,51 +55,50 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     auth['password'] = this.resource.credentials.values[1];
                     break;
             }
-            this.client.authenticate(auth)
+            this.feathersClient.authenticate(auth)
                 .then(response => {
-                    return this.client.passport.verifyJWT(response.accessToken);
+                    return this.feathersClient.passport.verifyJWT(response.accessToken);
                 }).then(payload => {
-                    return this.client.service('users').get(payload.userId);
+                    return this.feathersClient.service('users').get(payload.userId);
                 }).then(user => {
-                    this.resource.userId = user;
+                    this.resource.user = user;
                     return user;
                 }).then(() => {
-                    return this.client.service('clients').find({ query: { name: this.resource.clientName } });
+                    return this.feathersClient.service('clients').find({ query: { name: this.resource.clientName } });
                 }).then(queryResult => {
                     const clients: Paginated<any> = queryResult as Paginated<any>;
                     if (clients.total === 1) {
                         return clients.data[0];
                     } else if (clients.total === 0) {
-                        return this.client.service('clients').create({ name: this.resource.clientName });
+                        return this.feathersClient.service('clients').create({ name: this.resource.clientName });
                     } else {
-                        throw new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.');
+                        reject(new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                     }
                 }).then(client => {
-                    this.resource.clientId = client._id;
+                    this.resource.client = client;
                     if (subscriberFunction) {
                         this.subscribe(subscriberFunction);
                     }
-                    return this.service.create({
-                        client: this.resource.clientId,
-                        user: this.resource.userId._id
+                    return this.resourcesService.create({
+                        user: this.resource.user._id,
+                        client: this.resource.client._id
                     });
-                })
-                .then(resource => resolve(this.getData())).catch(err => {
+                }).then(resource => resolve(this.getData())).catch(err => {
                     if (!(err instanceof Conflict)) {
                         reject(err);
                     } else {
                         return resolve(this.getData());
                     }
-                });
+                }).catch(e => reject(e));
         });
     }
 
     private getResource(): Promise<Resource> {
         return new Promise((resolve, reject) => {
-            this.service.find({
+            this.resourcesService.find({
                 query: {
-                    user: this.resource.userId._id,
-                    client: this.resource.clientId
+                    user: this.resource.user._id,
+                    client: this.resource.client._id
                 }
             }).then(resources => {
                 if ((<Array<any>>resources).length === 1) {
@@ -117,7 +117,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public setData(data: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.service.patch(this.resource.id, { data: data })
+            this.resourcesService.patch(this.resource.id, { data: data })
                 .then(resource => {
                     resolve(resource.data)
                 }).catch(err => reject(err));
@@ -136,15 +136,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * in order to provide extra security.
              */
             if (this.resource.id === resource._id
-                && this.resource.clientId === resource.client
-                && this.resource.userId === resource.user) {
+                && this.resource.client._id === resource.client._id
+                && this.resource.user === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);
             } else {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }
         };
-        this.service.on('updated', resource => eventListener(resource, 'updated'));
-        this.service.on('patched', resource => eventListener(resource, 'patched'));
+        this.resourcesService.on('updated', resource => eventListener(resource, 'updated'));
+        this.resourcesService.on('patched', resource => eventListener(resource, 'patched'));
     }
 }
