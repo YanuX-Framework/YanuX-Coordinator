@@ -59,20 +59,30 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 .then(response => {
                     return this.feathersClient.passport.verifyJWT(response.accessToken);
                 }).then(payload => {
-                    return this.feathersClient.service('users').get(payload.userId);
-                }).then(user => {
-                    this.resource.user = user;
-                    return user;
-                }).then(() => {
-                    return this.feathersClient.service('clients').find({ query: { name: this.resource.clientName } });
-                }).then(queryResult => {
-                    const clients: Paginated<any> = queryResult as Paginated<any>;
-                    if (clients.total === 1) {
-                        return clients.data[0];
-                    } else if (clients.total === 0) {
-                        return this.feathersClient.service('clients').create({ name: this.resource.clientName });
+                    const promises = [this.feathersClient.service('users').get(payload.userId)]
+                    if (payload.clientId) {
+                        promises.push(this.feathersClient.service('clients').get(payload.clientId));
+                    }
+                    return Promise.all(promises);
+                }).then(results => {
+                    this.resource.user = results[0];
+                    if (results[1]) {
+                        return this.feathersClient.service('clients').get(results[1]);
                     } else {
-                        reject(new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
+                        return this.feathersClient.service('clients').find({ query: { id: this.resource.clientName } });
+                    }
+                }).then(results => {
+                    const clients = results.data ? results.data : results;
+                    if (Array.isArray(clients)) {
+                        if (clients.length === 1) {
+                            return clients[0];
+                        } else if (clients.length === 0) {
+                            return this.feathersClient.service('clients').create({ id: this.resource.clientName });
+                        } else {
+                            reject(new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
+                        }
+                    } else {
+                        return clients;
                     }
                 }).then(client => {
                     this.resource.client = client;
