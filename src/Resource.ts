@@ -2,7 +2,7 @@ import Credentials from "./Credentials";
 
 export default class Resource {
     public id: string;
-    public clientName: string;
+    public clientId: string;
     public client: any;
     public user: any;
     public credentials: Credentials;
@@ -11,8 +11,8 @@ export default class Resource {
     public updatedAt: Date;
     private rawResource: any;
 
-    constructor(clientName: string, credentials: Credentials, resource: any = {}) {
-        this.clientName = clientName;
+    constructor(clientId: string, credentials: Credentials, resource: any = {}) {
+        this.clientId = clientId;
         this.credentials = credentials;
         this.update(resource);
     }

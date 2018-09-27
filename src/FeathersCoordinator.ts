@@ -15,9 +15,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
-    constructor(url: string, clientName: string, credentials: Credentials, localStorageLocation: string = "./data/localstorage") {
+    constructor(url: string, credentials: Credentials, clientId: string = 'default', localStorageLocation: string = "./data/localstorage") {
         super();
-        this.resource = new Resource(clientName, credentials);
+        this.resource = new Resource(clientId, credentials);
         this.socket = io(url);
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket));
@@ -69,15 +69,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     if (results[1]) {
                         return this.feathersClient.service('clients').get(results[1]);
                     } else {
-                        return this.feathersClient.service('clients').find({ query: { id: this.resource.clientName } });
+                        return this.feathersClient.service('clients').find({ query: { id: this.resource.clientId } });
                     }
                 }).then(results => {
-                    const clients = results.data ? results.data : results;
+                    const clients = (results as any).data ? (results as any).data : results;
                     if (Array.isArray(clients)) {
                         if (clients.length === 1) {
                             return clients[0];
                         } else if (clients.length === 0) {
-                            return this.feathersClient.service('clients').create({ id: this.resource.clientName });
+                            return this.feathersClient.service('clients').create({ id: this.resource.clientId });
                         } else {
                             reject(new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                         }
@@ -139,7 +139,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             /**
              * TODO: This should be enforced at the Broker level.
              * I should also enforce that the Client ID of the token that is
-             * used for authentication matches the the provided clientName.
+             * used for authentication matches the provided clientId.
              * However, I have yet to find a straightforward way of doing so.
              * I will surely have to make some server-side ajustments that may
              * force me to change the way things are handled on the client-side
