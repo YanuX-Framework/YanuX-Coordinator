@@ -12,8 +12,7 @@ function test(): void {
         "yanux-ips-desktop-client"
     ]);
     //const credentials: Credentials = new Credentials("local", ["test_user_0@yanux.org", "topsecret"]);
-    const clientName: string = "yanux-coordinator-test";
-    const coordinator: FeathersCoordinator = new FeathersCoordinator(url, credentials, clientName);
+    const coordinator: FeathersCoordinator = new FeathersCoordinator(url, credentials);
     coordinator.init().then(result => {
         console.log('State:', result);
         return coordinator.setData({ message: "in a bottle" });

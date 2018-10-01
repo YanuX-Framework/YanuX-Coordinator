@@ -19,8 +19,8 @@ export default class Resource {
 
     public update(resource: any): void {
         this.id = resource._id;
-        this.user = resource.user || this.user;
-        this.client = resource.client || this.client;
+        //this.user = resource.user || this.user;
+        //this.client = resource.client || this.client;
         this.data = resource.data;
         this.createdAt = new Date(resource.createdAt);
         this.updatedAt = new Date(resource.updatedAt);

@@ -9,13 +9,22 @@ import Credentials from "./Credentials";
 import Resource from "./Resource";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 export default class FeathersCoordinator extends AbstractCoordinator {
+    private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
+        = (evenType: string) => (event: any) => console.log(evenType + ":", event);
+    private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
     private resource: Resource;
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
-    constructor(url: string, credentials: Credentials, clientId: string = 'default', localStorageLocation: string = "./data/localstorage") {
+    constructor(url: string,
+        credentials: Credentials = null,
+        onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
+        onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
+        onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
+        clientId: string = 'default',
+        localStorageLocation: string = "./data/localstorage") {
         super();
         this.resource = new Resource(clientId, credentials);
         this.socket = io(url);
@@ -30,33 +39,54 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         } else {
             this.storage = window.localStorage;
         }
-        this.feathersClient.configure(feathersAuthClient({ storage: this.storage }));
 
-        // TODO: Implement a proper generic logger system that I can use across this whole project (perhaps across all my projects).
-        let eventCallback: any = (evenType: string) => (event: any) => console.log(evenType + ":", event);
-        this.feathersClient.on('authenticated', eventCallback('authenticated'));
-        this.feathersClient.on('logout', eventCallback('logout'))
-        this.feathersClient.on('reauthentication-error', eventCallback('reauthentication-error'))
+        if (!this.resource.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
+            this.resource.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
+        }
+
+        this.feathersClient.configure(feathersAuthClient({ storage: this.storage }));
+        this.feathersClient.on('authenticated', onAuthenticated ? onAuthenticated : FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'));
+        this.feathersClient.on('logout', onLogout ? onLogout : FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'));
+        this.feathersClient.on('reauthentication-error', onReAuthenticationError ? onReAuthenticationError : FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'));
+    }
+
+    private get credentials(): Credentials {
+        return this.resource.credentials;
+    }
+
+    private set credentials(credentials: Credentials) {
+        this.resource.credentials = credentials;
+    }
+
+    private get user(): any {
+        return this.resource.user;
     }
 
     public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            const auth: any = {};
-            switch (this.resource.credentials.type) {
-                case 'yanux':
-                    auth['strategy'] = 'yanux';
-                    auth['accessToken'] = this.resource.credentials.values[0];
-                    auth['clientId'] = this.resource.credentials.values[1];
-                    break;
-                case 'local':
-                default:
-                    auth['strategy'] = 'local';
-                    auth['email'] = this.resource.credentials.values[0];
-                    auth['password'] = this.resource.credentials.values[1];
-                    break;
-            }
-            this.feathersClient.authenticate(auth)
-                .then(response => {
+            this.feathersClient.passport.getJWT().then(jwt => {
+                if (jwt) {
+                    this.resource.credentials = new Credentials('jwt', [jwt]);
+                }
+                const auth: any = {};
+                switch (this.resource.credentials.type) {
+                    case 'yanux':
+                        auth['strategy'] = 'yanux';
+                        auth['accessToken'] = this.resource.credentials.values[0];
+                        auth['clientId'] = this.resource.credentials.values[1];
+                        break;
+                    case 'local':
+                        auth['strategy'] = 'local';
+                        auth['email'] = this.resource.credentials.values[0];
+                        auth['password'] = this.resource.credentials.values[1];
+                        break;
+                    case 'jwt':
+                        auth['strategy'] = 'jwt';
+                        auth['accessToken'] = this.resource.credentials.values[0];
+                }
+                return auth;
+            }).then(auth => {
+                this.feathersClient.authenticate(auth).then(response => {
                     return this.feathersClient.passport.verifyJWT(response.accessToken);
                 }).then(payload => {
                     const promises = [this.feathersClient.service('users').get(payload.userId)]
@@ -99,8 +129,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     } else {
                         return resolve(this.getData());
                     }
-                }).catch(e => reject(e));
+                })
+            })
         });
+    }
+
+    public logout() {
+        this.feathersClient.logout();
     }
 
     private getResource(): Promise<Resource> {
@@ -146,8 +181,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * in order to provide extra security.
              */
             if (this.resource.id === resource._id
-                && this.resource.client._id === resource.client._id
-                && this.resource.user === resource.user) {
+                && this.resource.client._id === resource.client
+                && this.resource.user._id === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);
             } else {
