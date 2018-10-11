@@ -16,7 +16,7 @@ function test(): void {
     coordinator.init().then(result => {
         console.log('State:', result);
         return coordinator.setData({ message: "in a bottle" });
-    }).then(data => console.log('Data:', data)).catch(error => console.log('Error:', error));
+    }).then(data => console.log('Data:', data)).catch(error => console.error('Error:', error));
     coordinator.subscribe(data => console.log('Data Changed:', data));
 }
 test();
