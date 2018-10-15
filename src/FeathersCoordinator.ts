@@ -3,11 +3,13 @@ import { Conflict } from "@feathersjs/errors";
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads, Paginated } from "@feathersjs/feathers";
 import socketio from "@feathersjs/socketio-client";
 import * as Promise from 'bluebird';
+import * as fetch from 'isomorphic-fetch';
 import * as io from "socket.io-client";
 import AbstractCoordinator from "./AbstractCoordinator";
 import Credentials from "./Credentials";
 import Resource from "./Resource";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
+
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log(evenType + ":", event);
@@ -16,6 +18,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(url: string,
@@ -30,7 +33,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.socket = io(url);
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket));
+        
         this.resourcesService = this.feathersClient.service('resources');
+        this.instancesService = this.feathersClient.service('instances');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -116,6 +121,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     }
                 }).then(client => {
                     this.resource.client = client;
+                    /** TODO: Accept this URL as a parameter in the constructor! */
+                    return fetch('http://localhost:3003/deviceInfo')
+                }).then(response => {
+                    return response.json()
+                }).then(deviceInfo => {
+                    this.instancesService.create({
+                        user: this.resource.user._id,
+                        client: this.resource.client._id,
+                        deviceUuid: deviceInfo.deviceUuid
+                    });
+                }).then(() => {
                     if (subscriberFunction) {
                         this.subscribe(subscriberFunction);
                     }
@@ -123,13 +139,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         user: this.resource.user._id,
                         client: this.resource.client._id
                     });
-                }).then(resource => resolve(this.getData())).catch(err => {
-                    if (!(err instanceof Conflict)) {
-                        reject(err);
-                    } else {
-                        return resolve(this.getData());
-                    }
-                })
+                }).then(resource => resolve(this.getData()))
+                    .catch(err => {
+                        if (!(err instanceof Conflict)) {
+                            reject(err);
+                        } else {
+                            return resolve(this.getData());
+                        }
+                    })
             })
         });
     }
