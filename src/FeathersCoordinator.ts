@@ -8,7 +8,11 @@ import * as io from "socket.io-client";
 import AbstractCoordinator from "./AbstractCoordinator";
 import Credentials from "./Credentials";
 import Resource from "./Resource";
+import ClientNameNotUnique from "./errors/ClientNameNotUnique";
+import DeviceNotFoundError from "./errors/DeviceNotFoundError";
+import DeviceUiidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
+
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -17,11 +21,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private resource: Resource;
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
+    private localDeviceUrl: string;
+    private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
-    constructor(url: string,
+    constructor(brokerUrl: string,
+        localDeviceUrl: string,
         credentials: Credentials = null,
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
@@ -30,12 +37,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         localStorageLocation: string = "./data/localstorage") {
         super();
         this.resource = new Resource(clientId, credentials);
-        this.socket = io(url);
+        this.socket = io(brokerUrl);
+        this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket));
-        
-        this.resourcesService = this.feathersClient.service('resources');
+
+        this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
+        this.resourcesService = this.feathersClient.service('resources');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -114,24 +123,36 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         } else if (clients.length === 0) {
                             return this.feathersClient.service('clients').create({ id: this.resource.clientId });
                         } else {
-                            reject(new Error('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
+                            reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                         }
                     } else {
                         return clients;
                     }
                 }).then(client => {
                     this.resource.client = client;
-                    /** TODO: Accept this URL as a parameter in the constructor! */
-                    return fetch('http://localhost:3003/deviceInfo')
+                    return fetch(`${this.localDeviceUrl}/deviceInfo`)
                 }).then(response => {
                     return response.json()
                 }).then(deviceInfo => {
-                    this.instancesService.create({
-                        user: this.resource.user._id,
-                        client: this.resource.client._id,
-                        deviceUuid: deviceInfo.deviceUuid
+                    return this.devicesService.find({
+                        query: {
+                            deviceUuid: deviceInfo.deviceUuid
+                        }
                     });
-                }).then(() => {
+                }).then(results => {
+                    const devices = (results as any).data ? (results as any).data : results;
+                    if (devices.length === 1) {
+                        return this.instancesService.create({
+                            user: this.resource.user._id,
+                            client: this.resource.client._id,
+                            device: devices[0]._id
+                        });
+                    } else if (devices.length > 1) {
+                        reject(new DeviceUiidIsNotUnique('The impossible has happened! There is more than a device client with the same UUID.'));
+                    } else {
+                        reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
+                    }
+                }).then(device => {
                     if (subscriberFunction) {
                         this.subscribe(subscriberFunction);
                     }
