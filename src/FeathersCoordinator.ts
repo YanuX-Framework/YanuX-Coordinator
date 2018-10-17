@@ -10,7 +10,7 @@ import Credentials from "./Credentials";
 import Resource from "./Resource";
 import ClientNameNotUnique from "./errors/ClientNameNotUnique";
 import DeviceNotFoundError from "./errors/DeviceNotFoundError";
-import DeviceUiidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
+import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 
 
@@ -23,8 +23,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private feathersClient: Application<object>;
     private localDeviceUrl: string;
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
-    private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(brokerUrl: string,
@@ -44,6 +45,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
+        this.eventsService = this.feathersClient.service('events');
         this.resourcesService = this.feathersClient.service('resources');
 
         if ((typeof window === "undefined" || window === null) ||
@@ -100,74 +102,88 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 }
                 return auth;
             }).then(auth => {
-                this.feathersClient.authenticate(auth).then(response => {
-                    return this.feathersClient.passport.verifyJWT(response.accessToken);
-                }).then(payload => {
-                    const promises = [this.feathersClient.service('users').get(payload.userId)]
-                    if (payload.clientId) {
-                        promises.push(this.feathersClient.service('clients').get(payload.clientId));
-                    }
-                    return Promise.all(promises);
-                }).then(results => {
-                    this.resource.user = results[0];
-                    if (results[1]) {
-                        return this.feathersClient.service('clients').get(results[1]);
+                return this.feathersClient.authenticate(auth);
+            }).then(response => {
+                return this.feathersClient.passport.verifyJWT(response.accessToken);
+            }).then(payload => {
+                const promises = [this.feathersClient.service('users').get(payload.userId)]
+                if (payload.clientId) {
+                    promises.push(this.feathersClient.service('clients').get(payload.clientId));
+                }
+                return Promise.all(promises);
+            }).then(results => {
+                this.resource.user = results[0];
+                if (results[1]) {
+                    return this.feathersClient.service('clients').get(results[1]);
+                } else {
+                    return this.feathersClient.service('clients').find({ query: { id: this.resource.clientId } });
+                }
+            }).then(results => {
+                const clients = (results as any).data ? (results as any).data : results;
+                if (Array.isArray(clients)) {
+                    if (clients.length === 1) {
+                        return clients[0];
+                    } else if (clients.length === 0) {
+                        return this.feathersClient.service('clients').create({ id: this.resource.clientId });
                     } else {
-                        return this.feathersClient.service('clients').find({ query: { id: this.resource.clientId } });
+                        reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                     }
-                }).then(results => {
-                    const clients = (results as any).data ? (results as any).data : results;
-                    if (Array.isArray(clients)) {
-                        if (clients.length === 1) {
-                            return clients[0];
-                        } else if (clients.length === 0) {
-                            return this.feathersClient.service('clients').create({ id: this.resource.clientId });
-                        } else {
-                            reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
-                        }
-                    } else {
-                        return clients;
+                } else {
+                    return clients;
+                }
+            }).then(client => {
+                this.resource.client = client;
+                return fetch(`${this.localDeviceUrl}/deviceInfo`)
+            }).then(response => {
+                return response.json()
+            }).then(deviceInfo => {
+                return this.devicesService.find({
+                    query: {
+                        deviceUuid: deviceInfo.deviceUuid
                     }
-                }).then(client => {
-                    this.resource.client = client;
-                    return fetch(`${this.localDeviceUrl}/deviceInfo`)
-                }).then(response => {
-                    return response.json()
-                }).then(deviceInfo => {
-                    return this.devicesService.find({
-                        query: {
-                            deviceUuid: deviceInfo.deviceUuid
-                        }
-                    });
-                }).then(results => {
-                    const devices = (results as any).data ? (results as any).data : results;
-                    if (devices.length === 1) {
-                        return this.instancesService.create({
-                            user: this.resource.user._id,
-                            client: this.resource.client._id,
-                            device: devices[0]._id
-                        });
-                    } else if (devices.length > 1) {
-                        reject(new DeviceUiidIsNotUnique('The impossible has happened! There is more than a device client with the same UUID.'));
-                    } else {
-                        reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
-                    }
-                }).then(device => {
-                    if (subscriberFunction) {
-                        this.subscribe(subscriberFunction);
-                    }
-                    return this.resourcesService.create({
+                });
+            }).then(results => {
+                const devices = (results as any).data ? (results as any).data : results;
+                if (devices.length === 1) {
+                    return this.instancesService.create({
                         user: this.resource.user._id,
-                        client: this.resource.client._id
+                        client: this.resource.client._id,
+                        device: devices[0]._id
                     });
-                }).then(resource => resolve(this.getData()))
-                    .catch(err => {
-                        if (!(err instanceof Conflict)) {
-                            reject(err);
-                        } else {
-                            return resolve(this.getData());
-                        }
-                    })
+                } else if (devices.length > 1) {
+                    reject(new DeviceUuidIsNotUnique('The impossible has happened! There is more than a device client with the same UUID.'));
+                } else {
+                    reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
+                }
+            }).then(() => {
+                /** 
+                 * TODO:
+                 * Do something with the incoming proxemic events! 
+                 */
+                this.eventsService.on('proxemics', event => {
+                    console.log('Proxemics:', event);
+                    this.devicesService.find({ query: { $limit: 1, beaconValues: { $in: event.data.beacon.values } } })
+                        .then(results => {
+                            const device = ((results as any).data ? (results as any).data : results)[0];
+                            console.log(device)
+                        }).catch(e => console.error(e));
+                });
+            }).then(() => {
+                if (subscriberFunction) {
+                    this.subscribe(subscriberFunction);
+                }
+                return this.resourcesService.create({
+                    user: this.resource.user._id,
+                    client: this.resource.client._id
+                });
+            }).then(() => {
+                resolve(this.getData())
+            }).catch(err => {
+                if (!(err instanceof Conflict)) {
+                    reject(err);
+                } else {
+                    return resolve(this.getData());
+                }
             })
         });
     }
