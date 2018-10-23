@@ -19,6 +19,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         = (evenType: string) => (event: any) => console.log(evenType + ":", event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
     private resource: Resource;
+    private instance: any;
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
     private localDeviceUrl: string;
@@ -155,18 +156,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else {
                     reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
                 }
-            }).then(() => {
+            }).then(instance => {
+                this.instance = instance;
+                //const beaconsService = this.feathersClient.service('beacons');
+                /*beaconsService.on('created', beacon => {
+                    console.log('Event Beacon Created', beacon)
+                });*/
+                /*beaconsService.on('patched', beacon => {
+                    console.log('Event Beacon Patched', beacon)
+                });*/
+                /*beaconsService.on('removed', beacon => {
+                    console.log('Event Beacon Removed', beacon)
+                });*/
                 /** 
                  * TODO:
                  * Do something with the incoming proxemic events! 
                  */
                 this.eventsService.on('proxemics', event => {
                     console.log('Proxemics:', event);
-                    this.devicesService.find({ query: { $limit: 1, beaconValues: { $in: event.data.beacon.values } } })
-                        .then(results => {
-                            const device = ((results as any).data ? (results as any).data : results)[0];
-                            console.log(device)
-                        }).catch(e => console.error(e));
                 });
             }).then(() => {
                 if (subscriberFunction) {
