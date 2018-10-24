@@ -158,6 +158,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 }
             }).then(instance => {
                 this.instance = instance;
+                console.log('Instance:',instance);
                 //const beaconsService = this.feathersClient.service('beacons');
                 /*beaconsService.on('created', beacon => {
                     console.log('Event Beacon Created', beacon)
