@@ -13,7 +13,6 @@ import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 
-
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log(evenType + ":", event);
@@ -25,8 +24,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private localDeviceUrl: string;
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
-    private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(brokerUrl: string,
@@ -46,8 +45,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
-        this.eventsService = this.feathersClient.service('events');
         this.resourcesService = this.feathersClient.service('resources');
+        this.eventsService = this.feathersClient.service('events');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -65,6 +64,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.feathersClient.on('authenticated', onAuthenticated ? onAuthenticated : FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'));
         this.feathersClient.on('logout', onLogout ? onLogout : FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'));
         this.feathersClient.on('reauthentication-error', onReAuthenticationError ? onReAuthenticationError : FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'));
+
+        //Re-initialize on reconnect
+        const feathersSocketClient: SocketIOClient.Socket = this.feathersClient as any;
+        feathersSocketClient.io.on('reconnect', (attempt: any) => {
+            this.init().then(resource => {
+                console.log(`Reconnected after ${attempt} attempts`);
+            }).catch(e => console.error(e));
+        });
+        //Listening for proxemic events.
+        this.eventsService.on('proxemics', event => {
+            console.log('Proxemics:', event);
+        });
     }
 
     private get credentials(): Credentials {
@@ -79,7 +90,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.resource.user;
     }
 
-    public init(subscriberFunction: (resource: any, eventType: string) => void = null): Promise<any> {
+    public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.passport.getJWT().then(jwt => {
                 if (jwt) {
@@ -158,33 +169,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 }
             }).then(instance => {
                 this.instance = instance;
-                console.log('Instance:',instance);
-                //const beaconsService = this.feathersClient.service('beacons');
-                /*beaconsService.on('created', beacon => {
-                    console.log('Event Beacon Created', beacon)
-                });*/
-                /*beaconsService.on('patched', beacon => {
-                    console.log('Event Beacon Patched', beacon)
-                });*/
-                /*beaconsService.on('removed', beacon => {
-                    console.log('Event Beacon Removed', beacon)
-                });*/
-                /** 
-                 * TODO:
-                 * Do something with the incoming proxemic events! 
-                 */
-                this.eventsService.on('proxemics', event => {
-                    console.log('Proxemics:', event);
-                });
-            }).then(() => {
-                if (subscriberFunction) {
-                    this.subscribe(subscriberFunction);
-                }
+                console.log('Instance:', instance);
                 return this.resourcesService.create({
                     user: this.resource.user._id,
                     client: this.resource.client._id
                 });
-            }).then(() => {
+            }).then(resource => {
                 resolve(this.getData())
             }).catch(err => {
                 if (!(err instanceof Conflict)) {
