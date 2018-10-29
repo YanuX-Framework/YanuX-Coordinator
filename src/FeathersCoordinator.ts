@@ -22,10 +22,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
     private localDeviceUrl: string;
+
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
-    private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(brokerUrl: string,
@@ -46,7 +47,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
         this.resourcesService = this.feathersClient.service('resources');
-        this.eventsService = this.feathersClient.service('events');
+        this.proxemicsService = this.feathersClient.service('proxemics');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -72,9 +73,73 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.log(`Reconnected after ${attempt} attempts`);
             }).catch(e => console.error(e));
         });
-        //Listening for proxemic events.
-        this.eventsService.on('proxemics', event => {
-            console.log('Proxemics:', event);
+
+        //Listening for proxemics events.
+        this.proxemicsService.on('updated', proxemics => {
+            console.log('Proxemics:', proxemics.state);
+            this.devicesService.get(this.instance.device)
+                .then(device => {
+                    const currDevCap = proxemics.state[device.deviceUuid];
+                    let elDist = {
+                        view: device.deviceUuid,
+                        control: device.deviceUuid
+                    } as any;
+                    for (var deviceUuid in proxemics.state) {
+                        if (device.deviceUui !== deviceUuid) {
+                            if (proxemics.state[deviceUuid].view) {
+                                elDist.view = deviceUuid;
+                            }
+                            if (proxemics.state[deviceUuid].control) {
+                                elDist.control = deviceUuid;
+                            }
+                        }
+                    }
+
+                    if (currDevCap.view && !currDevCap.control) {
+                        elDist.view = device.deviceUuid;
+                    }
+
+                    if (currDevCap.view && currDevCap.control &&
+                        elDist.view === device.deviceUuid) {
+                        elDist.view = false;
+                    }
+
+                    Array.from(document.getElementsByClassName("yx-component")).forEach(el => {
+                        if (el instanceof HTMLElement) {
+                            el.style.display = 'block';
+                        }
+                    });
+
+                    if (elDist.view === device.deviceUuid) {
+                        Array.from(document.getElementsByClassName("yx-view")).forEach(el => {
+                            if (el instanceof HTMLElement) {
+                                el.style.display = 'block';
+                            }
+                        });
+                    } else {
+                        Array.from(document.getElementsByClassName("yx-view")).forEach(el => {
+                            if (el instanceof HTMLElement) {
+                                el.style.display = 'none';
+                            }
+                        });
+                    }
+
+                    if (elDist.control === device.deviceUuid) {
+                        Array.from(document.getElementsByClassName("yx-control")).forEach(el => {
+                            if (el instanceof HTMLElement) {
+                                el.style.display = 'block';
+                            }
+                        });
+                    } else {
+                        Array.from(document.getElementsByClassName("yx-control")).forEach(el => {
+                            if (el instanceof HTMLElement) {
+                                el.style.display = 'none';
+                            }
+                        });
+                    }
+                    console.log('Current Device UUID:', device.deviceUuid);
+                    console.log('Element Distribution', elDist);
+                })
         });
     }
 
@@ -218,7 +283,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 .then(resource => {
                     resolve(resource.data)
                 }).catch(err => reject(err));
-        })
+        });
     }
 
     public subscribe(subscriberFunction: (data: any, eventType: string) => void): void {
