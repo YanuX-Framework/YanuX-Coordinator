@@ -2,26 +2,36 @@ import feathersAuthClient from "@feathersjs/authentication-client";
 import { Conflict } from "@feathersjs/errors";
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads, Paginated } from "@feathersjs/feathers";
 import socketio from "@feathersjs/socketio-client";
-import * as Promise from 'bluebird';
 import * as fetch from 'isomorphic-fetch';
 import * as io from "socket.io-client";
 import AbstractCoordinator from "./AbstractCoordinator";
 import Credentials from "./Credentials";
+import Client from "./Client";
 import Resource from "./Resource";
+import Proxemics from "./Proxemics";
 import ClientNameNotUnique from "./errors/ClientNameNotUnique";
 import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
+import ProxemicsNotFoundError from "./errors/ProxemicsNotFoundError";
+
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log(evenType + ":", event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
-    private resource: Resource;
-    private instance: any;
+
+    public user: any;
+    public client: Client;
+    public device: any;
+    public instance: any;
+    public resource: Resource;
+    public proxemics: Proxemics;
+
+    private localDeviceUrl: string;
+    private credentials: Credentials;
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
-    private localDeviceUrl: string;
 
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
@@ -38,7 +48,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         clientId: string = 'default',
         localStorageLocation: string = "./data/localstorage") {
         super();
-        this.resource = new Resource(clientId, credentials);
+
+        this.credentials = credentials;
+        this.client = new Client(clientId);
+        this.resource = new Resource();
+        this.proxemics = new Proxemics();
         this.socket = io(brokerUrl);
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
@@ -57,8 +71,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.storage = window.localStorage;
         }
 
-        if (!this.resource.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
-            this.resource.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
+        if (!this.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
+            this.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
         }
 
         this.feathersClient.configure(feathersAuthClient({ storage: this.storage }));
@@ -73,109 +87,29 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.log(`Reconnected after ${attempt} attempts`);
             }).catch(e => console.error(e));
         });
-
-        //Listening for proxemics events.
-        this.proxemicsService.on('updated', proxemics => {
-            console.log('Proxemics:', proxemics.state);
-            this.devicesService.get(this.instance.device)
-                .then(device => {
-                    const currDevCap = proxemics.state[device.deviceUuid];
-                    let elDist = {
-                        view: device.deviceUuid,
-                        control: device.deviceUuid
-                    } as any;
-                    for (var deviceUuid in proxemics.state) {
-                        if (device.deviceUui !== deviceUuid) {
-                            if (proxemics.state[deviceUuid].view) {
-                                elDist.view = deviceUuid;
-                            }
-                            if (proxemics.state[deviceUuid].control) {
-                                elDist.control = deviceUuid;
-                            }
-                        }
-                    }
-
-                    if (currDevCap.view && !currDevCap.control) {
-                        elDist.view = device.deviceUuid;
-                    }
-
-                    if (currDevCap.view && currDevCap.control &&
-                        elDist.view === device.deviceUuid) {
-                        elDist.view = false;
-                    }
-
-                    Array.from(document.getElementsByClassName("yx-component")).forEach(el => {
-                        if (el instanceof HTMLElement) {
-                            el.style.display = 'block';
-                        }
-                    });
-
-                    if (elDist.view === device.deviceUuid) {
-                        Array.from(document.getElementsByClassName("yx-view")).forEach(el => {
-                            if (el instanceof HTMLElement) {
-                                el.style.display = 'block';
-                            }
-                        });
-                    } else {
-                        Array.from(document.getElementsByClassName("yx-view")).forEach(el => {
-                            if (el instanceof HTMLElement) {
-                                el.style.display = 'none';
-                            }
-                        });
-                    }
-
-                    if (elDist.control === device.deviceUuid) {
-                        Array.from(document.getElementsByClassName("yx-control")).forEach(el => {
-                            if (el instanceof HTMLElement) {
-                                el.style.display = 'block';
-                            }
-                        });
-                    } else {
-                        Array.from(document.getElementsByClassName("yx-control")).forEach(el => {
-                            if (el instanceof HTMLElement) {
-                                el.style.display = 'none';
-                            }
-                        });
-                    }
-                    console.log('Current Device UUID:', device.deviceUuid);
-                    console.log('Element Distribution', elDist);
-                })
-        });
-    }
-
-    private get credentials(): Credentials {
-        return this.resource.credentials;
-    }
-
-    private set credentials(credentials: Credentials) {
-        this.resource.credentials = credentials;
-    }
-
-    private get user(): any {
-        return this.resource.user;
     }
 
     public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.passport.getJWT().then(jwt => {
                 if (jwt) {
-                    this.resource.credentials = new Credentials('jwt', [jwt]);
+                    this.credentials = new Credentials('jwt', [jwt]);
                 }
                 const auth: any = {};
-                switch (this.resource.credentials.type) {
+                switch (this.credentials.type) {
                     case 'yanux':
                         auth['strategy'] = 'yanux';
-                        auth['accessToken'] = this.resource.credentials.values[0];
-                        auth['clientId'] = this.resource.credentials.values[1];
+                        auth['accessToken'] = this.credentials.values[0];
+                        auth['clientId'] = this.credentials.values[1];
                         break;
                     case 'local':
                         auth['strategy'] = 'local';
-                        auth['email'] = this.resource.credentials.values[0];
-                        auth['password'] = this.resource.credentials.values[1];
+                        auth['email'] = this.credentials.values[0];
+                        auth['password'] = this.credentials.values[1];
                         break;
                     case 'jwt':
                         auth['strategy'] = 'jwt';
-                        auth['accessToken'] = this.resource.credentials.values[0];
+                        auth['accessToken'] = this.credentials.values[0];
                 }
                 return auth;
             }).then(auth => {
@@ -189,11 +123,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 }
                 return Promise.all(promises);
             }).then(results => {
-                this.resource.user = results[0];
+                this.user = results[0];
                 if (results[1]) {
                     return this.feathersClient.service('clients').get(results[1]);
                 } else {
-                    return this.feathersClient.service('clients').find({ query: { id: this.resource.clientId } });
+                    return this.feathersClient.service('clients').find({ query: { id: this.client.id } });
                 }
             }).then(results => {
                 const clients = (results as any).data ? (results as any).data : results;
@@ -201,7 +135,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     if (clients.length === 1) {
                         return clients[0];
                     } else if (clients.length === 0) {
-                        return this.feathersClient.service('clients').create({ id: this.resource.clientId });
+                        return this.feathersClient.service('clients').create({ id: this.client.id });
                     } else {
                         reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                     }
@@ -209,22 +143,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     return clients;
                 }
             }).then(client => {
-                this.resource.client = client;
-                return fetch(`${this.localDeviceUrl}/deviceInfo`)
+                this.client.raw = client;
+                return fetch(`${this.localDeviceUrl}/deviceInfo`);
             }).then(response => {
-                return response.json()
+                return response.json();
             }).then(deviceInfo => {
                 return this.devicesService.find({
                     query: {
+                        $limit: 1,
                         deviceUuid: deviceInfo.deviceUuid
                     }
                 });
             }).then(results => {
                 const devices = (results as any).data ? (results as any).data : results;
                 if (devices.length === 1) {
+                    this.device = devices[0];
                     return this.instancesService.create({
-                        user: this.resource.user._id,
-                        client: this.resource.client._id,
+                        user: this.user._id,
+                        client: this.client.raw._id,
                         device: devices[0]._id
                     });
                 } else if (devices.length > 1) {
@@ -236,17 +172,27 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.instance = instance;
                 console.log('Instance:', instance);
                 return this.resourcesService.create({
-                    user: this.resource.user._id,
-                    client: this.resource.client._id
+                    user: this.user._id,
+                    client: this.client.raw._id
+                }).then(resource => resource).catch(err => {
+                    if (!(err instanceof Conflict)) {
+                        reject(err);
+                    }
                 });
-            }).then(resource => {
-                resolve(this.getData())
+            }).then(() => {
+                return this.proxemicsService.create({
+                    user: this.user._id,
+                }).then(proxemics => proxemics).catch(err => {
+                    if (!(err instanceof Conflict)) {
+                        reject(err);
+                    }
+                });
+            }).then(() => {
+                return Promise.all([this.getData(), this.getProxemics()]);
+            }).then(results => {
+                resolve(results[0]);
             }).catch(err => {
-                if (!(err instanceof Conflict)) {
-                    reject(err);
-                } else {
-                    return resolve(this.getData());
-                }
+                reject(err);
             })
         });
     }
@@ -259,8 +205,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return new Promise((resolve, reject) => {
             this.resourcesService.find({
                 query: {
-                    user: this.resource.user._id,
-                    client: this.resource.client._id
+                    $limit: 1,
+                    user: this.user._id,
+                    client: this.client.raw._id
                 }
             }).then(resources => {
                 if ((<Array<any>>resources).length === 1) {
@@ -286,7 +233,25 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public subscribe(subscriberFunction: (data: any, eventType: string) => void): void {
+    private getProxemics(): Promise<Proxemics> {
+        return new Promise((resolve, reject) => {
+            this.proxemicsService.find({
+                query: {
+                    $limit: 1,
+                    user: this.user._id
+                }
+            }).then(proxemics => {
+                if ((<Array<any>>proxemics).length === 1) {
+                    this.proxemics.update((<any>proxemics)[0])
+                    return resolve(this.proxemics);
+                } else {
+                    reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
+                }
+            }).catch(err => reject(err));
+        });
+    }
+
+    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void): void {
         let eventListener = (resource: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
@@ -297,9 +262,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * force me to change the way things are handled on the client-side
              * in order to provide extra security.
              */
-            if (this.resource.id === resource._id
-                && this.resource.client._id === resource.client
-                && this.resource.user._id === resource.user) {
+            if (this.resource.id === resource._id &&
+                this.client.raw._id === resource.client &&
+                this.user._id === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);
             } else {
@@ -308,5 +273,23 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.resourcesService.on('updated', resource => eventListener(resource, 'updated'));
         this.resourcesService.on('patched', resource => eventListener(resource, 'patched'));
+    }
+
+    public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
+        let eventListener = (proxemics: any, eventType: string = 'updated') => {
+            /**
+             * TODO: This should be enforced at the Broker level.
+             * [Read the similar comment on the "subscribeResource" method for an explanation.]
+             */
+            if (this.proxemics.id === proxemics._id &&
+                this.user._id === proxemics.user) {
+                this.proxemics.update(proxemics);
+                subscriberFunction(proxemics.state, eventType);
+            } else {
+                console.error('I\'m getting events that I shouldn\'t have heard about.');
+            }
+        };
+        this.proxemicsService.on('updated', proxemics => eventListener(proxemics, 'updated'));
+        this.proxemicsService.on('patched', proxemics => eventListener(proxemics, 'patched'));
     }
 }

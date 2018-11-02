@@ -1,4 +1,3 @@
-import * as Promise from 'bluebird';
 import Coordinator from "./Coordinator";
 
 export default abstract class AbstractCoordinator implements Coordinator {

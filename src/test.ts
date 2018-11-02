@@ -18,6 +18,6 @@ function test(): void {
         console.log('State:', result);
         return coordinator.setData({ message: "in a bottle" });
     }).then(data => console.log('Data:', data)).catch(error => console.error('Error:', error));
-    coordinator.subscribe(data => console.log('Data Changed:', data));
+    coordinator.subscribeResource(data => console.log('Data Changed:', data));
 }
 test();
