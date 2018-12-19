@@ -7,7 +7,7 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run build && npm run package",
+    "build": "npm run compile && npm run package",
     "compile": "npx tsc",
     "package": "npx webpack",
     "watch": "npm run watch:build",
@@ -24,10 +24,10 @@
   },
   "license": "LGPL-3.0",
   "dependencies": {
-    "@feathersjs/authentication-client": "^1.0.8",
-    "@feathersjs/errors": "^3.3.4",
-    "@feathersjs/feathers": "^3.2.3",
-    "@feathersjs/socketio-client": "^1.1.5",
+    "@feathersjs/authentication-client": "^1.0.9",
+    "@feathersjs/errors": "^3.3.5",
+    "@feathersjs/feathers": "^3.3.0",
+    "@feathersjs/socketio-client": "^1.2.0",
     "@types/feathersjs__authentication-client": "^1.0.4",
     "@types/feathersjs__errors": "^3.2.1",
     "@types/feathersjs__feathers": "^3.1.1",
@@ -43,7 +43,7 @@
     "source-map-loader": "^0.2.4",
     "ts-loader": "^5.3.1",
     "typescript": "^3.2.2",
-    "webpack": "^4.27.1",
+    "webpack": "^4.28.0",
     "webpack-cli": "^3.1.2"
   }
 }
