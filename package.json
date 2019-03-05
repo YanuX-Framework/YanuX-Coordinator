@@ -24,15 +24,15 @@
   },
   "license": "LGPL-3.0",
   "dependencies": {
-    "@feathersjs/authentication-client": "^1.0.9",
-    "@feathersjs/errors": "^3.3.5",
-    "@feathersjs/feathers": "^3.3.0",
-    "@feathersjs/socketio-client": "^1.2.0",
-    "@types/feathersjs__authentication-client": "^1.0.4",
-    "@types/feathersjs__errors": "^3.2.1",
+    "@feathersjs/authentication-client": "^1.0.11",
+    "@feathersjs/errors": "^3.3.6",
+    "@feathersjs/feathers": "^3.3.1",
+    "@feathersjs/socketio-client": "^1.2.1",
+    "@types/feathersjs__authentication-client": "^1.0.5",
+    "@types/feathersjs__errors": "^3.3.1",
     "@types/feathersjs__feathers": "^3.1.1",
-    "@types/feathersjs__socketio-client": "^1.0.1",
-    "@types/isomorphic-fetch": "0.0.34",
+    "@types/feathersjs__socketio-client": "^1.0.2",
+    "@types/isomorphic-fetch": "0.0.35",
     "@types/socket.io-client": "^1.4.32",
     "isomorphic-fetch": "^2.2.1",
     "node-localstorage": "^1.3.1",
@@ -41,9 +41,9 @@
   "devDependencies": {
     "npm-run-all": "^4.1.5",
     "source-map-loader": "^0.2.4",
-    "ts-loader": "^5.3.2",
-    "typescript": "^3.2.2",
-    "webpack": "^4.28.3",
-    "webpack-cli": "^3.1.2"
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.3.3333",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.2.3"
   }
 }
