@@ -16,7 +16,7 @@ function test(): void {
     const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, credentials);
     coordinator.init().then(result => {
         console.log('State:', result);
-        return coordinator.setData({ message: "in a bottle" });
+        return coordinator.setResourceData({ message: "in a bottle" });
     }).then(data => console.log('Data:', data)).catch(error => console.error('Error:', error));
     coordinator.subscribeResource(data => console.log('Data Changed:', data));
 }

@@ -1,4 +1,6 @@
 export default interface Coordinator {
-    getData(): Promise<any>;
-    setData(data: any): Promise<any>;
+    getResourceData(): Promise<any>;
+    setResourceData(data: any): Promise<any>;
+    getProxemicsState(): Promise<any>;
+    getProxemicsState(state: any): Promise<any>;
 }

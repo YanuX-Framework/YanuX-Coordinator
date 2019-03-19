@@ -9,12 +9,12 @@ import Credentials from "./Credentials";
 import Client from "./Client";
 import Resource from "./Resource";
 import Proxemics from "./Proxemics";
+import Instance from "./Proxemics";
 import ClientNameNotUnique from "./errors/ClientNameNotUnique";
 import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 import ProxemicsNotFoundError from "./errors/ProxemicsNotFoundError";
-
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -24,7 +24,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public user: any;
     public client: Client;
     public device: any;
-    public instance: any;
+    public instance: Instance;
+    public instances: Array<any>;
     public resource: Resource;
     public proxemics: Proxemics;
 
@@ -53,6 +54,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.client = new Client(clientId);
         this.resource = new Resource();
         this.proxemics = new Proxemics();
+        this.instances = new Array<any>();
+
         this.socket = io(brokerUrl);
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
@@ -87,6 +90,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.log(`Reconnected after ${attempt} attempts`);
             }).catch(e => console.error(e));
         });
+
+        document.addEventListener("visibilitychange", () => this.setInstanceActiveness(!document.hidden));
     }
 
     public init(): Promise<any> {
@@ -169,7 +174,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
                 }
             }).then(instance => {
-                this.instance = instance;
+                this.instance = new Instance(instance);
                 console.log('Instance:', instance);
                 return this.resourcesService.create({
                     user: this.user._id,
@@ -187,13 +192,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         reject(err);
                     }
                 });
-            }).then(() => {
-                return Promise.all([this.getData(), this.getProxemics()]);
-            }).then(results => {
-                resolve(results[0]);
-            }).catch(err => {
-                reject(err);
-            })
+            }).then(() => this.updateInstanceActiveness()).then(() => {
+                return Promise.all([this.getResourceData(), this.getProxemicsState()]);
+            }).then(results => resolve(results)).catch(err => reject(err))
         });
     }
 
@@ -220,14 +221,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public getData(): Promise<any> {
+    public getResourceData(): Promise<any> {
         return this.getResource().then(resource => resource.data).catch(err => Promise.reject(err));
     }
 
-    public setData(data: any): Promise<any> {
+    public setResourceData(data: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.resourcesService.patch(this.resource.id, { data: data })
                 .then(resource => {
+                    this.resource.update(resource);
                     resolve(resource.data)
                 }).catch(err => reject(err));
         });
@@ -248,6 +250,39 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
                 }
             }).catch(err => reject(err));
+        });
+    }
+
+    public getProxemicsState(): Promise<any> {
+        return this.getProxemics().then(proxemics => proxemics.state).catch(err => Promise.reject(err));
+    }
+
+    public getInstances(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.instancesService.find({
+                query: {
+                    $limit: 1,
+                    user: this.user._id,
+                    client: this.client.raw._id
+                }
+            }).then(instances => {
+                this.instances = instances;
+                return resolve(this.instances);
+            }).catch(err => reject(err));
+        });
+    }
+
+    public updateInstanceActiveness(): Promise<any> {
+        return this.setInstanceActiveness(!document.hidden);
+    }
+
+    public setInstanceActiveness(active: Boolean): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.instancesService.patch(this.instance.id, { active: active })
+                .then(instance => {
+                    this.instance.update(instance);
+                    resolve(instance)
+                }).catch(err => reject(err));
         });
     }
 
