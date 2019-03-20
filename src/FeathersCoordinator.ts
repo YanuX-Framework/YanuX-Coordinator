@@ -9,7 +9,7 @@ import Credentials from "./Credentials";
 import Client from "./Client";
 import Resource from "./Resource";
 import Proxemics from "./Proxemics";
-import Instance from "./Proxemics";
+import Instance from "./Instance";
 import ClientNameNotUnique from "./errors/ClientNameNotUnique";
 import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
@@ -24,10 +24,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public user: any;
     public client: Client;
     public device: any;
-    public instance: Instance;
-    public instances: Array<any>;
     public resource: Resource;
     public proxemics: Proxemics;
+    public instance: Instance;
+    public instances: Array<any>;
+    public activeInstances: Array<any>;
+
 
     private localDeviceUrl: string;
     private credentials: Credentials;
@@ -54,7 +56,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.client = new Client(clientId);
         this.resource = new Resource();
         this.proxemics = new Proxemics();
+        this.instance = new Instance();
         this.instances = new Array<any>();
+        this.activeInstances = new Array<any>();
 
         this.socket = io(brokerUrl);
         this.localDeviceUrl = localDeviceUrl;
@@ -174,7 +178,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
                 }
             }).then(instance => {
-                this.instance = new Instance(instance);
+                this.instance.update(instance);
                 console.log('Instance:', instance);
                 return this.resourcesService.create({
                     user: this.user._id,
@@ -257,17 +261,36 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.getProxemics().then(proxemics => proxemics.state).catch(err => Promise.reject(err));
     }
 
-    public getInstances(): Promise<any> {
+    public nothing(): any {
+        console.log('nothing pppo');
+    }
+
+    public getInstances(extraConditions: any): Promise<any> {
         return new Promise((resolve, reject) => {
+            const query: any = {
+                $populate: 'device',
+                user: this.user._id,
+                client: this.client.raw._id
+            };
+            Object.assign(query, extraConditions);
             this.instancesService.find({
-                query: {
-                    $limit: 1,
-                    user: this.user._id,
-                    client: this.client.raw._id
-                }
+                query
             }).then(instances => {
-                this.instances = instances;
-                return resolve(this.instances);
+                if (!extraConditions) {
+                    this.instances = instances;
+                }
+                return resolve(instances);
+            }).catch(err => reject(err));
+        });
+    }
+
+    public getActiveInstances(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.getInstances({
+                active: true
+            }).then(activeInstances => {
+                this.activeInstances = activeInstances;
+                return resolve(this.activeInstances)
             }).catch(err => reject(err));
         });
     }
@@ -326,5 +349,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.proxemicsService.on('updated', proxemics => eventListener(proxemics, 'updated'));
         this.proxemicsService.on('patched', proxemics => eventListener(proxemics, 'patched'));
+    }
+
+    public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
+        let eventListener = (instance: any, eventType: string = 'updated') => {
+            /**
+             * TODO: This should be enforced at the Broker level.
+             * [Read the similar comment on the "subscribeResource" method for an explanation.]
+             */
+            if (this.user._id === instance.user && this.client.raw._id === instance.client) {
+                if (this.instance.id === instance._id) {
+                    this.instance.update(instance);
+                }
+                subscriberFunction(instance, eventType);
+            } else {
+                console.error('I\'m getting events that I shouldn\'t have heard about.');
+            }
+        };
+        this.instancesService.on('updated', instance => eventListener(instance, 'updated'));
+        this.instancesService.on('patched', instance => eventListener(instance, 'patched'));
     }
 }
