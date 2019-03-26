@@ -160,6 +160,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.devicesService.find({
                     query: {
                         $limit: 1,
+                        user: this.user._id,
                         deviceUuid: deviceInfo.deviceUuid
                     }
                 });
