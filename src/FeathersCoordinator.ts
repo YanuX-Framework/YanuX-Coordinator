@@ -5,8 +5,8 @@ import socketio from "@feathersjs/socketio-client";
 import * as fetch from 'isomorphic-fetch';
 import * as io from "socket.io-client";
 import AbstractCoordinator from "./AbstractCoordinator";
-import Credentials from "./Credentials";
 import Client from "./Client";
+import Credentials from "./Credentials";
 import Resource from "./Resource";
 import Proxemics from "./Proxemics";
 import Instance from "./Instance";
@@ -44,16 +44,16 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     constructor(brokerUrl: string,
         localDeviceUrl: string,
+        clientId: string = 'default',
         credentials: Credentials = null,
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
         onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
-        clientId: string = 'default',
         localStorageLocation: string = "./data/localstorage") {
         super();
 
-        this.credentials = credentials;
         this.client = new Client(clientId);
+        this.credentials = credentials;
         this.resource = new Resource();
         this.proxemics = new Proxemics();
         this.instance = new Instance();
