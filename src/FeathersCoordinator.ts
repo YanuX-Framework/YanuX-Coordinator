@@ -40,6 +40,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private storage: Storage;
 
     constructor(brokerUrl: string,
@@ -69,6 +70,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.instancesService = this.feathersClient.service('instances');
         this.resourcesService = this.feathersClient.service('resources');
         this.proxemicsService = this.feathersClient.service('proxemics');
+        this.eventsService = this.feathersClient.service('events');
 
         if ((typeof window === "undefined" || window === null) ||
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
@@ -262,10 +264,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.getProxemics().then(proxemics => proxemics.state).catch(err => Promise.reject(err));
     }
 
-    public nothing(): any {
-        console.log('nothing pppo');
-    }
-
     public getInstances(extraConditions: any): Promise<any> {
         return new Promise((resolve, reject) => {
             const query: any = {
@@ -308,6 +306,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     resolve(instance)
                 }).catch(err => reject(err));
         });
+    }
+
+    public emitEvent(value: any, name: string): Promise<any> {
+        return this.eventsService.create({ value, name });
     }
 
     public subscribeResource(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -369,5 +371,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.instancesService.on('updated', instance => eventListener(instance, 'updated'));
         this.instancesService.on('patched', instance => eventListener(instance, 'patched'));
+    }
+
+    public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {
+        let eventListener = (event: any, eventType: string = 'created') => {
+            subscriberFunction(event, eventType);
+        };
+        this.eventsService.on('created', event => eventListener(event, 'created'));
     }
 }
