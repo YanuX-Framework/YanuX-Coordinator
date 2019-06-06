@@ -4,3 +4,5 @@ declare module 'node-localstorage' {
         new(location: string, quota: number): Storage;
     };
 }
+
+declare module 'node-rules';

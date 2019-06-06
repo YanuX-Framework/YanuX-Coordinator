@@ -28,22 +28,25 @@
     "@feathersjs/errors": "^3.3.6",
     "@feathersjs/feathers": "^3.3.1",
     "@feathersjs/socketio-client": "^1.2.1",
+    "isomorphic-fetch": "^2.2.1",
+    "lodash": "^4.17.11",
+    "node-localstorage": "^1.3.1",
+    "node-rules": "^4.0.2",
+    "socket.io-client": "^2.2.0"
+  },
+  "devDependencies": {
     "@types/feathersjs__authentication-client": "^1.0.5",
     "@types/feathersjs__errors": "^3.3.1",
     "@types/feathersjs__feathers": "^3.1.5",
     "@types/feathersjs__socketio-client": "^1.0.3",
     "@types/isomorphic-fetch": "0.0.35",
+    "@types/lodash": "^4.14.134",
     "@types/socket.io-client": "^1.4.32",
-    "isomorphic-fetch": "^2.2.1",
-    "node-localstorage": "^1.3.1",
-    "socket.io-client": "^2.2.0"
-  },
-  "devDependencies": {
     "npm-run-all": "^4.1.5",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.0.2",
     "typescript": "^3.5.1",
-    "webpack": "^4.32.2",
+    "webpack": "^4.33.0",
     "webpack-cli": "^3.3.2"
   }
 }

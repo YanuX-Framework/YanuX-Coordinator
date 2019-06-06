@@ -11,12 +11,15 @@
 
 import Coordinator from "./Coordinator";
 import AbstractCoordinator from "./AbstractCoordinator";
-import Credentials from "./Credentials";
 import FeathersCoordinator from "./FeathersCoordinator";
+import Credentials from "./Credentials";
+import ComponentsRuleEngine from "./ComponentsRuleEngine";
+
 
 export {
     Coordinator,
     AbstractCoordinator,
     FeathersCoordinator,
-    Credentials
+    Credentials,
+    ComponentsRuleEngine
 };
