@@ -39,7 +39,7 @@ function testComponentsRuleEngine(): void {
     const instances = [
         {
             "_id": new ObjectId("5cb4c511eb479c2e46a7a20d"),
-            "active": false,
+            "active": true,
             "brokerName": "YanuX-Broker",
             "user": new ObjectId("5cb4c3b2eb479c2e46a785d7"),
             "client": new ObjectId("5cb4c50feb479c2e46a7a1e2"),
@@ -94,15 +94,19 @@ function testComponentsRuleEngine(): void {
         "user": "5cb4c3b2eb479c2e46a785d7",
         "state": {
             "3d42affa-3685-47f2-97d0-bd4ff46de5c6": {
-                "view": true,
-                "control": true,
-                "display": {
-                    "resolution": [1920, 1080],
+                "display": [{
+                    "resolution": [1280, 1080],
                     "pixelDensity": 96,
                     "bitDepth": 24,
                     "size": [481, 271],
                     "refreshRate": 60
-                },
+                }, {
+                    "resolution": [1024, 1080],
+                    "pixelDensity": 96,
+                    "bitDepth": 24,
+                    "size": [481, 271],
+                    "refreshRate": 60
+                }],
                 "speakers": {
                     "type": "loudspeaker",
                     "channels": 2,
@@ -117,21 +121,6 @@ function testComponentsRuleEngine(): void {
                 "sensors": [] as any[]
             },
             "9ab8e750-bc1e-11e8-a769-3f2e91eebf08": {
-                /*"display": {
-                    "resolution": [2248, 1080],
-                    "pixelDensity": 402,
-                    "size": [154.9, 74.8],
-                    "refreshRate": 60
-                },
-                "speakers": {
-                    "type": "loudspeaker",
-                    "channels": 1,
-                },
-                "camera": {
-                    "resolution": [4032, 3024],
-                },
-                "input": ["keyboard", "mouse"],
-                "sensors": []*/
                 "display": {
                     "resolution": [1920, 1080],
                     "pixelDensity": 96,
@@ -141,7 +130,7 @@ function testComponentsRuleEngine(): void {
                 },
                 "speakers": {
                     "type": "loudspeaker",
-                    "channels": 1,
+                    "channels": 4,
                 },
                 "camera": {
                     "resolution": [1280, 720],
@@ -193,7 +182,7 @@ function testComponentsRuleEngine(): void {
                     {
                         "operator": ">=",
                         "value": 2,
-                        "enforce": false
+                        "enforce": true
                     },
                     {
                         "operator": ">=",

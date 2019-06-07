@@ -100,32 +100,44 @@ export default class ComponentsRuleEngine {
             consequence: function (R: any) {
                 this.capabilities = {};
                 const expandCapabilities = (([deviceUuid, capabilities]: [string, any]): void => {
-                    if (capabilities.display.pixelDensity && !capabilities.display.pixelRatio) {
-                        capabilities.display.pixelRatio = capabilities.display.pixelDensity / 150;
-                        capabilities.display.pixelRatio = Math.max(1, capabilities.display.pixelRatio);
-                        expandCapabilities([deviceUuid, capabilities]);
+                    const expandCapability = (capability: any): void => {
+                        if (capability.pixelDensity && !capability.pixelRatio) {
+                            capability.pixelRatio = capability.pixelDensity / 150;
+                            capability.pixelRatio = Math.max(1, capability.pixelRatio);
+                            expandCapability([deviceUuid, capabilities]);
+                        }
+                        if (!capability.pixelDensity && capability.pixelRatio) {
+                            capability.pixelDensity = capability.pixelRatio === 1 ? 96 : capability.pixelRatio * 150;
+                            expandCapability([deviceUuid, capabilities]);
+                        }
+                        if (!capability.pixelDensity && !capability.pixelRatio &&
+                            capability.resolution && capability.size) {
+                            const diagonalResolution = Math.sqrt(Math.pow(capability.resolution[0], 2) + Math.pow(capability.resolution[1], 2))
+                            const diagonalSize = Math.sqrt(Math.pow(capability.size[0], 2) + Math.pow(capability.size[1], 2))
+                            capability.pixelDensity = diagonalResolution / (diagonalSize / 25.4);
+                            expandCapability([deviceUuid, capabilities]);
+                        }
+                        if (capability.pixelDensity && capability.resolution && !capability.size) {
+                            const diagonalResolution = Math.sqrt(Math.pow(capability.resolution[0], 2) + Math.pow(capability.resolution[1], 2))
+                            const diagonalSize = diagonalResolution / capability.pixelDensity;
+                            const aspectRatio = capability.resolution[0] / capability.resolution[1];
+                            const height = (diagonalSize * 25.4) / Math.sqrt(Math.pow(aspectRatio, 2) + 1);
+                            const width = aspectRatio * height;
+                            capability.size = [width, height];
+                            expandCapability([deviceUuid, capabilities]);
+                        }
+                        if (capability.resolution && capability.pixelRatio && !capability.virtualResolution) {
+                            capability.virtualResolution = [];
+                            capability.resolution.forEach((d: number, i: number): any =>
+                                capability.virtualResolution[i] = d / capability.pixelRatio);
+                            expandCapability([deviceUuid, capabilities]);
+                        }
+                        return capability;
                     }
-                    if (!capabilities.display.pixelDensity && capabilities.display.pixelRatio) {
-                        capabilities.display.pixelDensity = capabilities.display.pixelRatio === 1 ? 96 : capabilities.display.pixelRatio * 150;
-                        expandCapabilities([deviceUuid, capabilities]);
-                    }
-                    if (!capabilities.display.pixelDensity && !capabilities.display.pixelRatio &&
-                        capabilities.display.resolution && capabilities.display.size) {
-                        const diagonalResolution = Math.sqrt(Math.pow(capabilities.display.resolution[0], 2) + Math.pow(capabilities.display.resolution[1], 2))
-                        const diagonalSize = Math.sqrt(Math.pow(capabilities.display.size[0], 2) + Math.pow(capabilities.display.size[1], 2))
-                        capabilities.display.pixelDensity = diagonalResolution / (diagonalSize / 25.4);
-                        expandCapabilities([deviceUuid, capabilities]);
-                    }
-                    if (capabilities.display.pixelDensity && capabilities.display.resolution && !capabilities.display.size) {
-                        const diagonalResolution = Math.sqrt(Math.pow(capabilities.display.resolution[0], 2) + Math.pow(capabilities.display.resolution[1], 2))
-                        const diagonalSize = diagonalResolution / capabilities.display.pixelDensity;
-                        const aspectRatio = capabilities.display.resolution[0] / capabilities.display.resolution[1];
-                        const height = (diagonalSize * 25.4) / Math.sqrt(Math.pow(aspectRatio, 2) + 1);
-                        const width = aspectRatio * height;
-                        capabilities.display.size = [width, height];
-                        expandCapabilities([deviceUuid, capabilities]);
-                    }
-                    this.capabilities[deviceUuid] = capabilities;
+                    this.capabilities[deviceUuid] = capabilities
+                    Object.entries(([type, capability]: [string, any]) => {
+                        this.capabilities[deviceUuid][type] = _.flatten([capability]).map(expandCapability)
+                    });
                 });
                 Object.entries(this.proxemics).forEach(expandCapabilities);
                 this.localDeviceCapabilities = this.capabilities[this.localDeviceUuid];
@@ -142,19 +154,15 @@ export default class ComponentsRuleEngine {
             consequence: function (R: any) {
                 const matchComponents = (component: string, componentRestrictions: any, deviceCapabilities: any, strictMatching: boolean = true): boolean => {
                     const matchCondition = (condition: any, capability: any): boolean => {
-                        const matchConditionAux = (condition: any, operator: string = 'AND'): boolean => {
-                            if (condition === true && !_.isNull(this.localDeviceCapabilities.display)) {
-                                console.log('>>> Condition True:', condition, 'Capability:', capability);
-                                return true;
-                            }
+                        const matchConditionAux = (condition: any, operator: string = 'AND'): any => {
                             if (_.isArray(condition)) {
                                 console.log('>>> Condition Array:', condition, 'Capability:', capability, 'Operator:', operator);
                                 const checkEachCondition = (c: any): boolean => matchConditionAux(c, operator);
                                 switch (operator) {
                                     case 'OR': return condition.some(checkEachCondition);
-                                    case 'NOT': return !condition.every(checkEachCondition)
+                                    case 'NOT': return !condition.every(checkEachCondition);
                                     case 'AND':
-                                    default: return condition.every(checkEachCondition)
+                                    default: return condition.every(checkEachCondition);
                                 }
                             }
                             if (_.isObjectLike(condition.values) && _.isString(condition.operator)) {
@@ -210,22 +218,29 @@ export default class ComponentsRuleEngine {
                                     case 'OR': return Object.entries(condition).some(processConditionEntries);
                                     case 'AND':
                                     case 'NOT':
-                                    default:
-                                        return Object.entries(condition).every(processConditionEntries);
+                                    default: return Object.entries(condition).every(processConditionEntries);
                                 }
                             }
                             if (_.isArray(capability)) {
                                 console.log('>>> Condition - Match Capability Array:', condition, 'Capability:', capability, 'Operator:', operator);
                                 return capability.includes(condition);
                             }
-                            return false;
+                            if (condition == capability || (condition === true && (!_.isUndefined(capability) || !_.isNull(capability)))) {
+                                return true;
+                            } else {
+                                return false;
+                            }
                         }
                         return matchConditionAux(condition);
                     }
                     console.log('> Component:', component);
                     return Object.entries(componentRestrictions).every(([type, condition]: [string, any]): boolean => {
                         console.log('>> Restrictions:', type);
-                        return matchCondition(condition, deviceCapabilities[type])
+                        const capability = deviceCapabilities[type];
+                        if (_.isArray(capability) && capability.some(c => !_.isString(c))) {
+                            return capability.some(c => matchCondition(condition, c));
+                        }
+                        return matchCondition(condition, capability);
                     });
                 }
                 Object.entries(this.restrictions).forEach(([component, componentRestrictions]) => {
