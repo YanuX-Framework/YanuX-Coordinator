@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import feathersAuthClient from "@feathersjs/authentication-client";
 import { Conflict } from "@feathersjs/errors";
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads, Paginated } from "@feathersjs/feathers";
@@ -344,8 +345,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             if (this.proxemics.id === proxemics._id &&
                 this.user._id === proxemics.user) {
-                this.proxemics.update(proxemics);
-                subscriberFunction(proxemics.state, eventType);
+                if (!_.isEqual(proxemics.state, this.proxemics.state)) {
+                    this.proxemics.update(proxemics);
+                    subscriberFunction(proxemics.state, eventType);
+                }
             } else {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }

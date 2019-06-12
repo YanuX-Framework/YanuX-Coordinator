@@ -82,8 +82,7 @@ export default class ComponentsRuleEngine {
             name: 'Use the default configuration when the local device is not present or its instance is not active',
             priority: 1,
             condition: function (R: any) {
-                R.when(!this.proxemics[this.localDeviceUuid]
-                    || !this.activeInstances.some((i: any) => i.device.deviceUuid === this.localDeviceUuid), this);
+                R.when(!this.proxemics[this.localDeviceUuid]);
             },
             consequence: function (R: any) {
                 this.componentsConfig = this.defaultComponentsConfig;
@@ -99,25 +98,24 @@ export default class ComponentsRuleEngine {
             },
             consequence: function (R: any) {
                 this.capabilities = {};
-                const expandCapabilities = (([deviceUuid, capabilities]: [string, any]): void => {
-                    const expandCapability = (capability: any): void => {
-                        if (capability.pixelDensity && !capability.pixelRatio) {
+                const expandCapabilities = (([deviceUuid, capabilities]: [string, any]): Array<any> => {
+                    const expandCapability = (capability: any): any => {
+                        if (!capability.orientiation) {
+                            capability.orientiation = 'landscape';
+                        } else if (capability.pixelDensity && !capability.pixelRatio) {
                             capability.pixelRatio = capability.pixelDensity / 150;
                             capability.pixelRatio = Math.max(1, capability.pixelRatio);
                             expandCapability([deviceUuid, capabilities]);
-                        }
-                        if (!capability.pixelDensity && capability.pixelRatio) {
+                        } else if (!capability.pixelDensity && capability.pixelRatio) {
                             capability.pixelDensity = capability.pixelRatio === 1 ? 96 : capability.pixelRatio * 150;
                             expandCapability([deviceUuid, capabilities]);
-                        }
-                        if (!capability.pixelDensity && !capability.pixelRatio &&
+                        } else if (!capability.pixelDensity && !capability.pixelRatio &&
                             capability.resolution && capability.size) {
                             const diagonalResolution = Math.sqrt(Math.pow(capability.resolution[0], 2) + Math.pow(capability.resolution[1], 2))
                             const diagonalSize = Math.sqrt(Math.pow(capability.size[0], 2) + Math.pow(capability.size[1], 2))
                             capability.pixelDensity = diagonalResolution / (diagonalSize / 25.4);
                             expandCapability([deviceUuid, capabilities]);
-                        }
-                        if (capability.pixelDensity && capability.resolution && !capability.size) {
+                        } else if (capability.pixelDensity && capability.resolution && !capability.size) {
                             const diagonalResolution = Math.sqrt(Math.pow(capability.resolution[0], 2) + Math.pow(capability.resolution[1], 2))
                             const diagonalSize = diagonalResolution / capability.pixelDensity;
                             const aspectRatio = capability.resolution[0] / capability.resolution[1];
@@ -125,8 +123,7 @@ export default class ComponentsRuleEngine {
                             const width = aspectRatio * height;
                             capability.size = [width, height];
                             expandCapability([deviceUuid, capabilities]);
-                        }
-                        if (capability.resolution && capability.pixelRatio && !capability.virtualResolution) {
+                        } else if (capability.resolution && capability.pixelRatio && !capability.virtualResolution) {
                             capability.virtualResolution = [];
                             capability.resolution.forEach((d: number, i: number): any =>
                                 capability.virtualResolution[i] = d / capability.pixelRatio);
@@ -138,6 +135,7 @@ export default class ComponentsRuleEngine {
                     Object.entries(([type, capability]: [string, any]) => {
                         this.capabilities[deviceUuid][type] = _.flatten([capability]).map(expandCapability)
                     });
+                    return this.capabilities;
                 });
                 Object.entries(this.proxemics).forEach(expandCapabilities);
                 this.localDeviceCapabilities = this.capabilities[this.localDeviceUuid];
@@ -153,35 +151,48 @@ export default class ComponentsRuleEngine {
             priority: 0,
             consequence: function (R: any) {
                 const matchComponents = (component: string, componentRestrictions: any, deviceCapabilities: any, strictMatching: boolean = true): boolean => {
+                    const fallbackCheck = (enforce: boolean = true): boolean => {
+                        let fallback = false;
+                        if (enforce === false && strictMatching) {
+                            fallback = !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
+                                if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
+                                    return matchComponents(component, componentRestrictions, this.capabilities[d], false);
+                                } else {
+                                    return false;
+                                }
+                            });
+                            console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
+                        }
+                        return fallback;
+                    };
                     const matchCondition = (condition: any, capability: any): boolean => {
-                        const matchConditionAux = (condition: any, operator: string = 'AND'): any => {
+                        const matchConditionAux = (condition: any, operator: string = 'AND', enforce: boolean = true): any => {
                             if (_.isArray(condition)) {
                                 console.log('>>> Condition Array:', condition, 'Capability:', capability, 'Operator:', operator);
                                 const checkEachCondition = (c: any): boolean => matchConditionAux(c, operator);
+                                const fallback = fallbackCheck(enforce);
                                 switch (operator) {
-                                    case 'OR': return condition.some(checkEachCondition);
-                                    case 'NOT': return !condition.every(checkEachCondition);
+                                    case 'OR': return fallback || condition.some(checkEachCondition);
+                                    case 'NOT': return fallback || !condition.every(checkEachCondition);
                                     case 'AND':
-                                    default: return condition.every(checkEachCondition);
+                                    default: return fallback || condition.every(checkEachCondition);
                                 }
                             }
-                            if (_.isObjectLike(condition.values) && _.isString(condition.operator)) {
-                                console.log('>>> Condition - Values Array & Operator:', condition, 'Capability:', capability, 'Operator:', operator);
-                                return matchConditionAux(_.flatten([condition.values]), condition.operator);
+                            if (!_.isUndefined(condition.values) || !_.isUndefined(condition.value)) {
+                                if (_.isUndefined(condition.operator)) {
+                                    condition.operator = 'AND';
+                                }
+                                if (_.isString(condition.operator)) {
+                                    console.log('>>> Condition - Values Array & Operator:', condition, 'Capability:', capability, 'Operator:', operator);
+                                    return matchConditionAux(_.flatten([condition.values || condition.value]), condition.operator, condition.enforce);
+                                }
                             }
                             if (_.isObjectLike(condition) && _.isString(operator)) {
                                 console.log('>>> Condition - Object Operator:', condition, 'Capability:', capability, 'Operator:', operator);
                                 const processConditionEntries = ([entryKey, entryValue]: [string, any]): boolean => {
                                     const capabilityValue = _.flattenDeep([capability[entryKey]]);
                                     const conditionValue = _.flattenDeep([entryValue.value]);
-                                    const enforce = entryValue.enforce === undefined ? true : entryValue.enforce;
-                                    let fallback = false;
-                                    if (enforce === false && strictMatching) {
-                                        fallback = !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some(d => {
-                                            return matchComponents(component, componentRestrictions, this.capabilities[d], false);
-                                        });
-                                        console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
-                                    }
+                                    const fallback = fallbackCheck(entryValue.enforce)
                                     console.log('>>>>', entryValue.operator, ':');
                                     switch (entryValue.operator) {
                                         case '=':
