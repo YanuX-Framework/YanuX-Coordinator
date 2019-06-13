@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import feathersAuthClient from "@feathersjs/authentication-client";
 import { Conflict } from "@feathersjs/errors";
-import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads, Paginated } from "@feathersjs/feathers";
+import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from "@feathersjs/feathers";
 import socketio from "@feathersjs/socketio-client";
 import * as fetch from 'isomorphic-fetch';
 import * as io from "socket.io-client";
@@ -92,12 +92,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
         //Re-initialize on reconnect
         const feathersSocketClient: SocketIOClient.Socket = this.feathersClient as any;
-        feathersSocketClient.io.on('reconnect', (attempt: any) => {
+        feathersSocketClient.io.on('reconnect', (attempt: number) => {
             this.init().then(resource => {
                 console.log(`Reconnected after ${attempt} attempts`);
             }).catch(e => console.error(e));
         });
-
+        /* TODO:
+         * Perhaps I should deal with ALL/MOST of the Socket.io events!
+         * https://socket.io/docs/client-api/#Event-%E2%80%98connect-error%E2%80%99
+         */
+        feathersSocketClient.io.on('connect_error', (error: any) => {
+            console.error('Connection Error:', error);
+        })
         document.addEventListener("visibilitychange", () => this.setInstanceActiveness(!document.hidden));
     }
 
