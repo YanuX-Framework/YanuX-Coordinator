@@ -138,8 +138,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.feathersClient.authenticate(auth);
             }).then(response => {
                 return Promise.all([
-                    this.feathersClient.service('users').get(response.user._id || response.authentication.payload.user._id),
-                    this.feathersClient.service('clients').get(response.client._id || response.authentication.payload.client._id)
+                    this.feathersClient.service('users').get(response.user ? response.user._id : response.authentication.payload.user._id),
+                    this.feathersClient.service('clients').get(response.client ? response.client._id : response.authentication.payload.client._id)
                 ]);
             }).then(results => {
                 this.user = results[0];
