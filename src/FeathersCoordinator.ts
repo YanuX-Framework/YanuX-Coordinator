@@ -1,10 +1,12 @@
-import * as _ from "lodash";
+import _ from "lodash";
 import feathersAuthClient from "@feathersjs/authentication-client";
+import { StorageWrapper } from "@feathersjs/authentication-client/lib/storage";
+
 import { Conflict } from "@feathersjs/errors";
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from "@feathersjs/feathers";
 import socketio from "@feathersjs/socketio-client";
-import * as fetch from 'isomorphic-fetch';
-import * as io from "socket.io-client";
+import fetch from 'isomorphic-fetch';
+import io from "socket.io-client";
 import AbstractCoordinator from "./AbstractCoordinator";
 import Client from "./Client";
 import Credentials from "./Credentials";
@@ -31,7 +33,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public instances: Array<any>;
     public activeInstances: Array<any>;
 
-
     private localDeviceUrl: string;
     private credentials: Credentials;
     private socket: SocketIOClient.Socket;
@@ -42,6 +43,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+
     private storage: Storage;
 
     constructor(brokerUrl: string,
@@ -85,7 +87,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
         }
 
-        this.feathersClient.configure(feathersAuthClient({ storage: this.storage }));
+        this.feathersClient.configure(feathersAuthClient({ storage: new StorageWrapper(this.storage) }));
         this.feathersClient.on('authenticated', onAuthenticated ? onAuthenticated : FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'));
         this.feathersClient.on('logout', onLogout ? onLogout : FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'));
         this.feathersClient.on('reauthentication-error', onReAuthenticationError ? onReAuthenticationError : FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'));
@@ -104,12 +106,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         feathersSocketClient.io.on('connect_error', (error: any) => {
             console.error('Connection Error:', error);
         })
-        document.addEventListener("visibilitychange", () => this.setInstanceActiveness(!document.hidden));
+        if (typeof document !== 'undefined') {
+            document.addEventListener("visibilitychange", () => this.setInstanceActiveness(!document.hidden));
+        }
     }
 
     public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.feathersClient.passport.getJWT().then(jwt => {
+            this.feathersClient.authentication.getAccessToken().then(jwt => {
                 if (jwt) {
                     this.credentials = new Credentials('jwt', [jwt]);
                 }
@@ -133,13 +137,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(auth => {
                 return this.feathersClient.authenticate(auth);
             }).then(response => {
-                return this.feathersClient.passport.verifyJWT(response.accessToken);
-            }).then(payload => {
-                const promises = [this.feathersClient.service('users').get(payload.userId)]
-                if (payload.clientId) {
-                    promises.push(this.feathersClient.service('clients').get(payload.clientId));
-                }
-                return Promise.all(promises);
+                return Promise.all([
+                    this.feathersClient.service('users').get(response.user._id || response.authentication.payload.user._id),
+                    this.feathersClient.service('clients').get(response.client._id || response.authentication.payload.client._id)
+                ]);
             }).then(results => {
                 this.user = results[0];
                 if (results[1]) {

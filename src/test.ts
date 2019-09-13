@@ -10,12 +10,12 @@ function testFeathersCoordinator(): void {
     console.log('Testing FeathersCoordinator');
     const brokerUrl: string = "http://localhost:3002";
     const localDeviceUrl: string = "http://localhost:3003";
-    const clientId = "yanux-ips-desktop-client";
+    const clientId = "yanux-desktop-client";
     const credentials: Credentials = new Credentials("yanux", [
-        "tZ0RxsvLgAe6KGhMAZIV8wP0VZRJSKzY9OFBcErLSHlIUdIuNyMFvqIZDuCKQXidqgTYc7GZMMSHX8HZBnF6a6sLMDtNdnfGyDGErrKX0w9u0i2Qc0xtYzfVLzBKezlpoxUqKaaY1hQWrdfcDyiq96sd0qyP9uRZlNyKtx8jMSWuAOcZKbi9cZYLjdeBcS7gyvS0NSRC56HodQYTQglc2yWLNqjHPDs6or2tjrNCRjb7ofyBZeVVgk031mPyr7uI",
+        "FQFBTOgSDUl0wt9x5MAv2nDDTlS3ofNDzEkx0U76mne3riES7bDj9odXJq3pZ8fmZ6QF1XnNGMGurS9Fsea83i24cGF3yaJ9tdhfIE47lVoAzXSHdtd7pBp1PtKzkPQrzR0C3H7TQuzEA67E1vpqfwnsUaqJPRLRwAVoP6Z7RyGdgb5f8yHMX1T6cbXQTFLi5LRekKVfRFSS5OSorYeAYFb9QOLHMxtjXfORS0Lx6AIh2d0TsoSQ6M0wfdZ9EN6v",
         clientId
     ]);
-    //const credentials: Credentials = new Credentials("local", ["test_user_0@yanux.org", "topsecret"]);
+    // const credentials: Credentials = new Credentials("local", ["peter@yanux.org", "topsecret"]);
     const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials);
     coordinator.init().then(result => {
         console.log('State:', result);
@@ -201,7 +201,7 @@ function testComponentsRuleEngine(): void {
 
 function test(): void {
     console.log('Running tests')
-    //testFeathersCoordinator();
-    testComponentsRuleEngine();
+    testFeathersCoordinator();
+    //testComponentsRuleEngine();
 }
 test();
