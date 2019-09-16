@@ -1,6 +1,7 @@
 import _ from "lodash";
 import feathersAuthClient from "@feathersjs/authentication-client";
 import { StorageWrapper } from "@feathersjs/authentication-client/lib/storage";
+import jsrsasign from "jsrsasign";
 
 import { Conflict } from "@feathersjs/errors";
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from "@feathersjs/feathers";
@@ -18,6 +19,7 @@ import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
 import ResourceNotFound from "./errors/ResourceNotFoundError";
 import ProxemicsNotFoundError from "./errors/ProxemicsNotFoundError";
+import InvalidBrokerJwtError from "./errors/InvalidBrokerJwtError";
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -44,12 +46,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
+    private brokerPublicKey: string;
     private storage: Storage;
 
     constructor(brokerUrl: string,
         localDeviceUrl: string,
         clientId: string = 'default',
         credentials: Credentials = null,
+        brokerPublicKey: string = null,
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
         onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
@@ -68,6 +72,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket));
+
+        this.brokerPublicKey = brokerPublicKey;
 
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
@@ -137,6 +143,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(auth => {
                 return this.feathersClient.authenticate(auth);
             }).then(response => {
+                if (this.brokerPublicKey) {
+                    const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split(".")[0]));
+                    const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, this.brokerPublicKey, { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] });
+                    if (!isJwtValid) {
+                        throw new InvalidBrokerJwtError('The JWT is not valid.');
+                    }
+                }
                 return Promise.all([
                     this.feathersClient.service('users').get(response.user ? response.user._id : response.authentication.payload.user._id),
                     this.feathersClient.service('clients').get(response.client ? response.client._id : response.authentication.payload.client._id)

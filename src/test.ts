@@ -1,3 +1,4 @@
+import fs from "fs";
 import {
     Credentials,
     FeathersCoordinator,
@@ -16,7 +17,9 @@ function testFeathersCoordinator(): void {
         clientId
     ]);
     // const credentials: Credentials = new Credentials("local", ["peter@yanux.org", "topsecret"]);
-    const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials);
+    const brokerPublicKey : string = fs.readFileSync('./keys/public.pem', { encoding: 'utf8' });
+    console.log('Loaded the following broker public key:\n'+brokerPublicKey);
+    const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials, brokerPublicKey);
     coordinator.init().then(result => {
         console.log('State:', result);
         return coordinator.setResourceData({ message: "in a bottle" });
