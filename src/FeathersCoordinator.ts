@@ -120,7 +120,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.authentication.getAccessToken().then(jwt => {
-                if (jwt) {
+                const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
+                if (jwtHeader) {
                     this.credentials = new Credentials('jwt', [jwt]);
                 }
                 const auth: any = {};
