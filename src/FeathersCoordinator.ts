@@ -68,7 +68,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.instances = new Array<any>();
         this.activeInstances = new Array<any>();
 
-        this.socket = io(brokerUrl);
+        this.socket = io(brokerUrl, {
+            transports: ['websocket'],
+            forceNew: true
+        });
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket));

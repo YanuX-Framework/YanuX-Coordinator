@@ -1,5 +1,5 @@
-import * as _ from "lodash";
-import * as RuleEngine from 'node-rules';
+import _ from "lodash";
+import RuleEngine from 'node-rules';
 
 export default class ComponentsRuleEngine {
     private _localDeviceUuid: string;
