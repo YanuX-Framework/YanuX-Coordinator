@@ -74,7 +74,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
-        this.feathersClient.configure(socketio(this.socket));
+        this.feathersClient.configure(socketio(this.socket, { timeout: 5000 }));
 
         this.brokerPublicKey = brokerPublicKey;
 
@@ -123,9 +123,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.authentication.getAccessToken().then(jwt => {
-                const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
-                if (jwtHeader) {
-                    this.credentials = new Credentials('jwt', [jwt]);
+                if (jwt) {
+                    const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
+                    if (jwtHeader) {
+                        this.credentials = new Credentials('jwt', [jwt]);
+                    }
                 }
                 const auth: any = {};
                 switch (this.credentials.type) {
@@ -142,6 +144,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     case 'jwt':
                         auth['strategy'] = 'jwt';
                         auth['accessToken'] = this.credentials.values[0];
+                        break;
                 }
                 return auth;
             }).then(auth => {
@@ -320,7 +323,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public updateInstanceActiveness(): Promise<any> {
-        return this.setInstanceActiveness(!document.hidden);
+        if (typeof document !== 'undefined') {
+            return this.setInstanceActiveness(!document.hidden);
+        } else {
+            return Promise.resolve();
+        }
     }
 
     public setInstanceActiveness(active: Boolean): Promise<any> {
