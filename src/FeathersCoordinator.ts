@@ -178,9 +178,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     } else {
                         reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                     }
-                } else {
-                    return clients;
-                }
+                } else { return clients; }
             }).then(client => {
                 this.client.raw = client;
                 return fetch(`${this.localDeviceUrl}/deviceInfo`);
@@ -233,10 +231,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public logout() {
-        this.feathersClient.logout();
-    }
-
+    public logout() { this.feathersClient.logout(); }
+    
+    public isConnected() : boolean { return this.socket.connected; }
+    
     private getResource(): Promise<Resource> {
         return new Promise((resolve, reject) => {
             this.resourcesService.find({
