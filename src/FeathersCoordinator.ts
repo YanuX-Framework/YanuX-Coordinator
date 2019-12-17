@@ -49,6 +49,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private brokerPublicKey: string;
     private storage: Storage;
 
+    private subscribeReconnectsFunction: (state: any, proxemics: any) => void;
+
     constructor(brokerUrl: string,
         localDeviceUrl: string,
         clientId: string = 'default',
@@ -106,6 +108,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         feathersSocketClient.io.on('reconnect', (attempt: number) => {
             this.init().then(resource => {
                 console.log(`Reconnected after ${attempt} attempts`);
+                this.subscribeReconnectsFunction(resource[0], resource[1]);
             }).catch(e => console.error(e));
         });
         /* TODO:
@@ -232,9 +235,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public logout() { this.feathersClient.logout(); }
-    
-    public isConnected() : boolean { return this.socket.connected; }
-    
+
+    public isConnected(): boolean { return this.socket.connected; }
+
     private getResource(): Promise<Resource> {
         return new Promise((resolve, reject) => {
             this.resourcesService.find({
@@ -362,6 +365,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }
         };
+        this.resourcesService.removeAllListeners('updated');
+        this.resourcesService.removeAllListeners('patched');
         this.resourcesService.on('updated', resource => eventListener(resource, 'updated'));
         this.resourcesService.on('patched', resource => eventListener(resource, 'patched'));
     }
@@ -382,6 +387,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }
         };
+        this.proxemicsService.removeAllListeners('updated');
+        this.proxemicsService.removeAllListeners('patched');
         this.proxemicsService.on('updated', proxemics => eventListener(proxemics, 'updated'));
         this.proxemicsService.on('patched', proxemics => eventListener(proxemics, 'patched'));
     }
@@ -401,6 +408,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }
         };
+        this.instancesService.removeAllListeners('updated');
+        this.instancesService.removeAllListeners('patched');
         this.instancesService.on('updated', instance => eventListener(instance, 'updated'));
         this.instancesService.on('patched', instance => eventListener(instance, 'patched'));
     }
@@ -409,6 +418,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         let eventListener = (event: any, eventType: string = 'created') => {
             subscriberFunction(event, eventType);
         };
+        this.eventsService.removeAllListeners('created');
         this.eventsService.on('created', event => eventListener(event, 'created'));
+    }
+
+    public subscribeReconnects(subscriberFunction: (state: any, proxemics: any) => void): void {
+        this.subscribeReconnectsFunction = subscriberFunction;
     }
 }
