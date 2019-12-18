@@ -17,8 +17,6 @@ import Instance from "./Instance";
 import ClientNameNotUnique from "./errors/ClientNameNotUnique";
 import DeviceNotFoundError from "./errors/DeviceNotFoundError";
 import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
-import ResourceNotFound from "./errors/ResourceNotFoundError";
-import ProxemicsNotFoundError from "./errors/ProxemicsNotFoundError";
 import InvalidBrokerJwtError from "./errors/InvalidBrokerJwtError";
 
 export default class FeathersCoordinator extends AbstractCoordinator {
@@ -212,25 +210,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(instance => {
                 this.instance.update(instance);
                 console.log('Instance:', instance);
-                return this.resourcesService.create({
-                    user: this.user._id,
-                    client: this.client.raw._id
-                }).then(resource => resource).catch(err => {
-                    if (!(err instanceof Conflict)) {
-                        reject(err);
-                    }
-                });
-            }).then(() => {
-                return this.proxemicsService.create({
-                    user: this.user._id,
-                }).then(proxemics => proxemics).catch(err => {
-                    if (!(err instanceof Conflict)) {
-                        reject(err);
-                    }
-                });
-            }).then(() => this.updateInstanceActiveness()).then(() => {
+                return this.updateInstanceActiveness()
+            }).then(updatedInstance => {
+                console.log('Updated Instance Activeness:', updatedInstance);
                 return Promise.all([this.getResourceData(), this.getProxemicsState()]);
-            }).then(results => resolve(results)).catch(err => reject(err))
+            }).then(results => resolve(results)).catch(err => {
+                if (!(err instanceof Conflict)) { reject(err); }
+            })
         });
     }
 
@@ -251,7 +237,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.resource.update((<any>resources)[0])
                     return resolve(this.resource);
                 } else {
-                    reject(new ResourceNotFound('Could not find the resource associated with the current application/user pair.'))
+                    this.resourcesService.create({
+                        user: this.user._id,
+                        client: this.client.raw._id
+                    }).then(resource => {
+                        this.resource.update(resource)
+                        return resolve(this.resource);
+                    }).catch(err => {
+                        if (!(err instanceof Conflict)) {
+                            reject(err);
+                        }
+                    })
                 }
             }).catch(err => reject(err));
         });
@@ -283,7 +279,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.proxemics.update((<any>proxemics)[0])
                     return resolve(this.proxemics);
                 } else {
-                    reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
+                    this.proxemicsService.create({
+                        user: this.user._id,
+                    }).then(proxemics => {
+                        this.proxemics.update(proxemics)
+                        return resolve(this.proxemics);
+                    }).catch(err => {
+                        if (!(err instanceof Conflict)) {
+                            reject(err);
+                            //reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
+                        }
+                    })
                 }
             }).catch(err => reject(err));
         });

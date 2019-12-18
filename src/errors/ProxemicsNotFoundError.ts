@@ -1,1 +1,0 @@
-export default class ProxemicsNotFoundError extends Error { }
