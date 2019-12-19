@@ -6,52 +6,55 @@ export default class ComponentsRuleEngine {
     private _instances: Array<any>;
     private _proxemics: any;
     private _restrictions: any;
+    private _R: any;
 
-    constructor(localDeviceUuid: string, instances: Array<any>, proxemics: any, restrictions: any) {
+    constructor(localDeviceUuid: string, restrictions: any = {}, proxemics: any = {}, instances: Array<any> = []) {
         this.localDeviceUuid = localDeviceUuid;
-        this.instances = instances;
-        this.proxemics = proxemics;
         this.restrictions = restrictions;
+        this.proxemics = proxemics;
+        this.instances = instances;
+        this.initRuleEngine();
     }
 
-    get localDeviceUuid(): string {
+    public get localDeviceUuid(): string {
         return this._localDeviceUuid;
     }
-    set localDeviceUuid(localDeviceUuid: string) {
+    public set localDeviceUuid(localDeviceUuid: string) {
         this._localDeviceUuid = localDeviceUuid;
     }
 
-    get instances(): Array<any> {
-        return this._instances;
-    }
-    set instances(instance: Array<any>) {
-        this._instances = instance;
-    }
-
-    get proxemics(): any {
-        return this._proxemics;
-    }
-    set proxemics(proxemics: any) {
-        this._proxemics = proxemics;
-    }
-
-    get restrictions(): any {
+    public get restrictions(): any {
         return this._restrictions;
     }
-    set restrictions(restrictions: any) {
+    public set restrictions(restrictions: any) {
         this._restrictions = restrictions;
     }
 
-    public run(): Promise<any> {
-        const R = new RuleEngine();
-        const facts = {
-            localDeviceUuid: this.localDeviceUuid,
-            activeInstances: this.instances.filter(i => i.active),
-            proxemics: this.proxemics,
-            restrictions: this.restrictions,
-        };
+    public get proxemics(): any {
+        return this._proxemics;
+    }
+    public set proxemics(proxemics: any) {
+        this._proxemics = proxemics;
+    }
 
-        R.register({
+    public get instances(): Array<any> {
+        return this._instances;
+    }
+    public set instances(instance: Array<any>) {
+        this._instances = instance;
+    }
+
+    public get R(): any {
+        return this._R;
+    }
+    public set R(R: any) {
+        this._R = R;
+    }
+
+    private initRuleEngine(): void {
+        this.R = new RuleEngine();
+
+        this.R.register({
             name: 'Create the default components configuration which hides all components by default',
             priority: 3,
             condition: function (R: any) {
@@ -66,7 +69,7 @@ export default class ComponentsRuleEngine {
             }
         });
 
-        R.register({
+        this.R.register({
             name: 'Start with the default components configuration',
             priority: 2,
             condition: function (R: any) {
@@ -78,7 +81,7 @@ export default class ComponentsRuleEngine {
             }
         });
 
-        R.register({
+        this.R.register({
             name: 'Use the default configuration when the local device is not present or its instance is not active',
             priority: 1,
             condition: function (R: any) {
@@ -90,7 +93,7 @@ export default class ComponentsRuleEngine {
             }
         });
 
-        R.register({
+        this.R.register({
             name: 'When the local device is present build the capabilities object from the available information, filling any information gaps that may exist in the best way possible',
             priority: 0,
             condition: function (R: any) {
@@ -143,7 +146,7 @@ export default class ComponentsRuleEngine {
             }
         });
 
-        R.register({
+        this.R.register({
             name: 'when device capabilities are available',
             condition: function (R: any) {
                 R.when(this.localDeviceCapabilities && this.capabilities);
@@ -260,8 +263,17 @@ export default class ComponentsRuleEngine {
                 R.stop();
             }
         });
-        return new Promise(function (resolve, reject) {
-            R.execute(facts, function (data: any) {
+    }
+
+    public run(): Promise<any> {
+        const facts = {
+            localDeviceUuid: this.localDeviceUuid,
+            activeInstances: this.instances.filter(i => i.active),
+            proxemics: this.proxemics,
+            restrictions: this.restrictions,
+        };
+        return new Promise((resolve, reject) => {
+            this.R.execute(facts, function (data: any) {
                 resolve(data);
             });
         });
