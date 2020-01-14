@@ -63,7 +63,8 @@ export default class ComponentsRuleEngine {
             consequence: function (R: any) {
                 this.defaultComponentsConfig = {};
                 Object.keys(this.restrictions).forEach(component => {
-                    this.defaultComponentsConfig[component] = false;
+                    this.defaultComponentsConfig[component] = this.restrictions[component].showWhenLocalDeviceIsMissing ?
+                        this.restrictions[component].showWhenLocalDeviceIsMissing : false;
                 });
                 R.next();
             }
