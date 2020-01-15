@@ -104,10 +104,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         //Re-initialize on reconnect
         const feathersSocketClient: SocketIOClient.Socket = this.feathersClient as any;
         feathersSocketClient.io.on('reconnect', (attempt: number) => {
-            this.init().then(resource => {
+            this.init().then((resource: any) => {
                 console.log(`Reconnected after ${attempt} attempts`);
                 this.subscribeReconnectsFunction(resource[0], resource[1]);
-            }).catch(e => console.error(e));
+            }).catch((err: any) => console.error(err));
         });
         /* TODO:
          * Perhaps I should deal with ALL/MOST of the Socket.io events!
@@ -123,7 +123,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public init(): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.feathersClient.authentication.getAccessToken().then(jwt => {
+            this.feathersClient.authentication.getAccessToken().then((jwt: any) => {
                 if (jwt) {
                     const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
                     if (jwtHeader) {
@@ -148,9 +148,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         break;
                 }
                 return auth;
-            }).then(auth => {
+            }).then((auth: any) => {
                 return this.feathersClient.authenticate(auth);
-            }).then(response => {
+            }).then((response: any) => {
                 if (this.brokerPublicKey) {
                     const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split(".")[0]));
                     const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, this.brokerPublicKey, { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] });
@@ -162,14 +162,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.feathersClient.service('users').get(response.user ? response.user._id : response.authentication.payload.user._id),
                     this.feathersClient.service('clients').get(response.client ? response.client._id : response.authentication.payload.client._id)
                 ]);
-            }).then(results => {
+            }).then((results: any) => {
                 this.user = results[0];
                 if (results[1]) {
                     return this.feathersClient.service('clients').get(results[1]);
                 } else {
                     return this.feathersClient.service('clients').find({ query: { id: this.client.id } });
                 }
-            }).then(results => {
+            }).then((results: any) => {
                 const clients = (results as any).data ? (results as any).data : results;
                 if (Array.isArray(clients)) {
                     if (clients.length === 1) {
@@ -180,12 +180,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
                     }
                 } else { return clients; }
-            }).then(client => {
+            }).then((client: any) => {
                 this.client.raw = client;
                 return fetch(`${this.localDeviceUrl}/deviceInfo`);
-            }).then(response => {
+            }).then((response: any) => {
                 return response.json();
-            }).then(deviceInfo => {
+            }).then((deviceInfo: any) => {
                 return this.devicesService.find({
                     query: {
                         $limit: 1,
@@ -193,7 +193,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         deviceUuid: deviceInfo.deviceUuid
                     }
                 });
-            }).then(results => {
+            }).then((results: any) => {
                 const devices = (results as any).data ? (results as any).data : results;
                 if (devices.length === 1) {
                     this.device = devices[0];
@@ -207,14 +207,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else {
                     reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
                 }
-            }).then(instance => {
+            }).then((instance: any) => {
                 this.instance.update(instance);
                 console.log('Instance:', instance);
                 return this.updateInstanceActiveness()
-            }).then(updatedInstance => {
+            }).then((updatedInstance: any) => {
                 console.log('Updated Instance Activeness:', updatedInstance);
                 return Promise.all([this.getResourceData(), this.getProxemicsState()]);
-            }).then(results => resolve(results)).catch(err => {
+            }).then((results: any) => resolve(results)).catch((err: any) => {
                 if (!(err instanceof Conflict)) { reject(err); }
             })
         });
@@ -232,7 +232,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     user: this.user._id,
                     client: this.client.raw._id
                 }
-            }).then(resources => {
+            }).then((resources: any) => {
                 if ((<Array<any>>resources).length === 1) {
                     this.resource.update((<any>resources)[0])
                     return resolve(this.resource);
@@ -240,16 +240,16 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.resourcesService.create({
                         user: this.user._id,
                         client: this.client.raw._id
-                    }).then(resource => {
+                    }).then((resource: any) => {
                         this.resource.update(resource)
                         return resolve(this.resource);
-                    }).catch(err => {
+                    }).catch((err: any) => {
                         if (!(err instanceof Conflict)) {
                             reject(err);
                         }
                     })
                 }
-            }).catch(err => reject(err));
+            }).catch((err: any) => reject(err));
         });
     }
 
@@ -260,10 +260,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public setResourceData(data: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.resourcesService.patch(this.resource.id, { data: data })
-                .then(resource => {
+                .then((resource: any) => {
                     this.resource.update(resource);
                     resolve(resource.data)
-                }).catch(err => reject(err));
+                }).catch((err: any) => reject(err));
         });
     }
 
@@ -274,24 +274,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     $limit: 1,
                     user: this.user._id
                 }
-            }).then(proxemics => {
+            }).then((proxemics: any) => {
                 if ((<Array<any>>proxemics).length === 1) {
                     this.proxemics.update((<any>proxemics)[0])
                     return resolve(this.proxemics);
                 } else {
                     this.proxemicsService.create({
                         user: this.user._id,
-                    }).then(proxemics => {
+                    }).then((proxemics: any) => {
                         this.proxemics.update(proxemics)
                         return resolve(this.proxemics);
-                    }).catch(err => {
+                    }).catch((err: any) => {
                         if (!(err instanceof Conflict)) {
                             reject(err);
                             //reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
                         }
                     })
                 }
-            }).catch(err => reject(err));
+            }).catch((err: any) => reject(err));
         });
     }
 
@@ -309,12 +309,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             Object.assign(query, extraConditions);
             this.instancesService.find({
                 query
-            }).then(instances => {
+            }).then((instances: any) => {
                 if (!extraConditions) {
                     this.instances = instances;
                 }
                 return resolve(instances);
-            }).catch(err => reject(err));
+            }).catch((err: any) => reject(err));
         });
     }
 
@@ -340,10 +340,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public setInstanceActiveness(active: Boolean): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.instancesService.patch(this.instance.id, { active: active })
-                .then(instance => {
+                .then((instance: any) => {
                     this.instance.update(instance);
                     resolve(instance)
-                }).catch(err => reject(err));
+                }).catch((err: any) => reject(err));
         });
     }
 
@@ -373,8 +373,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.resourcesService.removeAllListeners('updated');
         this.resourcesService.removeAllListeners('patched');
-        this.resourcesService.on('updated', resource => eventListener(resource, 'updated'));
-        this.resourcesService.on('patched', resource => eventListener(resource, 'patched'));
+        this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
+        this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
     }
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -395,8 +395,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.proxemicsService.removeAllListeners('updated');
         this.proxemicsService.removeAllListeners('patched');
-        this.proxemicsService.on('updated', proxemics => eventListener(proxemics, 'updated'));
-        this.proxemicsService.on('patched', proxemics => eventListener(proxemics, 'patched'));
+        this.proxemicsService.on('updated', (proxemics: any) => eventListener(proxemics, 'updated'));
+        this.proxemicsService.on('patched', (proxemics: any) => eventListener(proxemics, 'patched'));
     }
 
     public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -416,8 +416,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         };
         this.instancesService.removeAllListeners('updated');
         this.instancesService.removeAllListeners('patched');
-        this.instancesService.on('updated', instance => eventListener(instance, 'updated'));
-        this.instancesService.on('patched', instance => eventListener(instance, 'patched'));
+        this.instancesService.on('updated', (instance: any) => eventListener(instance, 'updated'));
+        this.instancesService.on('patched', (instance: any) => eventListener(instance, 'patched'));
     }
 
     public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -425,7 +425,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             subscriberFunction(event, eventType);
         };
         this.eventsService.removeAllListeners('created');
-        this.eventsService.on('created', event => eventListener(event, 'created'));
+        this.eventsService.on('created', (event: any) => eventListener(event, 'created'));
     }
 
     public subscribeReconnects(subscriberFunction: (state: any, proxemics: any) => void): void {
