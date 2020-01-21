@@ -266,17 +266,29 @@ export default class ComponentsRuleEngine {
         });
     }
 
-    public run(): Promise<any> {
-        const facts = {
-            localDeviceUuid: this.localDeviceUuid,
-            activeInstances: this.instances.filter(i => i.active),
-            proxemics: this.proxemics,
-            restrictions: this.restrictions,
-        };
-        return new Promise((resolve, reject) => {
-            this.R.execute(facts, function (data: any) {
-                resolve(data);
+    public run(deviceUuids: string[] = null): Promise<any> {
+        const dUuids = deviceUuids === null ? [this.localDeviceUuid] : deviceUuids
+        const promisedResult = Promise.all(dUuids.map(dUuid => {
+            const facts = {
+                localDeviceUuid: dUuid,
+                activeInstances: this.instances.filter(i => i.active),
+                proxemics: this.proxemics,
+                restrictions: this.restrictions,
+            };
+            return new Promise((resolve, reject) => {
+                this.R.execute(facts, function (data: any) {
+                    resolve(data);
+                });
             });
-        });
+        })).then(results => {
+            const objResult : any = {}
+            results.forEach((result : any) => objResult[result.localDeviceUuid] = result)
+            return new Promise((resolve, reject) => {
+                resolve(objResult);
+            });
+        })
+        if (deviceUuids === null) {
+            return promisedResult.then((pr : any) => pr[this.localDeviceUuid]);
+        } else { return promisedResult }
     }
 }
