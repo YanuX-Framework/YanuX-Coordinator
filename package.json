@@ -35,7 +35,7 @@
     "@feathersjs/feathers": "^4.5.0",
     "@feathersjs/socketio-client": "^4.5.0",
     "@types/isomorphic-fetch": "0.0.35",
-    "@types/jsonwebtoken": "^8.3.6",
+    "@types/jsonwebtoken": "^8.3.7",
     "@types/jsrsasign": "^8.0.2",
     "@types/lodash": "^4.14.149",
     "@types/socket.io-client": "^1.4.32",
