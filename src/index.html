@@ -6,12 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><%= htmlWebpackPlugin.options.title %></title>
-    <script type="text/javascript" src="webcomponents-bundle.js"></script>
+    <style>
+        /*yanux-components-distribution {
+            --font-family: 'Times New Roman', Times, serif;
+        }*/
+        /*yanux-components-distribution::part(container) {
+            color: red;
+        }*/
+        yanux-components-distribution {
+            width: 500px;
+        }
+    </style>
 </head>
 
 <body>
     <h1><%= htmlWebpackPlugin.options.title %></h1>
-    <yanux-components-distribution id="ycd"></yanux-components-distribution>
+    <yanux-components-distribution id="ycd" instanceId="5e1f1f35167afc2aaa1515b0"></yanux-components-distribution>
 </body>
 
 </html>

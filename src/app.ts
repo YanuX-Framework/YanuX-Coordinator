@@ -1,6 +1,10 @@
 import './ComponentsDistributionElement'
 import { componentsDistribution } from './examples'
 
+
 document.addEventListener("DOMContentLoaded", function (e) {
-    document.getElementById('ycd').setAttribute('componentsdistribution', JSON.stringify(componentsDistribution))
+    const yanuxComponentsDistributionElement = document.getElementById('ycd');
+    yanuxComponentsDistributionElement.setAttribute('componentsdistribution', JSON.stringify(componentsDistribution))
+    yanuxComponentsDistributionElement.addEventListener('updated-components-distribution',
+        (e: CustomEvent) => console.log('[YXCDE] Updated Components Distribution:', e.detail))
 });
