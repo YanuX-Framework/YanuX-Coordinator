@@ -29,6 +29,17 @@ class ComponentsDistributionElement extends LitElement {
       this.dispatchEvent(event);
     }
   }
+  handleAutoButtonClick(instanceId: string) {
+    return (e: InputEvent): void => {
+      console.log('[YXCDE - Auto Button Clicked] Instance:', instanceId, 'Event:', e)
+      let event = new CustomEvent('reset-auto-components-distribution', {
+        detail: {
+          instanceId
+        }
+      });
+      this.dispatchEvent(event);
+    }
+  }
   static get styles() {
     return css`
     :host {
@@ -86,58 +97,95 @@ class ComponentsDistributionElement extends LitElement {
       const instanceIds = Object.keys(this.componentsDistribution)
       const components = _.uniq(_.flatten(instanceIds.map(instanceId => Object.keys(this.componentsDistribution[instanceId].components))))
       return html`
-          <div id="container" part="container">
-            <table id="components-distributions-table" part="components-distributions-table">
-                <caption id="components-distributions-table-caption" part="components-distributions-table-caption">
-                    <div id="instance-info" part="instance-info">
-                      <div id="instance-device-name" part="instance-device-name">
-                          <span id="instance-info-device-name-label" part="instance-info-device-name-label">
+          <div id="container"
+               part="container">
+            <table id="components-distributions-table"
+                   part="components-distributions-table">
+                <caption id="components-distributions-table-caption"
+                         part="components-distributions-table-caption">
+                    <div id="instance-info"
+                         part="instance-info">
+                      <div id="instance-device-name"
+                           part="instance-device-name">
+                          <span id="instance-info-device-name-label"
+                                part="instance-info-device-name-label">
                               Device:
                           </span>
-                          <span id="instance-info-device-name-value" part="instance-info-device-name-value">
+                          <span id="instance-info-device-name-value"
+                                part="instance-info-device-name-value">
                               ${instanceInfo ? html`${instanceInfo.device.name}` : html``}
                           </span>
                       </div>
                       ${this.checkIfDeviceInstanceHasMultipleInstancesRunning() ? html`
-                      <div id="instance-info-name" part="instance-info-name">
-                          <span id="instance-info-name-label" part="instance-info-name-label">
+                      <div id="instance-info-name"
+                           part="instance-info-name">
+                          <span id="instance-info-name-label"
+                                part="instance-info-name-label">
                               Instance:
                           </span>
-                          <span id="instance-info-name-value" part="instance-info-name-value">
+                          <span id="instance-info-name-value"
+                                part="instance-info-name-value">
                               ${instanceInfo.name ? html`${instanceInfo.name}` : html`${instanceInfo.id}`}
                           </span>
                       </div>` : html``}
               </div>
                 </caption>
-                <thead id="components-distributions-table-header" part="components-distributions-table-header">
-                    <tr>
-                        <th>Device</th>
+                <thead id="components-distributions-table-header"
+                      part="components-distributions-table-header">
+                    <tr class="components-distributions-table-header-row"
+                        part="components-distributions-table-header-row">
+                        <th class="components-distributions-table-header-device-cell"
+                            part="components-distributions-table-header-device-cell">
+                             Device
+                        </th>
                         ${components.map(component => html`
-                        <th>${component}</th>
+                        <th class="components-distributions-table-header-component-cell"
+                            part="components-distributions-table-header-component-cell">
+                            ${component}
+                        </th>
                         `)}
+                        <th class="components-distributions-table-header-auto-cell"
+                            part="components-distributions-table-header-auto-cell">
+                        </th>
                     </tr>
                 </thead>
-                <tbody id="components-distributions-table-body" part="components-distributions-table-body">
+                <tbody id="components-distributions-table-body"
+                       part="components-distributions-table-body">
                     ${instanceIds.map(instanceId => html`
-                    <tr class="instance-row" part="instance-row">
-                        <td class="instance-cell" part="instance-cell">
+                    <tr class="instance-row"
+                        part="instance-row">
+                        <td class="instance-cell"
+                            part="instance-cell">
                             ${this.componentsDistribution[instanceId].device.name}
                             ${this.checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId) ? html`
-                            <span class="instance-name"><!--
+                            <span class="instance-name"
+                                  part="instance-name"><!--
                             -->${this.componentsDistribution[instanceId].name ? this.componentsDistribution[instanceId].name : instanceId}<!--
                             --></span>` : html``}
                         </td>
                         ${components.map(component => html`
-                        <td class="component-cell" part="component-cell">
-                            <label class="component-label">
-                                <input class="component-checkbox" part="component-checkbox"
-                                      type="checkbox"
-                                      name="instance-${instanceId}-component-${component}"
-                                      ?checked="${this.componentsDistribution[instanceId].components[component]}"
-                                      @click="${this.handleCheckboxClick(instanceId, component)}" />
+                        <td class="component-cell"
+                            part="component-cell">
+                            <label class="component-label"
+                                   part="component-label">
+                                <input class="component-checkbox"
+                                       part="component-checkbox"
+                                       type="checkbox"
+                                       name="instance-${instanceId}-component-${component}"
+                                       ?checked="${this.componentsDistribution[instanceId].components[component]}"
+                                       @click="${this.handleCheckboxClick(instanceId, component)}" />
                             </label>
                         </td>
                         `)}
+                        <td class="instance-auto"
+                            part="instance-auto">
+                            <button class="instance-auto-button"
+                                    part="instance-auto-button" 
+                                    type="button"
+                                    @click="${this.handleAutoButtonClick(instanceId)}">
+                                Auto
+                            </button> 
+                        </td>
                     </tr>
                     `)}
                 </tbody>

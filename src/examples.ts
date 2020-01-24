@@ -10,7 +10,7 @@ export const componentsDistribution = {
     },
 
     "5e1f1f35167afc2aaa1515b2": {
-        name: "Instance 01",
+        name: "Instance 02",
         device: {
             uuid: "9ab8e750-bc1e-11e8-a769-3f2e91eebf08",
             name: "Laptop"
