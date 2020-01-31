@@ -339,7 +339,19 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public setInstanceActiveness(active: Boolean): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.instancesService.patch(this.instance.id, { active: active })
+            this.instancesService
+                .patch(this.instance.id, { active: active })
+                .then((instance: any) => {
+                    this.instance.update(instance);
+                    resolve(instance)
+                }).catch((err: any) => reject(err));
+        });
+    }
+
+    public setComponentDistribution(auto: Boolean, components: any): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            this.instancesService
+                .patch(this.instance.id, { componentsDistribution: { auto, components } })
                 .then((instance: any) => {
                     this.instance.update(instance);
                     resolve(instance)
@@ -387,7 +399,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.user._id === proxemics.user) {
                 if (!_.isEqual(proxemics.state, this.proxemics.state)) {
                     this.proxemics.update(proxemics);
-                    subscriberFunction(proxemics.state, eventType);
+                    subscriberFunction(this.proxemics.state, eventType);
                 }
             } else {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
@@ -407,9 +419,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             if (this.user._id === instance.user && this.client.raw._id === instance.client) {
                 if (this.instance.id === instance._id) {
+                    if (!this.instance.equals(instance)) {
+                        subscriberFunction(instance, eventType);
+                    }
                     this.instance.update(instance);
                 }
-                subscriberFunction(instance, eventType);
             } else {
                 console.error('I\'m getting events that I shouldn\'t have heard about.');
             }

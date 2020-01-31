@@ -1,7 +1,11 @@
+import _ from 'lodash'
+import ComponentsDistribution from './ComponentsDistribution'
+
 export default class Instance {
     public id: string;
     public active: Boolean;
     public instanceUuid: String;
+    public componentsDistribution: ComponentsDistribution;
     public createdAt: Date;
     public updatedAt: Date;
     public _raw: any;
@@ -14,16 +18,24 @@ export default class Instance {
         this.id = instance._id;
         this.active = instance.active;
         this.instanceUuid = instance.instanceUuid;
+        this.componentsDistribution = new ComponentsDistribution(instance.componentsDistribution);
         this.createdAt = new Date(instance.createdAt);
         this.updatedAt = new Date(instance.updatedAt);
         this._raw = instance;
     }
-    
-    public get raw() : any {
+
+    public equals(instance: any): boolean {
+        return (this.id === instance.id || this.id === instance._id)
+            && this.active === instance.active
+            && this.instanceUuid === instance.instanceUuid
+            && _.isEqual(this.componentsDistribution, new ComponentsDistribution(instance.componentsDistribution))
+    }
+
+    public get raw(): any {
         return this._raw;
     }
-    
-    public set raw(raw : any) {
+
+    public set raw(raw: any) {
         this._raw = raw;
         this.update(this.raw);
     }
