@@ -8,6 +8,7 @@ export default class Instance {
     public componentsDistribution: ComponentsDistribution;
     public createdAt: Date;
     public updatedAt: Date;
+    public timestamp: Date;
     public _raw: any;
 
     constructor(instance: any = {}) {
@@ -21,11 +22,13 @@ export default class Instance {
         this.componentsDistribution = new ComponentsDistribution(instance.componentsDistribution);
         this.createdAt = new Date(instance.createdAt);
         this.updatedAt = new Date(instance.updatedAt);
+        this.timestamp = new Date();
         this._raw = instance;
     }
 
     public equals(instance: any): boolean {
-        return (this.id === instance.id || this.id === instance._id)
+        return !_.isNil(instance)
+            && (this.id === instance.id || this.id === instance._id)
             && this.active === instance.active
             && this.instanceUuid === instance.instanceUuid
             && _.isEqual(this.componentsDistribution, new ComponentsDistribution(instance.componentsDistribution))

@@ -23,6 +23,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log(evenType + ":", event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
+    private static CACHED_INSTANCES_MAX_AGE: Number = 10000;
 
     public user: any;
     public client: Client;
@@ -30,8 +31,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public resource: Resource;
     public proxemics: Proxemics;
     public instance: Instance;
-    public instances: Array<any>;
-    public activeInstances: Array<any>;
+    public cachedInstances: Map<string, Instance>;
 
     private localDeviceUrl: string;
     private credentials: Credentials;
@@ -65,13 +65,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.resource = new Resource();
         this.proxemics = new Proxemics();
         this.instance = new Instance();
-        this.instances = new Array<any>();
-        this.activeInstances = new Array<any>();
+        this.cachedInstances = new Map<string, Instance>();
 
-        this.socket = io(brokerUrl, {
-            transports: ['websocket'],
-            forceNew: true
-        });
+        this.socket = io(brokerUrl, { transports: ['websocket'], forceNew: true });
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket, { timeout: 5000 }));
@@ -88,9 +84,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             (typeof window.localStorage === "undefined" || window.localStorage === null)) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
-        } else {
-            this.storage = window.localStorage;
-        }
+        } else { this.storage = window.localStorage; }
 
         if (!this.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
             this.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
@@ -113,11 +107,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
          * Perhaps I should deal with ALL/MOST of the Socket.io events!
          * https://socket.io/docs/client-api/#Event-%E2%80%98connect-error%E2%80%99
          */
-        feathersSocketClient.io.on('connect_error', (error: any) => {
-            console.error('Connection Error:', error);
-        })
+        feathersSocketClient.io.on('connect_error', (error: any) => { console.error('Connection Error:', error); })
         if (typeof document !== 'undefined') {
-            document.addEventListener("visibilitychange", () => this.setInstanceActiveness(!document.hidden));
+            document.addEventListener('visibilitychange', () => this.setInstanceActiveness(!document.hidden));
         }
     }
 
@@ -126,9 +118,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.feathersClient.authentication.getAccessToken().then((jwt: any) => {
                 if (jwt) {
                     const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
-                    if (jwtHeader) {
-                        this.credentials = new Credentials('jwt', [jwt]);
-                    }
+                    if (jwtHeader) { this.credentials = new Credentials('jwt', [jwt]); }
                 }
                 const auth: any = {};
                 switch (this.credentials.type) {
@@ -244,9 +234,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         this.resource.update(resource)
                         return resolve(this.resource);
                     }).catch((err: any) => {
-                        if (!(err instanceof Conflict)) {
-                            reject(err);
-                        }
+                        if (!(err instanceof Conflict)) { reject(err); }
                     })
                 }
             }).catch((err: any) => reject(err));
@@ -285,10 +273,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         this.proxemics.update(proxemics)
                         return resolve(this.proxemics);
                     }).catch((err: any) => {
-                        if (!(err instanceof Conflict)) {
-                            reject(err);
-                            //reject(new ProxemicsNotFoundError('Could not find proxemics associated with the current user.'))
-                        }
+                        if (!(err instanceof Conflict)) { reject(err); }
                     })
                 }
             }).catch((err: any) => reject(err));
@@ -300,41 +285,23 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public getInstances(extraConditions: any): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const query: any = {
-                $populate: 'device',
-                user: this.user._id,
-                client: this.client.raw._id
-            };
-            Object.assign(query, extraConditions);
-            this.instancesService.find({
-                query
-            }).then((instances: any) => {
-                if (!extraConditions) {
-                    this.instances = instances;
-                }
-                return resolve(instances);
-            }).catch((err: any) => reject(err));
-        });
+        const query: any = {
+            $populate: 'device',
+            user: this.user._id,
+            client: this.client.raw._id
+        };
+        Object.assign(query, extraConditions);
+        return this.instancesService.find({ query })
     }
 
     public getActiveInstances(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.getInstances({
-                active: true
-            }).then(activeInstances => {
-                this.activeInstances = activeInstances;
-                return resolve(this.activeInstances)
-            }).catch(err => reject(err));
-        });
+        return this.getInstances({ active: true });
     }
 
     public updateInstanceActiveness(): Promise<any> {
         if (typeof document !== 'undefined') {
             return this.setInstanceActiveness(!document.hidden);
-        } else {
-            return Promise.resolve();
-        }
+        } else { return Promise.resolve(); }
     }
 
     public setInstanceActiveness(active: Boolean): Promise<any> {
@@ -379,9 +346,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.user._id === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);
-            } else {
-                console.error('I\'m getting events that I shouldn\'t have heard about.');
-            }
+            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
         };
         this.resourcesService.removeAllListeners('updated');
         this.resourcesService.removeAllListeners('patched');
@@ -401,9 +366,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.proxemics.update(proxemics);
                     subscriberFunction(this.proxemics.state, eventType);
                 }
-            } else {
-                console.error('I\'m getting events that I shouldn\'t have heard about.');
-            }
+            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
         };
         this.proxemicsService.removeAllListeners('updated');
         this.proxemicsService.removeAllListeners('patched');
@@ -418,20 +381,29 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * [Read the similar comment on the "subscribeResource" method for an explanation.]
              */
             if (this.user._id === instance.user && this.client.raw._id === instance.client) {
-                if (this.instance.id === instance._id) {
-                    if (!this.instance.equals(instance)) {
-                        subscriberFunction(instance, eventType);
-                    }
-                    this.instance.update(instance);
+                const newInstance = new Instance(instance);
+                if (this.instance.id === newInstance.id) {
+                    this.instance = newInstance;
                 }
-            } else {
-                console.error('I\'m getting events that I shouldn\'t have heard about.');
-            }
+                if (!newInstance.equals(this.cachedInstances.get(newInstance.id))) {
+                    subscriberFunction(instance, eventType);
+                }
+                this.cachedInstances.set(newInstance.id, newInstance);
+                //this.cleanUpCachedInstances();
+            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
         };
         this.instancesService.removeAllListeners('updated');
         this.instancesService.removeAllListeners('patched');
         this.instancesService.on('updated', (instance: any) => eventListener(instance, 'updated'));
         this.instancesService.on('patched', (instance: any) => eventListener(instance, 'patched'));
+    }
+
+    private cleanUpCachedInstances(): void {
+        this.cachedInstances.forEach((instance: Instance) => {
+            if (new Date().getTime() - instance.timestamp.getTime() > FeathersCoordinator.CACHED_INSTANCES_MAX_AGE) {
+                this.cachedInstances.delete(instance.id);
+            }
+        });
     }
 
     public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {

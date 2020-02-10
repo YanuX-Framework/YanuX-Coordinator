@@ -55,7 +55,7 @@ export default class ComponentsRuleEngine {
         this.R = new RuleEngine();
 
         this.R.register({
-            name: 'Create the default components configuration which hides all components by default',
+            name: 'Create the default components configuration',
             priority: 3,
             condition: function (R: any) {
                 R.when(!this.defaultComponentsConfig);
@@ -63,8 +63,8 @@ export default class ComponentsRuleEngine {
             consequence: function (R: any) {
                 this.defaultComponentsConfig = {};
                 Object.keys(this.restrictions).forEach(component => {
-                    this.defaultComponentsConfig[component] = this.restrictions[component].showWhenLocalDeviceIsMissing ?
-                        this.restrictions[component].showWhenLocalDeviceIsMissing : false;
+                    this.defaultComponentsConfig[component] = this.restrictions[component].showByDefault ?
+                        this.restrictions[component].showByDefault : false;
                 });
                 R.next();
             }
@@ -83,10 +83,12 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
-            name: 'Use the default configuration when the local device is not present or its instance is not active',
+            name: 'Use the default configuration when the local device is not present, its instance is not active',
             priority: 1,
             condition: function (R: any) {
-                R.when(!this.proxemics[this.localDeviceUuid]);
+                R.when(!this.proxemics[this.localDeviceUuid]
+                    || !this.activeInstances.some((i: any) => i.device.deviceUuid === this.localDeviceUuid)
+                    || this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid));
             },
             consequence: function (R: any) {
                 this.componentsConfig = this.defaultComponentsConfig;
@@ -281,14 +283,14 @@ export default class ComponentsRuleEngine {
                 });
             });
         })).then(results => {
-            const objResult : any = {}
-            results.forEach((result : any) => objResult[result.localDeviceUuid] = result)
+            const objResult: any = {}
+            results.forEach((result: any) => objResult[result.localDeviceUuid] = result)
             return new Promise((resolve, reject) => {
                 resolve(objResult);
             });
         })
         if (deviceUuids === null) {
-            return promisedResult.then((pr : any) => pr[this.localDeviceUuid]);
+            return promisedResult.then((pr: any) => pr[this.localDeviceUuid]);
         } else { return promisedResult }
     }
 }
