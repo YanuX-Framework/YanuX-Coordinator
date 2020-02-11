@@ -1,10 +1,11 @@
 import _ from 'lodash'
 import { LitElement, customElement, property, TemplateResult, html, css, } from 'lit-element'
+import InstanceComponentsDistribution from './InstancesComponentsDistribution'
 
 @customElement('yanux-components-distribution')
 class ComponentsDistributionElement extends LitElement {
   @property({ type: String, reflect: true }) instanceId: string
-  @property({ type: Object, reflect: true }) componentsDistribution: any
+  @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution
   checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
     return Object.entries(this.componentsDistribution)
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
@@ -16,7 +17,9 @@ class ComponentsDistributionElement extends LitElement {
       console.log('[YXCDE - Checkbox Clicked] Instance:', instanceId,
         'Component:', component,
         'Checked:', checkboxChecked)
-      this.componentsDistribution[instanceId].components[component] = checkboxChecked
+      if (this.componentsDistribution[instanceId].components) {
+        this.componentsDistribution[instanceId].components[component] = checkboxChecked
+      }
       this.componentsDistribution = Object.assign({}, this.componentsDistribution, {})
       let event = new CustomEvent('updated-components-distribution', {
         detail: {
@@ -45,6 +48,7 @@ class ComponentsDistributionElement extends LitElement {
     :host {
       --font-family: Arial, Helvetica, sans-serif;
       --table-border: 1px solid black;
+      --table-margin: auto;
       --table-border-collapse: collapse;
       --table-cell-padding: 4px;
       --table-cell-vertical-align: middle;
@@ -60,6 +64,7 @@ class ComponentsDistributionElement extends LitElement {
     }
     table {
       border-collapse: var(--table-border-collapse);
+      margin: var(--table-margin);
     } 
     table, th, td {
       border: var(--table-border);
@@ -95,7 +100,16 @@ class ComponentsDistributionElement extends LitElement {
     if (this.instanceId && this.componentsDistribution) {
       const instanceInfo = this.componentsDistribution[this.instanceId]
       const instanceIds = Object.keys(this.componentsDistribution)
-      const components = _.uniq(_.flatten(instanceIds.map(instanceId => Object.keys(this.componentsDistribution[instanceId].components))))
+      const components =
+        _.pull(
+          _.uniq(
+            _.flatten(
+              instanceIds.map(
+                instanceId =>
+                  this.componentsDistribution[instanceId].components ? Object.keys(this.componentsDistribution[instanceId].components) : null
+              )
+            )
+          ), null)
       return html`
           <div id="container"
                part="container">
@@ -125,7 +139,7 @@ class ComponentsDistributionElement extends LitElement {
                           </span>
                           <span id="instance-info-name-value"
                                 part="instance-info-name-value">
-                              ${instanceInfo.name ? html`${instanceInfo.name}` : html`${instanceInfo.id}`}
+                              ${instanceInfo.name ? html`${instanceInfo.name}` : html`${this.instanceId}`}
                           </span>
                       </div>` : html``}
               </div>
@@ -172,7 +186,7 @@ class ComponentsDistributionElement extends LitElement {
                                        part="component-checkbox"
                                        type="checkbox"
                                        name="instance-${instanceId}-component-${component}"
-                                       ?checked="${this.componentsDistribution[instanceId].components[component]}"
+                                       ?checked="${this.componentsDistribution[instanceId].components ? this.componentsDistribution[instanceId].components[component] : false}"
                                        @click="${this.handleCheckboxClick(instanceId, component)}" />
                             </label>
                         </td>

@@ -15,7 +15,7 @@ import FeathersCoordinator from "./FeathersCoordinator";
 import Credentials from "./Credentials";
 import ComponentsRuleEngine from "./ComponentsRuleEngine";
 import ComponentsDistributionElement from "./ComponentsDistributionElement";
-
+import InstancesComponentsDistribution from "./InstancesComponentsDistribution";
 
 export {
     Coordinator,
@@ -23,5 +23,6 @@ export {
     FeathersCoordinator,
     Credentials,
     ComponentsRuleEngine,
-    ComponentsDistributionElement
+    ComponentsDistributionElement,
+    InstancesComponentsDistribution
 };

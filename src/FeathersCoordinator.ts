@@ -389,7 +389,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     subscriberFunction(instance, eventType);
                 }
                 this.cachedInstances.set(newInstance.id, newInstance);
-                //this.cleanUpCachedInstances();
+                this.cleanUpCachedInstances();
             } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
         };
         this.instancesService.removeAllListeners('updated');
