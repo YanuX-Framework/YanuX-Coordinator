@@ -9,7 +9,7 @@ export default abstract class AbstractCoordinator implements Coordinator {
     public abstract getActiveInstances(): Promise<any>;
     public abstract setInstanceActiveness(active: Boolean): Promise<any>;
     public abstract updateInstanceActiveness(): Promise<any>;
-    public abstract setComponentDistribution(auto: Boolean, components: any): Promise<any>;
+    public abstract setComponentDistribution(components: any, auto: Boolean, instanceId: string): Promise<any>;
     public abstract emitEvent(value: any, name: string): Promise<any>;
     public abstract subscribeResource(subscriberFunction: (data: any, eventType: string) => void): void;
     public abstract subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void;

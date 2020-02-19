@@ -7,7 +7,7 @@ export default interface Coordinator {
     getActiveInstances(): Promise<any>;
     setInstanceActiveness(active: Boolean): Promise<any>;
     updateInstanceActiveness(): Promise<any>;
-    setComponentDistribution(auto: Boolean, components: any): Promise<any>;
+    setComponentDistribution(components: any, auto: Boolean, instanceId: string): Promise<any>;
     emitEvent(value: any, name: string): Promise<any>;
     subscribeResource(subscriberFunction: (data: any, eventType: string) => void): void;
     subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void;

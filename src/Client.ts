@@ -1,11 +1,11 @@
 export default class Client {
     public id: string;
-    
+
     private _raw: any;
-    public get raw() : any {
+    public get raw(): any {
         return this._raw;
     }
-    public set raw(raw : any) {
+    public set raw(raw: any) {
         this._raw = raw;
         this.update(this.raw);
     }

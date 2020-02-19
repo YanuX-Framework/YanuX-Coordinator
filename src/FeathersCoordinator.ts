@@ -315,12 +315,14 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public setComponentDistribution(auto: Boolean, components: any): Promise<any> {
+    public setComponentDistribution(components: any, auto: Boolean = true, instanceId: string = this.instance.id): Promise<any> {
         return new Promise<any>((resolve, reject) => {
             this.instancesService
-                .patch(this.instance.id, { componentsDistribution: { auto, components } })
+                .patch(instanceId, { componentsDistribution: { auto, components } })
                 .then((instance: any) => {
-                    this.instance.update(instance);
+                    if (this.instance.id === instanceId) {
+                        this.instance.update(instance);
+                    }
                     resolve(instance)
                 }).catch((err: any) => reject(err));
         });
@@ -341,9 +343,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * force me to change the way things are handled on the client-side
              * in order to provide extra security.
              */
-            if (this.resource.id === resource._id &&
-                this.client.raw._id === resource.client &&
-                this.user._id === resource.user) {
+            if (this.resource && this.resource.id === resource._id &&
+                this.client && this.client.raw._id === resource.client &&
+                this.user && this.user._id === resource.user) {
                 this.resource.update(resource);
                 subscriberFunction(this.resource.data, eventType);
             } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
@@ -360,8 +362,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the "subscribeResource" method for an explanation.]
              */
-            if (this.proxemics.id === proxemics._id &&
-                this.user._id === proxemics.user) {
+            if (this.proxemics && this.proxemics.id === proxemics._id &&
+                this.user && this.user._id === proxemics.user) {
                 if (!_.isEqual(proxemics.state, this.proxemics.state)) {
                     this.proxemics.update(proxemics);
                     subscriberFunction(this.proxemics.state, eventType);
@@ -380,8 +382,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the "subscribeResource" method for an explanation.]
              */
-            if (this.user._id === instance.user && this.client.raw._id === instance.client) {
-                const newInstance = new Instance(instance);
+            const newInstance = new Instance(instance);
+            if (this.user && this.user._id === instance.user &&
+                this.client.raw && this.client.raw._id === instance.client) {
                 if (this.instance.id === newInstance.id) {
                     this.instance = newInstance;
                 }
@@ -389,8 +392,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     subscriberFunction(instance, eventType);
                 }
                 this.cachedInstances.set(newInstance.id, newInstance);
-                this.cleanUpCachedInstances();
-            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
+                //this.cleanUpCachedInstances();
+            } else { console.error('I\'m PROBABLY getting events that I shouldn\'t have heard about.'); }
         };
         this.instancesService.removeAllListeners('updated');
         this.instancesService.removeAllListeners('patched');
