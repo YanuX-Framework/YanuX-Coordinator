@@ -384,7 +384,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             const newInstance = new Instance(instance);
             if (this.user && this.user._id === instance.user &&
-                this.client.raw && this.client.raw._id === instance.client) {
+                this.client && this.client.raw && this.client.raw._id === instance.client) {
                 if (this.instance.id === newInstance.id) {
                     this.instance = newInstance;
                 }
@@ -392,7 +392,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     subscriberFunction(instance, eventType);
                 }
                 this.cachedInstances.set(newInstance.id, newInstance);
-                //this.cleanUpCachedInstances();
+                this.cleanUpCachedInstances();
             } else { console.error('I\'m PROBABLY getting events that I shouldn\'t have heard about.'); }
         };
         this.instancesService.removeAllListeners('updated');
