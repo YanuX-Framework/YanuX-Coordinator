@@ -2,18 +2,27 @@ import _ from "lodash";
 import RuleEngine from 'node-rules';
 
 export default class ComponentsRuleEngine {
+    private _localInstanceUuid: string;
     private _localDeviceUuid: string;
     private _instances: Array<any>;
     private _proxemics: any;
     private _restrictions: any;
     private _R: any;
 
-    constructor(localDeviceUuid: string, restrictions: any = {}, proxemics: any = {}, instances: Array<any> = []) {
+    constructor(localInstanceUuid: string, localDeviceUuid: string, restrictions: any = {}, proxemics: any = {}, instances: Array<any> = []) {
+        this.localInstanceUuid = localInstanceUuid
         this.localDeviceUuid = localDeviceUuid;
         this.restrictions = restrictions;
         this.proxemics = proxemics;
         this.instances = instances;
         this.initRuleEngine();
+    }
+
+    public get localInstanceUuid(): string {
+        return this._localInstanceUuid;
+    }
+    public set localInstanceUuid(instanceUuid: string) {
+        this._localInstanceUuid = instanceUuid;
     }
 
     public get localDeviceUuid(): string {
@@ -56,12 +65,13 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Create the default components configuration',
-            priority: 3,
+            priority: 4,
             condition: function (R: any) {
                 R.when(!this.defaultComponentsConfig);
             },
             consequence: function (R: any) {
                 this.defaultComponentsConfig = {};
+                this.auto = true;
                 Object.keys(this.restrictions).forEach(component => {
                     this.defaultComponentsConfig[component] = this.restrictions[component].showByDefault ?
                         this.restrictions[component].showByDefault : false;
@@ -72,7 +82,7 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Start with the default components configuration',
-            priority: 2,
+            priority: 3,
             condition: function (R: any) {
                 R.when(this.defaultComponentsConfig && !this.componentsConfig);
             },
@@ -83,7 +93,24 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
-            name: 'Use the default configuration when the local device is not present, its instance is not active',
+            name: 'Use the current configuration of the local device\'s instance if there is already a manual component distribition attributed to it',
+            priority: 2,
+            condition: function (R: any) {
+                this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
+                R.when(!this.ignoreManual
+                    && this.localInstance.componentsDistribution
+                    && this.localInstance.componentsDistribution.components
+                    && this.localInstance.componentsDistribution.auto === false);
+            },
+            consequence: function (R: any) {
+                this.componentsConfig = this.localInstance.componentsDistribution.components;
+                this.auto = false;
+                R.stop();
+            }
+        });
+
+        this.R.register({
+            name: 'Use the default configuration if the local device is not present, if its instance is not active or if its instance is the only one active',
             priority: 1,
             condition: function (R: any) {
                 R.when(!this.proxemics[this.localDeviceUuid]
@@ -268,29 +295,17 @@ export default class ComponentsRuleEngine {
         });
     }
 
-    public run(deviceUuids: string[] = null): Promise<any> {
-        const dUuids = deviceUuids === null ? [this.localDeviceUuid] : deviceUuids
-        const promisedResult = Promise.all(dUuids.map(dUuid => {
-            const facts = {
-                localDeviceUuid: dUuid,
-                activeInstances: this.instances.filter(i => i.active),
-                proxemics: this.proxemics,
-                restrictions: this.restrictions,
-            };
-            return new Promise((resolve, reject) => {
-                this.R.execute(facts, function (data: any) {
-                    resolve(data);
-                });
-            });
-        })).then(results => {
-            const objResult: any = {}
-            results.forEach((result: any) => objResult[result.localDeviceUuid] = result)
-            return new Promise((resolve, reject) => {
-                resolve(objResult);
-            });
-        })
-        if (deviceUuids === null) {
-            return promisedResult.then((pr: any) => pr[this.localDeviceUuid]);
-        } else { return promisedResult }
+    public run(ignoreManual: boolean = false): Promise<any> {
+        const facts = {
+            localInstanceUuid: this.localInstanceUuid,
+            localDeviceUuid: this.localDeviceUuid,
+            ignoreManual,
+            activeInstances: this.instances.filter(i => i.active),
+            proxemics: this.proxemics,
+            restrictions: this.restrictions,
+        };
+        return new Promise((resolve, reject) => {
+            this.R.execute(facts, function (data: any) { resolve(data); });
+        });
     }
 }

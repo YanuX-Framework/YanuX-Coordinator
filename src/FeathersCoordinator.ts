@@ -1,27 +1,29 @@
-import _ from "lodash";
-import feathersAuthClient from "@feathersjs/authentication-client";
-import { StorageWrapper } from "@feathersjs/authentication-client/lib/storage";
-import jsrsasign from "jsrsasign";
+import _ from 'lodash';
+import feathersAuthClient from '@feathersjs/authentication-client';
+import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
+import jsrsasign from 'jsrsasign';
 
-import { Conflict } from "@feathersjs/errors";
-import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from "@feathersjs/feathers";
-import socketio from "@feathersjs/socketio-client";
+import { Conflict } from '@feathersjs/errors';
+import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from '@feathersjs/feathers';
+import socketio from '@feathersjs/socketio-client';
 import fetch from 'isomorphic-fetch';
-import io from "socket.io-client";
-import AbstractCoordinator from "./AbstractCoordinator";
-import Client from "./Client";
-import Credentials from "./Credentials";
-import Resource from "./Resource";
-import Proxemics from "./Proxemics";
-import Instance from "./Instance";
-import ClientNameNotUnique from "./errors/ClientNameNotUnique";
-import DeviceNotFoundError from "./errors/DeviceNotFoundError";
-import DeviceUuidIsNotUnique from "./errors/DeviceUuidIsNotUnique";
-import InvalidBrokerJwtError from "./errors/InvalidBrokerJwtError";
+import io from 'socket.io-client';
+import AbstractCoordinator from './AbstractCoordinator';
+import Client from './Client';
+import Credentials from './Credentials';
+import Resource from './Resource';
+import Proxemics from './Proxemics';
+import Instance from './Instance';
+import ClientNameNotUnique from './errors/ClientNameNotUnique';
+import DeviceNotFoundError from './errors/DeviceNotFoundError';
+import DeviceUuidIsNotUnique from './errors/DeviceUuidIsNotUnique';
+import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
+import UnavailableResourceId from './errors/UnavailableResourceId';
+import UnavailableInstanceId from './errors/UnavailableInstanceId';
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
-        = (evenType: string) => (event: any) => console.log(evenType + ":", event);
+        = (evenType: string) => (event: any) => console.log(evenType + ':', event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
     private static CACHED_INSTANCES_MAX_AGE: Number = 10000;
 
@@ -57,7 +59,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
         onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
-        localStorageLocation: string = "./data/localstorage") {
+        localStorageLocation: string = './data/localstorage') {
         super();
 
         this.client = new Client(clientId);
@@ -80,8 +82,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
-        if ((typeof window === "undefined" || window === null) ||
-            (typeof window.localStorage === "undefined" || window.localStorage === null)) {
+        if ((typeof window === 'undefined' || window === null) ||
+            (typeof window.localStorage === 'undefined' || window.localStorage === null)) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
         } else { this.storage = window.localStorage; }
@@ -117,7 +119,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.authentication.getAccessToken().then((jwt: any) => {
                 if (jwt) {
-                    const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split(".")[0]));
+                    const jwtHeader: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(jwt.split('.')[0]));
                     if (jwtHeader) { this.credentials = new Credentials('jwt', [jwt]); }
                 }
                 const auth: any = {};
@@ -142,7 +144,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.feathersClient.authenticate(auth);
             }).then((response: any) => {
                 if (this.brokerPublicKey) {
-                    const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split(".")[0]));
+                    const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split('.')[0]));
                     const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, this.brokerPublicKey, { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] });
                     if (!isJwtValid) {
                         throw new InvalidBrokerJwtError('The JWT is not valid.');
@@ -247,11 +249,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public setResourceData(data: any): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.resourcesService.patch(this.resource.id, { data: data })
-                .then((resource: any) => {
-                    this.resource.update(resource);
-                    resolve(resource.data)
-                }).catch((err: any) => reject(err));
+            if (this.resource && this.resource.id) {
+                this.resourcesService.patch(this.resource.id, { data: data })
+                    .then((resource: any) => {
+                        this.resource.update(resource);
+                        resolve(resource.data)
+                    }).catch((err: any) => reject(err));
+            } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
         });
     }
 
@@ -306,25 +310,30 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public setInstanceActiveness(active: Boolean): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.instancesService
-                .patch(this.instance.id, { active: active })
-                .then((instance: any) => {
-                    this.instance.update(instance);
-                    resolve(instance)
-                }).catch((err: any) => reject(err));
+            if (this.instance && this.instance.id) {
+                this.instancesService
+                    .patch(this.instance.id, { active: active })
+                    .then((instance: any) => {
+                        this.instance.update(instance);
+                        resolve(instance)
+                    }).catch((err: any) => reject(err));
+            } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
         });
     }
 
     public setComponentDistribution(components: any, auto: Boolean = true, instanceId: string = this.instance.id): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            this.instancesService
-                .patch(instanceId, { componentsDistribution: { auto, components } })
-                .then((instance: any) => {
-                    if (this.instance.id === instanceId) {
-                        this.instance.update(instance);
-                    }
-                    resolve(instance)
-                }).catch((err: any) => reject(err));
+            if (instanceId) {
+                this.instancesService
+                    .patch(instanceId, { componentsDistribution: { auto, components } })
+                    .then((instance: any) => {
+                        if (this.instance.id === instanceId) {
+                            this.instance.update(instance);
+                        }
+                        resolve(instance)
+                    }).catch((err: any) => reject(err));
+            } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
+
         });
     }
 
@@ -360,7 +369,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         let eventListener = (proxemics: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
-             * [Read the similar comment on the "subscribeResource" method for an explanation.]
+             * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             if (this.proxemics && this.proxemics.id === proxemics._id &&
                 this.user && this.user._id === proxemics.user) {
@@ -380,7 +389,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         let eventListener = (instance: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
-             * [Read the similar comment on the "subscribeResource" method for an explanation.]
+             * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             const newInstance = new Instance(instance);
             if (this.user && this.user._id === instance.user &&

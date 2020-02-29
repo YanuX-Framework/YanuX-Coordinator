@@ -1,8 +1,8 @@
 export default class ComponentsDistribution {
     public auto : boolean;
     public components : any;
-    constructor(compontsDistribution : any = {}) {
-        this.auto = compontsDistribution.auto;
-        this.components = compontsDistribution.components;
+    constructor(componentsDistribution : any = {}) {
+        this.auto = componentsDistribution.auto;
+        this.components = componentsDistribution.components;
     }
 } 

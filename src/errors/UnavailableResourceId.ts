@@ -1,0 +1,1 @@
+export default class UnavailableResourceId extends Error { }

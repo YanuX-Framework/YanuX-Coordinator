@@ -38,6 +38,7 @@ function testComponentsRuleEngine(): void {
             return this.id;
         }
     }
+    const localInstanceUuid =  "0ea41404-86a7-42d7-980c-f343ef66df10";
     const localDeviceUuid = "3d42affa-3685-47f2-97d0-bd4ff46de5c6";
     const instances = [
         {
@@ -195,7 +196,7 @@ function testComponentsRuleEngine(): void {
             }
         }
     };
-    const componentsRuleEngine = new ComponentsRuleEngine(localDeviceUuid, restrictions, proxemics.state, instances);
+    const componentsRuleEngine = new ComponentsRuleEngine(localInstanceUuid, localDeviceUuid, restrictions, proxemics.state, instances);
     componentsRuleEngine.run().then(data => {
         console.log(data.componentsConfig);
         //console.log(data.capabilities);

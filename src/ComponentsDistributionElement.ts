@@ -14,11 +14,14 @@ class ComponentsDistributionElement extends LitElement {
   handleCheckboxClick(instanceId: string, component: string) {
     return (e: InputEvent): void => {
       const checkboxChecked = (e.target as HTMLInputElement).checked
-      console.log('[YXCDE - Checkbox Clicked] Instance:', instanceId,
+      console.log(
+        '[YXCDE - Checkbox Clicked] Instance:', instanceId,
         'Component:', component,
-        'Checked:', checkboxChecked)
+        'Checked:', checkboxChecked
+      )
       if (this.componentsDistribution[instanceId].components) {
-        this.componentsDistribution[instanceId].components[component] = checkboxChecked
+        this.componentsDistribution[instanceId].components[component] = checkboxChecked;
+        this.componentsDistribution[instanceId].auto = false;
       }
       this.componentsDistribution = Object.assign({}, this.componentsDistribution, {})
       let event = new CustomEvent('updated-components-distribution', {
@@ -186,7 +189,7 @@ class ComponentsDistributionElement extends LitElement {
                                        part="component-checkbox"
                                        type="checkbox"
                                        name="instance-${instanceId}-component-${component}"
-                                       ?checked="${this.componentsDistribution[instanceId].components ? this.componentsDistribution[instanceId].components[component] : false}"
+                                       .checked="${this.componentsDistribution[instanceId].components ? this.componentsDistribution[instanceId].components[component] : false}"
                                        @click="${this.handleCheckboxClick(instanceId, component)}" />
                             </label>
                         </td>

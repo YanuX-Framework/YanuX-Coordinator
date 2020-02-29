@@ -35,7 +35,7 @@
     "@feathersjs/feathers": "^4.5.0",
     "@feathersjs/socketio-client": "^4.5.0",
     "@types/isomorphic-fetch": "0.0.35",
-    "@types/jsonwebtoken": "^8.3.7",
+    "@types/jsonwebtoken": "^8.3.8",
     "@types/jsrsasign": "^8.0.2",
     "@types/lodash": "^4.14.149",
     "@types/socket.io-client": "^1.4.32",
@@ -50,7 +50,7 @@
     "socket.io-client": "^2.3.0",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.1",
-    "typescript": "^3.8.2",
+    "typescript": "^3.8.3",
     "webpack": "^4.41.6",
     "webpack-cli": "^3.3.11"
   }
