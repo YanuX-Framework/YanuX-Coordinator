@@ -29,11 +29,11 @@
     "http-server": "^0.12.1"
   },
   "devDependencies": {
-    "@feathersjs/authentication": "^4.5.0",
-    "@feathersjs/authentication-client": "^4.5.0",
-    "@feathersjs/errors": "^4.5.0",
-    "@feathersjs/feathers": "^4.5.0",
-    "@feathersjs/socketio-client": "^4.5.0",
+    "@feathersjs/authentication": "^4.5.2",
+    "@feathersjs/authentication-client": "^4.5.2",
+    "@feathersjs/errors": "^4.5.2",
+    "@feathersjs/feathers": "^4.5.2",
+    "@feathersjs/socketio-client": "^4.5.2",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/jsrsasign": "^8.0.2",
@@ -51,7 +51,7 @@
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
-    "webpack": "^4.41.6",
+    "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11"
   }
 }
