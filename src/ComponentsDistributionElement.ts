@@ -19,7 +19,7 @@ class ComponentsDistributionElement extends LitElement {
         'Component:', component,
         'Checked:', checkboxChecked
       )
-      if (this.componentsDistribution[instanceId].components) {
+      if (this.componentsDistribution[instanceId] && this.componentsDistribution[instanceId].components) {
         this.componentsDistribution[instanceId].components[component] = checkboxChecked;
         this.componentsDistribution[instanceId].auto = false;
       }
@@ -38,11 +38,11 @@ class ComponentsDistributionElement extends LitElement {
   handleAutoButtonClick(instanceId: string) {
     return (e: InputEvent): void => {
       console.log('[YXCDE - Auto Button Clicked] Instance:', instanceId, 'Event:', e)
-      let event = new CustomEvent('reset-auto-components-distribution', {
-        detail: {
-          instanceId
-        }
-      });
+      if (this.componentsDistribution[instanceId]) {
+        this.componentsDistribution[instanceId].auto = true
+      }
+      this.componentsDistribution = Object.assign({}, this.componentsDistribution, {})
+      let event = new CustomEvent('reset-auto-components-distribution', { detail: { instanceId } });
       this.dispatchEvent(event);
     }
   }
@@ -61,6 +61,16 @@ class ComponentsDistributionElement extends LitElement {
       --instance-name-font-size: 0.8em;
       --instance-name-color: #777777;
       --component-cell-text-align: center;
+      --button-border: 1px solid #ccc;
+      --button-padding: 8px 24px;
+      --button-border-radius: 4px;
+      --button-active-box-shadow: inset 0px 0 32px #00000077;
+      --button-instance-auto-button-on-color: #ffffff;
+      --button-instance-auto-button-on-background: #228B22;
+      --button-instance-auto-button-on-box-shadow: inset 0px 0 12px #00000077;
+      --button-instance-auto-button-off-color: #ffffff;
+      --button-instance-auto-button-off-background: #800000;
+      --button-instance-auto-button-off-box-shadow: inset 0px 0 12px #ffffff77;
     }
     #container {
       font-family: var(--font-family);
@@ -96,6 +106,26 @@ class ComponentsDistributionElement extends LitElement {
     #instance-info-device-name-label,
     #instance-info-name-label {
       font-weight: var(--instance-info-labels-font-weight);
+    }
+    button {
+      border: var(--button-border);
+      padding: var(--button-padding);
+      border-radius: var(--button-border-radius);
+    }
+    button:active,
+    button.instance-auto-button-on:active,
+    button.instance-auto-button-off:active  {
+      box-shadow: var(--button-active-box-shadow);
+    }
+    button.instance-auto-button-on {
+      color: var(--button-instance-auto-button-on-color);
+      background: var(--button-instance-auto-button-on-background);
+      box-shadow: var(--button-instance-auto-button-on-box-shadow);
+    }
+    button.instance-auto-button-off {
+      color: var(--button-instance-auto-button-on-color);
+      background: var(--button-instance-auto-button-off-background);
+      box-shadow: var(--button-instance-auto-button-off-box-shadow);
     }
     `
   }
@@ -196,8 +226,8 @@ class ComponentsDistributionElement extends LitElement {
                         `)}
                         <td class="instance-auto"
                             part="instance-auto">
-                            <button class="instance-auto-button"
-                                    part="instance-auto-button" 
+                            <button class="instance-auto-button ${this.componentsDistribution[instanceId].auto ? 'instance-auto-button-on' : 'instance-auto-button-off'}"
+                                    part="instance-auto-button ${this.componentsDistribution[instanceId].auto ? 'instance-auto-button-on' : 'instance-auto-button-off'}" 
                                     type="button"
                                     @click="${this.handleAutoButtonClick(instanceId)}">
                                 Auto

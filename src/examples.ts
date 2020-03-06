@@ -6,6 +6,7 @@ export const componentsDistribution = {
             uuid: "9ab8e750-bc1e-11e8-a769-3f2e91eebf08",
             name: "Laptop"
         },
+        auto: true,
         components: { screen: true, keypad: false }
     },
 
@@ -15,6 +16,7 @@ export const componentsDistribution = {
             uuid: "9ab8e750-bc1e-11e8-a769-3f2e91eebf08",
             name: "Laptop"
         },
+        auto: false,
         components: { screen: true, keypad: false }
     },
 
@@ -24,6 +26,7 @@ export const componentsDistribution = {
             uuid: "9ab8e750-bc1e-11e8-a769-3f2e91eebf09",
             name: "Smartphone"
         },
+        auto: false,
         components: { screen: false, keypad: true }
     }
 }
