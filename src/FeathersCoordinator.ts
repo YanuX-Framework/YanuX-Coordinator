@@ -222,7 +222,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 query: {
                     $limit: 1,
                     user: this.user._id,
-                    client: this.client.raw._id
+                    client: this.client.raw._id,
+                    default: true
                 }
             }).then((resources: any) => {
                 if ((<Array<any>>resources).length === 1) {
@@ -231,7 +232,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else {
                     this.resourcesService.create({
                         user: this.user._id,
-                        client: this.client.raw._id
+                        client: this.client.raw._id,
+                        default: true
                     }).then((resource: any) => {
                         this.resource.update(resource)
                         return resolve(this.resource);
