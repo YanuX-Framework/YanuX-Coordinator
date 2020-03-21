@@ -98,6 +98,7 @@ export default class ComponentsRuleEngine {
             condition: function (R: any) {
                 this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
                 R.when(!this.ignoreManual
+                    && this.localInstance
                     && this.localInstance.componentsDistribution
                     && this.localInstance.componentsDistribution.components
                     && this.localInstance.componentsDistribution.auto === false);

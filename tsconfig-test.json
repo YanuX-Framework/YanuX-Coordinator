@@ -1,19 +1,17 @@
 {
     "files": [
         "src/index.d.ts",
-        "src/index.ts",
-        "src/app.ts"
+        "src/test.ts"
     ],
     "compilerOptions": {
-        "outDir": "lib/",
-        "target": "ES2015",
+        "outDir": "build/",
+        "target": "ES5",
         "lib": [
             "ESNext",
             "ES2018",
             "ES2017",
             "ES2016",
             "ES2015",
-            "ES5",
             "DOM",
             "DOM.Iterable",
             "ScriptHost"

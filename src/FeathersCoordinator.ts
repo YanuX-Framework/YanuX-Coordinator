@@ -6,7 +6,7 @@ import jsrsasign from 'jsrsasign';
 import { Conflict } from '@feathersjs/errors';
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from '@feathersjs/feathers';
 import socketio from '@feathersjs/socketio-client';
-import fetch from 'isomorphic-fetch';
+import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
 import Client from './Client';
@@ -197,7 +197,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else if (devices.length > 1) {
                     reject(new DeviceUuidIsNotUnique('The impossible has happened! There is more than a device client with the same UUID.'));
                 } else {
-                    reject(new DeviceNotFoundError('A device with the given UUID could\'nt be found!'));
+                    reject(new DeviceNotFoundError('A device with the given UUID couldn\'t be found!'));
                 }
             }).then((instance: any) => {
                 this.instance.update(instance);
@@ -258,6 +258,26 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         resolve(resource.data)
                     }).catch((err: any) => reject(err));
             } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
+        });
+    }
+
+    //TODO: 
+    //I think that the Broker is not enforcing the access to the resources when using the "find" method.
+    //This can be a MAJOR security issue.
+    public getSharedResources(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.resourcesService.find({
+                query: {
+                    client: this.client.raw._id,
+                    default: false,
+                    sharedWith: this.user._id
+                }
+            }).then((resources: any) => {
+                //TODO:
+                //Encapsulate the response into something that has a specific type.
+                //I should probably look for other places where I used "any" but that can have a specific type.
+                resolve(resources);
+            }).catch((err: any) => reject(err));
         });
     }
 
