@@ -1,8 +1,10 @@
 import Coordinator from "./Coordinator";
+import SharedResource from "./SharedResource";
 
 export default abstract class AbstractCoordinator implements Coordinator {
-    public abstract getResourceData(): Promise<any>;
-    public abstract setResourceData(data: any): Promise<any>;
+    public abstract getResources(): Promise<Array<SharedResource>>;
+    public abstract getResourceData(id: string): Promise<any>;
+    public abstract setResourceData(data: any, id: string): Promise<any>;
     public abstract getProxemicsState(): Promise<any>;
     public abstract getProxemicsState(state: any): Promise<any>;
     public abstract getInstances(extraConditions: any): Promise<any>;

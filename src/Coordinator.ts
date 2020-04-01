@@ -1,6 +1,9 @@
+import SharedResource from "./SharedResource";
+
 export default interface Coordinator {
-    getResourceData(): Promise<any>;
-    setResourceData(data: any): Promise<any>;
+    getResources(): Promise<Array<SharedResource>>;
+    getResourceData(id: string): Promise<any>;
+    setResourceData(data: any, id: string): Promise<any>;
     getProxemicsState(): Promise<any>;
     getProxemicsState(state: any): Promise<any>;
     getInstances(extraConditions: any): Promise<any>;

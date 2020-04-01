@@ -17,9 +17,11 @@ test();
 
 async function testFeathersCoordinator() {
     console.log('Testing FeathersCoordinator');
+
     const brokerUrl: string = 'http://localhost:3002';
     const localDeviceUrl: string = 'http://localhost:3003';
-    const clientId = 'postman';
+    const clientId = 'yanux-coordinator-test';
+
     /**
      * NOTE: 
      * Use the following URL to get a new token if needed.
@@ -29,6 +31,7 @@ async function testFeathersCoordinator() {
         'rIjArcZ6Y8jO1pEOwBJmg4IpWoc2XMvwNPM9rYiWcRGTbW1kRwK8Q3Q4PWQIKlTU82LRhDk0N9zzVHnL2BS5vw4KMT8zaRup2uROWvWBO2dSSpWIDIgseuiHe0v3qeKyEaOyMPNZ7FVXGcqswisTtC3DinjbQYfkUiBuxXfqTJWtQ2fsiRNBsO81KYeJ7evLctbyiKM24aOvtaDJKAUyW2nSx1xpFXqFHgIfKdNqCImoOhdPFWrNIkPuyxCygT1f',
         clientId
     ]);
+
     const brokerPublicKey: string =
         `-----BEGIN PUBLIC KEY-----
     MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAw/YczpxmtzaEh853mdJ+
@@ -45,18 +48,22 @@ async function testFeathersCoordinator() {
     MrAGsRdOJYBH9RnGc6m9UgUCAwEAAQ==
     -----END PUBLIC KEY-----
     `;
+
     console.log('Loaded the following broker public key:', brokerPublicKey);
     const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials, brokerPublicKey);
-    coordinator.subscribeResource(data => console.log('Data Changed:', data));
+
+    const resourceId = '5e82662b3baa67cec20dec5b';
+
+    coordinator.subscribeResource(data => console.log('Data Changed:', data), resourceId);
 
     const result = await coordinator.init();
     console.log('State:', result);
-
-    const data = await coordinator.setResourceData({ message: 'in a bottle' });
-    console.log('Data:', data);
-
-    const sharedResources = await coordinator.getSharedResources();
-    console.log('Shared Resources:', sharedResources);
+    console.log('Shared Resources:', await (await coordinator.getResources(true, true)));
+    console.log('Data:', await coordinator.getResourceData(resourceId));
+    console.log('Set Data:', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
+    const newResource = await coordinator.createResource('Bottled Message');
+    console.log('Create Resource:', newResource);
+    console.log('Delete Resource:', await coordinator.deleteResource(newResource.id));
 }
 
 async function testComponentsRuleEngine() {

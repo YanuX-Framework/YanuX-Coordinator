@@ -11,15 +11,19 @@ import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
 import Client from './Client';
 import Credentials from './Credentials';
-import Resource from './Resource';
+import DefaultResource from './Resource';
 import Proxemics from './Proxemics';
 import Instance from './Instance';
+import SharedResource from './SharedResource';
+
 import ClientNameNotUnique from './errors/ClientNameNotUnique';
 import DeviceNotFoundError from './errors/DeviceNotFoundError';
 import DeviceUuidIsNotUnique from './errors/DeviceUuidIsNotUnique';
 import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
 import UnavailableResourceId from './errors/UnavailableResourceId';
 import UnavailableInstanceId from './errors/UnavailableInstanceId';
+import ResourceNotFound from './errors/ResourceNotFound';
+import UnsupportedResourceRetrievalConfiguration from './errors/UnsupportedResourceRetrievalConfiguration'
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -30,7 +34,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public user: any;
     public client: Client;
     public device: any;
-    public resource: Resource;
+    public resource: DefaultResource;
     public proxemics: Proxemics;
     public instance: Instance;
     public cachedInstances: Map<string, Instance>;
@@ -64,7 +68,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
         this.client = new Client(clientId);
         this.credentials = credentials;
-        this.resource = new Resource();
+        this.resource = new DefaultResource();
         this.proxemics = new Proxemics();
         this.instance = new Instance();
         this.cachedInstances = new Map<string, Instance>();
@@ -216,68 +220,73 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public isConnected(): boolean { return this.socket.connected; }
 
-    private getResource(): Promise<Resource> {
+    //TODO:
+    //I encapsulated the response into something that has a specific type.
+    //However, I should probably look for other places where I used "any" but that can have a specific type.
+    public getResources(owned: boolean = true, sharedWith: boolean = true): Promise<Array<SharedResource>> {
         return new Promise((resolve, reject) => {
+            const orCondition = [];
+            if (owned) { orCondition.push({ user: this.user._id }) }
+            if (sharedWith) { orCondition.push({ sharedWith: this.user._id }) }
+            if (orCondition.length === 0) {
+                throw new UnsupportedResourceRetrievalConfiguration('Must choose "owned", "sharedWith" or both');
+            }
             this.resourcesService.find({
-                query: {
-                    $limit: 1,
-                    user: this.user._id,
-                    client: this.client.raw._id,
-                    default: true
-                }
+                query: { $populate: 'user', client: this.client.raw._id, $or: orCondition }
             }).then((resources: any) => {
-                if ((<Array<any>>resources).length === 1) {
-                    this.resource.update((<any>resources)[0])
-                    return resolve(this.resource);
-                } else {
-                    this.resourcesService.create({
-                        user: this.user._id,
-                        client: this.client.raw._id,
-                        default: true
-                    }).then((resource: any) => {
-                        this.resource.update(resource)
-                        return resolve(this.resource);
-                    }).catch((err: any) => {
-                        if (!(err instanceof Conflict)) { reject(err); }
-                    })
-                }
+                resolve(resources.map((r: any) => new SharedResource(r)));
             }).catch((err: any) => reject(err));
         });
     }
 
-    public getResourceData(): Promise<any> {
-        return this.getResource().then(resource => resource.data).catch(err => Promise.reject(err));
+    public createResource(resourceName: string = ''): Promise<SharedResource> {
+        return new Promise((resolve, reject) => {
+            this.resourcesService.create({
+                user: this.user._id,
+                client: this.client.raw._id,
+                name: resourceName,
+                default: false
+            }).then((resource: any) => {
+                resolve(new SharedResource(resource))
+            }).catch((e: Error) => { reject(e) })
+        });
     }
 
-    public setResourceData(data: any): Promise<any> {
+    //TODO: Ensure that only the owner can delete the resource
+    public deleteResource(id: string): Promise<SharedResource> {
+        return new Promise((resolve, reject) => {
+            this.resourcesService.remove(id)
+                .then((resource: any) => {
+                    resolve(new SharedResource(resource))
+                }).catch((e: Error) => { reject(e) })
+        });
+    }
+
+    //TODO: Share Resource
+
+    //TODO: Unshare Resource
+
+    public getResourceData(id: string = null): Promise<any> {
+        return this.getResource(id).then(resource => resource.data).catch(err => Promise.reject(err));
+    }
+
+    public setResourceData(data: any, id: string = null): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            if (this.resource && this.resource.id) {
-                this.resourcesService.patch(this.resource.id, { data: data })
+            let resourceId: string;
+            if (id) { resourceId = id; }
+            else if (this.resource && this.resource.id) {
+                resourceId = this.resource.id;
+            }
+            if (resourceId) {
+                this.resourcesService
+                    .patch(resourceId, { data: data })
                     .then((resource: any) => {
-                        this.resource.update(resource);
+                        if (this.resource && this.resource.id === resourceId) {
+                            this.resource.update(resource)
+                        }
                         resolve(resource.data)
                     }).catch((err: any) => reject(err));
             } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
-        });
-    }
-
-    //TODO: 
-    //I think that the Broker is not enforcing the access to the resources when using the "find" method.
-    //This can be a MAJOR security issue.
-    public getSharedResources(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.resourcesService.find({
-                query: {
-                    client: this.client.raw._id,
-                    default: false,
-                    sharedWith: this.user._id
-                }
-            }).then((resources: any) => {
-                //TODO:
-                //Encapsulate the response into something that has a specific type.
-                //I should probably look for other places where I used "any" but that can have a specific type.
-                resolve(resources);
-            }).catch((err: any) => reject(err));
         });
     }
 
@@ -302,6 +311,36 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         if (!(err instanceof Conflict)) { reject(err); }
                     })
                 }
+            }).catch((err: any) => reject(err));
+        });
+    }
+
+    private getResource(id: string = null): Promise<DefaultResource> {
+        return new Promise((resolve, reject) => {
+            let query: any;
+            if (id) {
+                query = { _id: id };
+            } else {
+                query = { $limit: 1, user: this.user._id, client: this.client.raw._id, default: true };
+            }
+            this.resourcesService.find({ query }).then((resources: any) => {
+                if ((<Array<any>>resources).length === 1) {
+                    this.resource.update((<any>resources)[0])
+                    return resolve(this.resource);
+                } else if (!id) {
+                    this.resourcesService.create({
+                        user: this.user._id,
+                        client: this.client.raw._id,
+                        default: true
+                    }).then((resource: any) => {
+                        this.resource.update(resource);
+                        return resolve(this.resource);
+                    }).catch((err: any) => {
+                        if (!(err instanceof Conflict)) {
+                            reject(err);
+                        } else { resolve(this.resource); }
+                    });
+                } else { reject(new ResourceNotFound('Resource Not Found')); }
             }).catch((err: any) => reject(err));
         });
     }
@@ -363,8 +402,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.eventsService.create({ value, name });
     }
 
-    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void): void {
+    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
         let eventListener = (resource: any, eventType: string = 'updated') => {
+            let subscribedResourceId: string;
+            if (id) { subscribedResourceId = id; }
+            else if (this.resource && this.resource.id) {
+                subscribedResourceId = this.resource.id;
+            }
             /**
              * TODO: This should be enforced at the Broker level.
              * I should also enforce that the Client ID of the token that is
@@ -374,10 +418,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * force me to change the way things are handled on the client-side
              * in order to provide extra security.
              */
-            if (this.resource && this.resource.id === resource._id &&
+            if (subscribedResourceId === resource._id &&
                 this.client && this.client.raw._id === resource.client &&
-                this.user && this.user._id === resource.user) {
-                this.resource.update(resource);
+                this.user && (this.user._id === resource.user || resource.sharedWith.some((u: any) => u === this.user._id))) {
+                if (this.resource && this.resource.id === resource._id) {
+                    this.resource.update(resource);
+                }
                 subscriberFunction(this.resource.data, eventType);
             } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
         };
@@ -385,6 +431,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.resourcesService.removeAllListeners('patched');
         this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
         this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
+        this.resourcesService.on('removed', (resource: any) => eventListener(resource, 'removed'));
     }
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
