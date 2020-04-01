@@ -1,0 +1,1 @@
+export default class UnsupportedConfiguration extends Error { }

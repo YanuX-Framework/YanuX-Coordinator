@@ -18,16 +18,18 @@ import SharedResource from './SharedResource';
 
 import ClientNameNotUnique from './errors/ClientNameNotUnique';
 import DeviceNotFoundError from './errors/DeviceNotFoundError';
-import DeviceUuidIsNotUnique from './errors/DeviceUuidIsNotUnique';
+import DeviceUuidNotUnique from './errors/DeviceUuidNotUnique';
 import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
 import UnavailableResourceId from './errors/UnavailableResourceId';
 import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
-import UnsupportedResourceRetrievalConfiguration from './errors/UnsupportedResourceRetrievalConfiguration'
+import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
+import UserNotFoundError from './errors/UserNotFoundError';
+
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
-        = (evenType: string) => (event: any) => console.log(evenType + ':', event);
+        = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
     private static CACHED_INSTANCES_MAX_AGE: Number = 10000;
 
@@ -44,6 +46,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private socket: SocketIOClient.Socket;
     private feathersClient: Application<object>;
 
+    private usersService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
@@ -53,6 +56,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private brokerPublicKey: string;
     private storage: Storage;
 
+    private subscribeResourcesFunction: (data: any, eventType: string) => void
+    private subscribeResourceFunction: (data: any, eventType: string) => void;
+    private subscribeProxemicsFunction: (data: any, eventType: string) => void;
+    private subscribeInstancesFunction: (data: any, eventType: string) => void;
+    private subscribeEventsFunction: (data: any, eventType: string) => void;
     private subscribeReconnectsFunction: (state: any, proxemics: any) => void;
 
     constructor(brokerUrl: string,
@@ -78,19 +86,26 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket, { timeout: 5000 }));
 
-        this.brokerPublicKey = brokerPublicKey;
-
+        this.usersService = this.feathersClient.service('users');
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
         this.resourcesService = this.feathersClient.service('resources');
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
+        this.brokerPublicKey = brokerPublicKey;
+
         if ((typeof window === 'undefined' || window === null) ||
             (typeof window.localStorage === 'undefined' || window.localStorage === null)) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
         } else { this.storage = window.localStorage; }
+
+
+        this.subscribeResourceFunction = null;
+        this.subscribeProxemicsFunction = null;
+        this.subscribeInstancesFunction = null;
+        this.subscribeReconnectsFunction = null;
 
         if (!this.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
             this.credentials = new Credentials('jwt', [this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)]);
@@ -105,15 +120,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         const feathersSocketClient: SocketIOClient.Socket = this.feathersClient as any;
         feathersSocketClient.io.on('reconnect', (attempt: number) => {
             this.init().then((resource: any) => {
-                console.log(`Reconnected after ${attempt} attempts`);
-                this.subscribeReconnectsFunction(resource[0], resource[1]);
-            }).catch((err: any) => console.error(err));
+                console.log(`[YXC] Reconnected after ${attempt} attempts`);
+                if (this.subscribeReconnectsFunction) {
+                    this.subscribeReconnectsFunction(resource[0], resource[1]);
+                }
+            }).catch((err: any) => console.error('[YXC] Reconnection Error:', err));
         });
         /* TODO:
          * Perhaps I should deal with ALL/MOST of the Socket.io events!
          * https://socket.io/docs/client-api/#Event-%E2%80%98connect-error%E2%80%99
          */
-        feathersSocketClient.io.on('connect_error', (error: any) => { console.error('Connection Error:', error); })
+        feathersSocketClient.io.on('connect_error', (error: any) => { console.error('[YXC] Connection Error:', error); })
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', () => this.setInstanceActiveness(!document.hidden));
         }
@@ -150,9 +167,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (this.brokerPublicKey) {
                     const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split('.')[0]));
                     const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, this.brokerPublicKey, { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] });
-                    if (!isJwtValid) {
-                        throw new InvalidBrokerJwtError('The JWT is not valid.');
-                    }
+                    if (!isJwtValid) { throw new InvalidBrokerJwtError('The JWT is not valid.'); }
                 }
                 return Promise.all([
                     this.feathersClient.service('users').get(response.user ? response.user._id : response.authentication.payload.user._id),
@@ -173,7 +188,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     } else if (clients.length === 0) {
                         return this.feathersClient.service('clients').create({ id: this.client.id });
                     } else {
-                        reject(new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.'));
+                        throw new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.');
                     }
                 } else { return clients; }
             }).then((client: any) => {
@@ -199,16 +214,16 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         device: devices[0]._id
                     });
                 } else if (devices.length > 1) {
-                    reject(new DeviceUuidIsNotUnique('The impossible has happened! There is more than a device client with the same UUID.'));
+                    throw new DeviceUuidNotUnique('The impossible has happened! There is more than a device client with the same UUID.');
                 } else {
-                    reject(new DeviceNotFoundError('A device with the given UUID couldn\'t be found!'));
+                    throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found!');
                 }
             }).then((instance: any) => {
                 this.instance.update(instance);
-                console.log('Instance:', instance);
+                console.log('[YXC] Initialized Instance:', instance);
                 return this.updateInstanceActiveness()
             }).then((updatedInstance: any) => {
-                console.log('Updated Instance Activeness:', updatedInstance);
+                console.log('[YXC] Updated Instance Activeness:', updatedInstance);
                 return Promise.all([this.getResourceData(), this.getProxemicsState()]);
             }).then((results: any) => resolve(results)).catch((err: any) => {
                 if (!(err instanceof Conflict)) { reject(err); }
@@ -229,7 +244,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             if (owned) { orCondition.push({ user: this.user._id }) }
             if (sharedWith) { orCondition.push({ sharedWith: this.user._id }) }
             if (orCondition.length === 0) {
-                throw new UnsupportedResourceRetrievalConfiguration('Must choose "owned", "sharedWith" or both');
+                throw new UnsupportedConfiguration('Must choose "owned", "sharedWith" or both');
             }
             this.resourcesService.find({
                 query: { $populate: 'user', client: this.client.raw._id, $or: orCondition }
@@ -262,9 +277,37 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    //TODO: Share Resource
+    public shareResource(resourceId: string, userEmail: string): Promise<SharedResource> {
+        return new Promise((resolve, reject) => {
+            Promise.all([
+                this.resourcesService.get(resourceId),
+                this.usersService.find({ $limit: 1, query: { email: userEmail } })
+            ]).then(results => {
+                let [resource, users] = results;
+                if (users.length !== 1) {
+                    throw new UserNotFoundError('Could not find a user with the given e-mail address.')
+                } else {
+                    return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } });
+                }
+            }).then(resource => { resolve(new SharedResource(resource)); }).catch(err => { reject(err); })
+        });
+    }
 
-    //TODO: Unshare Resource
+    public unshareResource(resourceId: string, userEmail: string): Promise<SharedResource> {
+        return new Promise((resolve, reject) => {
+            Promise.all([
+                this.resourcesService.get(resourceId),
+                this.usersService.find({ $limit: 1, query: { email: userEmail } })
+            ]).then(results => {
+                let [resource, users] = results;
+                if (users.length !== 1) {
+                    throw new UserNotFoundError('Could not find a user with the given e-mail address.')
+                } else {
+                    return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } });
+                }
+            }).then(resource => { resolve(new SharedResource(resource)); }).catch(err => { reject(err); })
+        });
+    }
 
     public getResourceData(id: string = null): Promise<any> {
         return this.getResource(id).then(resource => resource.data).catch(err => Promise.reject(err));
@@ -402,6 +445,39 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.eventsService.create({ value, name });
     }
 
+    public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
+        let eventListener = (resource: any, eventType: string = 'updated') => {
+            /**
+             * TODO: This should be enforced at the Broker level.
+             * I should also enforce that the Client ID of the token that is
+             * used for authentication matches the provided clientId.
+             * However, I have yet to find a straightforward way of doing so.
+             * I will surely have to make some server-side ajustments that may
+             * force me to change the way things are handled on the client-side
+             * in order to provide extra security.
+             */
+            if (this.client && this.client.raw._id === resource.client &&
+                this.user && (this.user._id === resource.user || resource.sharedWith.some((u: any) => u === this.user._id))) {
+                subscriberFunction(new SharedResource(resource), eventType);
+            } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
+        };
+        this.unsubscribeResources();
+        //TODO: Make sure that what I really need are the "created", "updated", "patched" and "removed" events.
+        this.resourcesService.on('created', (resource: any) => eventListener(resource, 'created'));
+        this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
+        this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
+        this.resourcesService.on('removed', (resource: any) => eventListener(resource, 'removed'));
+        this.subscribeResourcesFunction = eventListener;
+    }
+
+    public unsubscribeResources(): void {
+        this.resourcesService.removeListener('created', this.subscribeResourcesFunction);
+        this.resourcesService.removeListener('updated', this.subscribeResourcesFunction);
+        this.resourcesService.removeListener('patched', this.subscribeResourcesFunction);
+        this.resourcesService.removeListener('removed', this.subscribeResourcesFunction);
+        this.subscribeResourcesFunction = null;
+    }
+
     public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
         let eventListener = (resource: any, eventType: string = 'updated') => {
             let subscribedResourceId: string;
@@ -424,14 +500,20 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (this.resource && this.resource.id === resource._id) {
                     this.resource.update(resource);
                 }
-                subscriberFunction(this.resource.data, eventType);
-            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
+                subscriberFunction(new SharedResource(resource).data, eventType);
+            } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
-        this.resourcesService.removeAllListeners('updated');
-        this.resourcesService.removeAllListeners('patched');
+        this.unsubscribeResource();
+        //TODO: Make sure that I only need "updated" and "patched" events.
         this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
         this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
-        this.resourcesService.on('removed', (resource: any) => eventListener(resource, 'removed'));
+        this.subscribeResourceFunction = eventListener;
+    }
+
+    public unsubscribeResource(): void {
+        this.resourcesService.removeListener('updated', this.subscribeResourceFunction);
+        this.resourcesService.removeListener('patched', this.subscribeResourceFunction);
+        this.subscribeResourceFunction = null;
     }
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -446,12 +528,19 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.proxemics.update(proxemics);
                     subscriberFunction(this.proxemics.state, eventType);
                 }
-            } else { console.error('I\'m getting events that I shouldn\'t have heard about.'); }
+            } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
-        this.proxemicsService.removeAllListeners('updated');
-        this.proxemicsService.removeAllListeners('patched');
+        this.unsubscribeProxemics();
+        //TODO: Make sure that I only need "updated" and "patched" events.
         this.proxemicsService.on('updated', (proxemics: any) => eventListener(proxemics, 'updated'));
         this.proxemicsService.on('patched', (proxemics: any) => eventListener(proxemics, 'patched'));
+        this.subscribeProxemicsFunction = eventListener;
+    }
+
+    public unsubscribeProxemics(): void {
+        this.proxemicsService.removeListener('updated', this.subscribeProxemicsFunction);
+        this.proxemicsService.removeListener('patched', this.subscribeProxemicsFunction);
+        this.subscribeProxemicsFunction = null;
     }
 
     public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
@@ -471,12 +560,19 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 }
                 this.cachedInstances.set(newInstance.id, newInstance);
                 this.cleanUpCachedInstances();
-            } else { console.error('I\'m PROBABLY getting events that I shouldn\'t have heard about.'); }
+            } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
-        this.instancesService.removeAllListeners('updated');
-        this.instancesService.removeAllListeners('patched');
+        this.unsubscribeInstances();
+        //TODO: Make sure that I only need "updated" and "patched" events.
         this.instancesService.on('updated', (instance: any) => eventListener(instance, 'updated'));
         this.instancesService.on('patched', (instance: any) => eventListener(instance, 'patched'));
+        this.subscribeInstancesFunction = eventListener;
+    }
+
+    public unsubscribeInstances(): void {
+        this.instancesService.removeListener('updated', this.subscribeInstancesFunction);
+        this.instancesService.removeListener('patched', this.subscribeInstancesFunction);
+        this.subscribeInstancesFunction = null;
     }
 
     private cleanUpCachedInstances(): void {
@@ -491,11 +587,21 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         let eventListener = (event: any, eventType: string = 'created') => {
             subscriberFunction(event, eventType);
         };
-        this.eventsService.removeAllListeners('created');
+        this.unsubscribeEvents();
         this.eventsService.on('created', (event: any) => eventListener(event, 'created'));
+        this.subscribeEventsFunction = eventListener;
+    }
+
+    public unsubscribeEvents(): void {
+        this.eventsService.removeListener('created', this.subscribeEventsFunction);
+        this.subscribeEventsFunction = null;
     }
 
     public subscribeReconnects(subscriberFunction: (state: any, proxemics: any) => void): void {
         this.subscribeReconnectsFunction = subscriberFunction;
+    }
+
+    public unsubscribeReconnects(): void {
+        this.subscribeReconnectsFunction = null;
     }
 }

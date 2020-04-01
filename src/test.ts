@@ -52,18 +52,21 @@ async function testFeathersCoordinator() {
     console.log('Loaded the following broker public key:', brokerPublicKey);
     const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials, brokerPublicKey);
 
-    const resourceId = '5e82662b3baa67cec20dec5b';
+    const resourceId = '5e84f4950f5de41614105259';
 
-    coordinator.subscribeResource(data => console.log('Data Changed:', data), resourceId);
+    coordinator.subscribeResources((data, eventType) => console.log(`Resource ${eventType}:`, data));
+    coordinator.subscribeResource((data, eventType) => console.log(`Data ${eventType}:`, data), resourceId);
 
     const result = await coordinator.init();
-    console.log('State:', result);
-    console.log('Shared Resources:', await (await coordinator.getResources(true, true)));
-    console.log('Data:', await coordinator.getResourceData(resourceId));
-    console.log('Set Data:', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
+    console.log('--- init ---:\n', result);
+    console.log('--- getResources ---:\n', await (await coordinator.getResources(true, true)));
+    console.log('--- getResourceData ---:\n', await coordinator.getResourceData(resourceId));
+    console.log('--- setResourceData ---:\n', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
     const newResource = await coordinator.createResource('Bottled Message');
-    console.log('Create Resource:', newResource);
-    console.log('Delete Resource:', await coordinator.deleteResource(newResource.id));
+    console.log('--- createResource ---:\n', newResource);
+    console.log('--- deleteResource ---:\n', await coordinator.deleteResource(newResource.id));
+    console.log('--- shareResource ---:\n', await coordinator.shareResource(resourceId, 'test_user_0@yanux.org'));
+    console.log('--- unshareResource ---:\n', await coordinator.unshareResource(resourceId, 'test_user_0@yanux.org'));
 }
 
 async function testComponentsRuleEngine() {

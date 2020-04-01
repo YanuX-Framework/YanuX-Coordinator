@@ -41,7 +41,7 @@
     "@types/lodash": "^4.14.149",
     "@types/socket.io-client": "^1.4.32",
     "cross-fetch": "^3.0.4",
-    "html-webpack-plugin": "^4.0.3",
+    "html-webpack-plugin": "^4.0.4",
     "jsrsasign": "^8.0.13",
     "lit-element": "^2.3.1",
     "lodash": "^4.17.15",
