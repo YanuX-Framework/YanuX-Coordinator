@@ -1,5 +1,5 @@
 import _ from 'lodash'
-import { LitElement, customElement, property, TemplateResult, html, css, } from 'lit-element'
+import { LitElement, customElement, property, TemplateResult, html, css } from 'lit-element'
 import InstanceComponentsDistribution from './InstancesComponentsDistribution'
 
 @customElement('yanux-components-distribution')
@@ -160,7 +160,7 @@ class ComponentsDistributionElement extends LitElement {
                           </span>
                           <span id="instance-info-device-name-value"
                                 part="instance-info-device-name-value">
-                              ${instanceInfo ? html`${instanceInfo.device.name}` : html``}
+                              ${instanceInfo ? instanceInfo.device.name : html``}
                           </span>
                       </div>
                       ${this.checkIfDeviceInstanceHasMultipleInstancesRunning() ? html`
@@ -172,7 +172,7 @@ class ComponentsDistributionElement extends LitElement {
                           </span>
                           <span id="instance-info-name-value"
                                 part="instance-info-name-value">
-                              ${instanceInfo.name ? html`${instanceInfo.name}` : html`${this.instanceId}`}
+                              ${instanceInfo.name ? instanceInfo.name : this.instanceId}
                           </span>
                       </div>` : html``}
               </div>

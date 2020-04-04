@@ -19,7 +19,7 @@ async function testFeathersCoordinator() {
     console.log('Testing FeathersCoordinator');
 
     const brokerUrl: string = 'http://localhost:3002';
-    const localDeviceUrl: string = 'http://localhost:3003';
+    const localDeviceUrl: string = 'http://localhost:3023';
     const clientId = 'yanux-coordinator-test';
 
     /**
@@ -59,7 +59,7 @@ async function testFeathersCoordinator() {
 
     const result = await coordinator.init();
     console.log('--- init ---:\n', result);
-    console.log('--- getResources ---:\n', await (await coordinator.getResources(true, true)));
+    console.log('--- getResources ---:\n', await coordinator.getResources(true, true));
     console.log('--- getResourceData ---:\n', await coordinator.getResourceData(resourceId));
     console.log('--- setResourceData ---:\n', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
     const newResource = await coordinator.createResource('Bottled Message');
