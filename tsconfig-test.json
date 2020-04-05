@@ -1,26 +1,11 @@
 {
+    "extends": "./tsconfig.json",
     "files": [
         "src/index.d.ts",
         "src/test.ts"
     ],
     "compilerOptions": {
         "outDir": "build/",
-        "target": "ES5",
-        "lib": [
-            "ESNext",
-            "ES2018",
-            "ES2017",
-            "ES2016",
-            "ES2015",
-            "DOM",
-            "DOM.Iterable",
-            "ScriptHost"
-        ],
-        "noImplicitAny": true,
-        "sourceMap": true,
-        "declaration": true,
-        "esModuleInterop": true,
-        "moduleResolution": "node",
-        "experimentalDecorators": true
+        "target": "ES5"
     }
 }
