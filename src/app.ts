@@ -20,4 +20,8 @@ document.addEventListener("DOMContentLoaded", function (e) {
     );
 
     yanuxResourceManagementElement.setAttribute('resources', JSON.stringify(resources));
+    yanuxResourceManagementElement.addEventListener(
+        'resource-selected',
+        (e: CustomEvent) => console.log('[YXCDE] Reset Auto Components Distribution:', e.detail)
+    );
 });

@@ -1,15 +1,15 @@
-import _ from 'lodash'
-import { LitElement, customElement, property, TemplateResult, html, css } from 'lit-element'
-import InstanceComponentsDistribution from './InstancesComponentsDistribution'
+import _ from 'lodash';
+import { LitElement, customElement, property, TemplateResult, html, css } from 'lit-element';
+import InstanceComponentsDistribution from './InstancesComponentsDistribution';
 
 @customElement('yanux-components-distribution')
 class ComponentsDistributionElement extends LitElement {
-  @property({ type: String, reflect: true }) instanceId: string
-  @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution
+  @property({ type: String, reflect: true }) instanceId: string;
+  @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution;
   checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
     return Object.entries(this.componentsDistribution)
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
-        instanceId !== currInstanceId && instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid)
+        instanceId !== currInstanceId && instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid);
   }
   handleCheckboxClick(instanceId: string, component: string) {
     return (e: InputEvent): void => {
@@ -18,7 +18,7 @@ class ComponentsDistributionElement extends LitElement {
         '[YXCDE - Checkbox Clicked] Instance:', instanceId,
         'Component:', component,
         'Checked:', checkboxChecked
-      )
+      );
       if (this.componentsDistribution[instanceId] && this.componentsDistribution[instanceId].components) {
         this.componentsDistribution[instanceId].components[component] = checkboxChecked;
         this.componentsDistribution[instanceId].auto = false;
@@ -37,11 +37,11 @@ class ComponentsDistributionElement extends LitElement {
   }
   handleAutoButtonClick(instanceId: string) {
     return (e: InputEvent): void => {
-      console.log('[YXCDE - Auto Button Clicked] Instance:', instanceId, 'Event:', e)
+      console.log('[YXCDE - Auto Button Clicked] Instance:', instanceId, 'Event:', e);
       if (this.componentsDistribution[instanceId]) {
-        this.componentsDistribution[instanceId].auto = true
+        this.componentsDistribution[instanceId].auto = true;
       }
-      this.componentsDistribution = Object.assign({}, this.componentsDistribution, {})
+      this.componentsDistribution = Object.assign({}, this.componentsDistribution, {});
       let event = new CustomEvent('reset-auto-components-distribution', { detail: { instanceId } });
       this.dispatchEvent(event);
     }
@@ -127,12 +127,12 @@ class ComponentsDistributionElement extends LitElement {
       background: var(--button-instance-auto-button-off-background);
       box-shadow: var(--button-instance-auto-button-off-box-shadow);
     }
-    `
+    `;
   }
   render(): TemplateResult {
     if (this.instanceId && this.componentsDistribution) {
-      const instanceInfo = this.componentsDistribution[this.instanceId]
-      const instanceIds = Object.keys(this.componentsDistribution)
+      const instanceInfo = this.componentsDistribution[this.instanceId];
+      const instanceIds = Object.keys(this.componentsDistribution);
       const components =
         _.pull(
           _.uniq(
@@ -142,7 +142,7 @@ class ComponentsDistributionElement extends LitElement {
                   this.componentsDistribution[instanceId].components ? Object.keys(this.componentsDistribution[instanceId].components) : null
               )
             )
-          ), null)
+          ), null);
       return html`
           <div id="container"
                part="container">
@@ -160,7 +160,7 @@ class ComponentsDistributionElement extends LitElement {
                           </span>
                           <span id="instance-info-device-name-value"
                                 part="instance-info-device-name-value">
-                              ${instanceInfo ? instanceInfo.device.name : html``}
+                              ${instanceInfo ? instanceInfo.device.name : null}
                           </span>
                       </div>
                       ${this.checkIfDeviceInstanceHasMultipleInstancesRunning() ? html`
@@ -174,7 +174,7 @@ class ComponentsDistributionElement extends LitElement {
                                 part="instance-info-name-value">
                               ${instanceInfo.name ? instanceInfo.name : this.instanceId}
                           </span>
-                      </div>` : html``}
+                      </div>` : null}
               </div>
                 </caption>
                 <thead id="components-distributions-table-header"
@@ -208,7 +208,7 @@ class ComponentsDistributionElement extends LitElement {
                             <span class="instance-name"
                                   part="instance-name"><!--
                             -->${this.componentsDistribution[instanceId].name ? this.componentsDistribution[instanceId].name : instanceId}<!--
-                            --></span>` : html``}
+                            --></span>` : null}
                         </td>
                         ${components.map(component => html`
                         <td class="component-cell"
@@ -238,7 +238,8 @@ class ComponentsDistributionElement extends LitElement {
                 </tbody>
             </table>
           </div>
-    `} else { return html`` }
+    `;
+    } else { return null; }
   }
 }
-export default ComponentsDistributionElement
+export default ComponentsDistributionElement;

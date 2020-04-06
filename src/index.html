@@ -7,20 +7,21 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><%= htmlWebpackPlugin.options.title %></title>
     <style>
+        .title {
+            font-family: Arial, Helvetica, sans-serif;
+            text-align: center;
+        }
         /*yanux-components-distribution {
             --font-family: 'Times New Roman', Times, serif;
         }*/
         /*yanux-components-distribution::part(container) {
             color: red;
         }*/
-        yanux-components-distribution {
-            width: 500px;
-        }
     </style>
 </head>
 
 <body>
-    <h1><%= htmlWebpackPlugin.options.title %></h1>
+    <h1 class='title'><%= htmlWebpackPlugin.options.title %></h1>
     <yanux-components-distribution id="ycd" instanceId="5e1f1f35167afc2aaa1515b0"></yanux-components-distribution>
     <br />
     <yanux-resource-management id="yrm"></yanux-resource-management>
