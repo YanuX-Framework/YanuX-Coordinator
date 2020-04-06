@@ -1,0 +1,12 @@
+The following icons are part of the Material Design Icons (https://material.io/resources/icons/) which are released under the Apache License 2.0:
+- create-black.svg
+- create-white.svg
+- delete-black.svg
+- delete-white.svg
+- power-black.svg
+- power-white.svg
+- share-black.svg
+- share-white.svg
+
+The black versions was downloaded as is from the Material Design Icons website. The white versions are just modified version that swap black and white.
+The Apache License 2.0 is also included in this same folder as required.

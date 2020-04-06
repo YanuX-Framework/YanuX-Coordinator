@@ -24,4 +24,6 @@ document.addEventListener("DOMContentLoaded", function (e) {
         'resource-selected',
         (e: CustomEvent) => console.log('[YXCDE] Reset Auto Components Distribution:', e.detail)
     );
+
+    //setInterval(() => console.log('Hearbeat...'), 1000);
 });

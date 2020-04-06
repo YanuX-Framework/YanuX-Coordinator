@@ -26,7 +26,7 @@
     "email": "pedro@albuquerques.net",
     "url": "https://pedro.albuquerques.net"
   },
-  "license": "LGPL-3.0",
+  "license": "Apache-2.0",
   "dependencies": {
     "http-server": "^0.12.1"
   },
@@ -36,6 +36,7 @@
     "@feathersjs/errors": "^4.5.2",
     "@feathersjs/feathers": "^4.5.2",
     "@feathersjs/socketio-client": "^4.5.2",
+    "@polymer/paper-dialog": "^3.0.1",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/jsrsasign": "^8.0.2",
     "@types/lodash": "^4.14.149",
@@ -50,6 +51,7 @@
     "npm-run-all": "^4.1.5",
     "socket.io-client": "^2.3.0",
     "source-map-loader": "^0.2.4",
+    "svg-inline-loader": "^0.8.2",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",

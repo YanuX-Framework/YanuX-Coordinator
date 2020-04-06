@@ -6,3 +6,8 @@ declare module 'node-localstorage' {
 }
 
 declare module 'node-rules';
+
+declare module "*.svg" {
+    const content: any;
+    export default content;
+}
