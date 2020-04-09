@@ -10,7 +10,9 @@ module.exports = {
   devtool: 'source-map',
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, 'dist'),
+    library: ['yanux-coordinator', '[name]'],
+    libraryTarget: 'umd'
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js']

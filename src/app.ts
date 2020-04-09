@@ -22,8 +22,14 @@ document.addEventListener("DOMContentLoaded", function (e) {
     yanuxResourceManagementElement.setAttribute('resources', JSON.stringify(resources));
     yanuxResourceManagementElement.addEventListener(
         'resource-selected',
-        (e: CustomEvent) => console.log('[YXCDE] Reset Auto Components Distribution:', e.detail)
+        (e: CustomEvent) => console.log('[YXRME]: Resource Selected', e.detail)
     );
-
-    //setInterval(() => console.log('Hearbeat...'), 1000);
+    yanuxResourceManagementElement.addEventListener(
+        'create-resource',
+        (e: CustomEvent) => console.log('[YXRME]: Create Resource', e.detail)
+    );
+    yanuxResourceManagementElement.addEventListener(
+        'share-resource',
+        (e: CustomEvent) => console.log('[YXRME]: Share Resource', e.detail)
+    );
 });

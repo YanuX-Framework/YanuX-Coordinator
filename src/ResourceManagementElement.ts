@@ -37,16 +37,29 @@ class ResourceManagermentElement extends LitElement {
     }
 
     createResource(e: Event) {
+        const createResourceDialog = this.shadowRoot.getElementById('create-resource-dialog') as PaperDialogElement;
+        createResourceDialog.close();
         const resourceName = (this.shadowRoot.getElementById('create-resource-name') as HTMLInputElement).value;
         console.log('[YXRME - Create Resource] Event:', e, 'Name:', resourceName);
+        let event = new CustomEvent('create-resource', { detail: { resourceName } });
+        this.dispatchEvent(event);
     }
 
     shareResource(e: Event) {
-        console.log('[YXRME - Share Resource] Event:', e);
+        const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
+        shareResourceDialog.close();
+        const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
+        console.log('[YXRME - Share Resource] Event:', e, 'Name:', userEmail);
+        let event = new CustomEvent('share-resource', { detail: { userEmail } });
+        this.dispatchEvent(event);
     }
 
     deleteResource(e: Event) {
+        const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
+        deleteResourceDialog.close();
         console.log('[YXRME - Delete Resource] Event:', e);
+        let event = new CustomEvent('share-resource', { detail: { resourceId: this.resourceId } });
+        this.dispatchEvent(event);
     }
 
     showCreateResourceDialog(e: Event) {
@@ -75,39 +88,80 @@ class ResourceManagermentElement extends LitElement {
             --resource-management-margin: auto;
             --resource-management-icon-size: 24px;
             --resource-management-select-padding: 4px;
-            --resource-management-buttons-margin: 4px;
             --resource-management-buttons-text-align: center;
-            --resource-management-button-margin: 8px;
-            --resource-management-button-padding: 8px;
+            --dialog-form-margin: auto auto 12px auto;
+            --dialog-form-margin-fields: 24px auto auto auto;
+            --dialog-form-buttons-display: flex;
+            --dialog-form-buttons-jutify-content: end;
+            --dialog-form-buttons-margin: 12px auto auto auto;
+            --button-outline: 0;
+            --button-border: 1px solid #ccc;
+            --button-margin: 4px;
+            --button-padding: 8px 12px;
+            --button-border-radius: 8px;
+            --button-active-box-shadow: inset 0px 0 32px #00000077;
         }
+
         #container {
             font-family: var(--font-family);
         }
+
         #resource-management {
             width: var(--resource-management-width);
             margin: var(--resource-management-margin);
         }
+
         .resource-management-icon {
             width: var(--resource-management-icon-size);
             height: var(--resource-management-icon-size);
         }
+
         #resource-management-select {
             padding: var(--resource-management-select-padding);
+            appearance: none;
         }
+
         #resource-management-buttons {
-            margin: var(--resource-management-buttons-margin);
             text-align: var(--resource-management-buttons-text-align);
         }
-        .resource-management-button {
-            margin: var(--resource-management-button-margin);
-            padding: var(--resource-management-button-padding);
+
+        .dialog-form {
+            margin: var(--dialog-form-margin);
         }
-        .dialog > .inputs > input {
+
+        .dialog-form .fields {
+            margin: var(--dialog-form-margin-fields);
+        }
+
+        .dialog-form .buttons {
+            display: var(--dialog-form-buttons-display);;
+            justify-content: var(--dialog-form-buttons-jutify-content);
+            margin: var(--dialog-form-buttons-margin);
+        }
+
+        button:focus {
+            outline: var(--button-outline);
+        }
+
+        .resource-management-button,
+        .dialog-button {
+            border: var(--button-border);
+            padding: var(--button-padding);
+            border-radius: var(--button-border-radius);
+            margin: var(--button-margin);
+        }
+
+        .dialog-button:active,
+        .resource-management-button:active {
+            box-shadow: var(--button-active-box-shadow);
+        }
+
+        .dialog-label {
+            font-weight: bold;
+        }
+
+        .dialog-input {
             padding: 8px;
-        }
-        .dialog > .buttons > button {
-            margin: 4px;
-            padding: 4px;
         }
         `;
     }
@@ -115,27 +169,6 @@ class ResourceManagermentElement extends LitElement {
     render(): TemplateResult {
         if (this.resources) {
             return html`
-            <paper-dialog id="create-resource-dialog" class="dialog">
-                <h2>Create Resource</h2>
-                <div class="inputs">
-                    <label for="create-resource-name">Name:</label>
-                    <input type="text" id="create-resource-name" name="create-resource-name">
-                </div>
-                <div class="buttons">
-                    <button type="button" dialog-dismiss>
-                        <slot name="create-resource-cancel">Cancel</slot>
-                    </button>
-                    <button type="button" @click="${this.createResource}" dialog-confirm autofocus>
-                        <slot name="create-resource-ok">OK</slot>
-                    </button>
-                 </div>
-            </paper-dialog>
-            <paper-dialog id="share-resource-dialog">
-                <h2>Share Resource</h2>
-            </paper-dialog>
-            <paper-dialog id="delete-resource-dialog">
-                <h2>Delete Resource</h2>
-            </paper-dialog>
             <div id="container"
                part="container">
                <div id="resource-management"
@@ -177,6 +210,62 @@ class ResourceManagermentElement extends LitElement {
                             </slot>
                         </button>
                     </div>
+                </div>
+                <div id="dialogs">
+                    <paper-dialog id="create-resource-dialog" class="dialog">
+                        <form id="create-resource-dialog-form" class="dialog-form" @submit="${this.createResource}" action="javascript:void(0);">
+                            <h2>Create Resource</h2>
+                            <div class="fields">
+                                <label class="dialog-label" for="create-resource-name">
+                                    <slot name="create-resource-name-label">Name:</slot>
+                                </label>
+                                <input class="dialog-input" id="create-resource-name" name="create-resource-name" type="text" required>
+                            </div>
+                            <div class="buttons">
+                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                    <slot name="create-resource-cancel">Cancel</slot>
+                                </button>
+                                <button class="dialog-button dialog-button-ok" type="submit" autofocus>
+                                    <slot name="create-resource-ok">OK</slot>
+                                </button>
+                            </div>
+                        </form>
+                    </paper-dialog>
+                    <paper-dialog id="share-resource-dialog">
+                        <form id="share-resource-dialog-form" class="dialog-form" @submit="${this.shareResource}" action="javascript:void(0);">
+                            <h2>Share Resource</h2>
+                            <div class="fields">
+                                <label class="dialog-label" for="share-resource-email">
+                                    <slot name="share-resource-email-label">Email:</slot>
+                                </label>
+                                <input class="dialog-input" id="share-resource-email" name="share-resource-email" type="email" required>
+                            </div>
+                            <div class="buttons">
+                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                    <slot name="create-resource-cancel">Cancel</slot>
+                                </button>
+                                <button class="dialog-button dialog-button-ok" type="submit" autofocus>
+                                    <slot name="create-resource-ok">OK</slot>
+                                </button>
+                            </div>
+                        </form>
+                    </paper-dialog>
+                    <paper-dialog id="delete-resource-dialog">
+                        <div class="dialog-form">
+                            <h2>Delete Resource</h2>
+                            <div class="fields">
+                                <slot name="delete-resource-message">Are you sure you want to delete the currently selected resource?</slot>
+                            </div>
+                            <div class="buttons">
+                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                    <slot name="create-resource-cancel">Cancel</slot>
+                                </button>
+                                <button class="dialog-button dialog-button-ok" type="button" @click="${this.deleteResource}" dialog-confirm autofocus>
+                                    <slot name="create-resource-ok">OK</slot>
+                                </button>
+                            </div>
+                        </div>
+                    </paper-dialog>
                 </div>
             </div>
             `;

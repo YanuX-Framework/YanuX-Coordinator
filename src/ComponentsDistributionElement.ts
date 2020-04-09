@@ -72,76 +72,97 @@ class ComponentsDistributionElement extends LitElement {
       --instance-name-font-size: 0.8em;
       --instance-name-color: #777777;
       --component-cell-text-align: center;
+      --button-outline: 0;
       --button-border: 1px solid #ccc;
       --button-padding: 8px 12px;
       --button-border-radius: 4px;
       --button-active-box-shadow: inset 0px 0 32px #00000077;
       --button-instance-auto-button-on-color: #ffffff;
-      --button-instance-auto-button-on-background: #228B22;
+      --button-instance-auto-button-on-background: #22AA22;
       --button-instance-auto-button-on-box-shadow: inset 0px 0 12px #00000077;
       --button-instance-auto-button-off-color: #ffffff;
-      --button-instance-auto-button-off-background: #800000;
+      --button-instance-auto-button-off-background: #CC0000;
       --button-instance-auto-button-off-box-shadow: inset 0px 0 12px #ffffff77;
       --instance-auto-button-icon-size: 24px;
     }
+
     #hidden-slots {
       display: none;
     }
+
     #container {
       font-family: var(--font-family);
     }
+
     table {
       border-collapse: var(--table-border-collapse);
       margin: var(--table-margin);
     } 
+
     table, th, td {
       border: var(--table-border);
     }
+
     th, td {
       padding: var(--table-cell-padding);
       vertical-align: var(--table-cell-vertical-align);
     }
+
     .instance-name {
       display: block;
       font-size: var(--instance-name-font-size);
       color: var(--instance-name-color);
     }
+
     .instance-name::before {
       content: "(";
     }
+
     .instance-name::after {
       content: ")";
     }
+
     .component-cell {
       text-align: var(--component-cell-text-align);
     }
+
     #instance-info {
       text-align: var(--instance-info-text-align);
     }
+
     #instance-info-device-name-label,
     #instance-info-name-label {
       font-weight: var(--instance-info-labels-font-weight);
     }
+
     button {
       border: var(--button-border);
       padding: var(--button-padding);
       border-radius: var(--button-border-radius);
     }
+
+    button:focus {
+      outline: var(--button-outline);
+    }
+
     button:active,
     button.instance-auto-button-on:active,
     button.instance-auto-button-off:active  {
       box-shadow: var(--button-active-box-shadow);
     }
+
     button.instance-auto-button-on {
       color: var(--button-instance-auto-button-on-color);
       background: var(--button-instance-auto-button-on-background);
       box-shadow: var(--button-instance-auto-button-on-box-shadow);
     }
+
     button.instance-auto-button-off {
       color: var(--button-instance-auto-button-on-color);
       background: var(--button-instance-auto-button-off-background);
       box-shadow: var(--button-instance-auto-button-off-box-shadow);
     }
+
     .instance-auto-button-icon {
       width: var(--instance-auto-button-icon-size);
       height: var(--instance-auto-button-icon-size);
@@ -176,7 +197,7 @@ class ComponentsDistributionElement extends LitElement {
                           part="instance-device-name">
                         <span id="instance-info-device-name-label"
                               part="instance-info-device-name-label">
-                              <slot name="instance-info-device-name-label-title">Device</slot>:
+                              <slot name="instance-info-device-name-label-title">Device:</slot>
                         </span>
                         <span id="instance-info-device-name-value"
                               part="instance-info-device-name-value">
@@ -188,7 +209,7 @@ class ComponentsDistributionElement extends LitElement {
                           part="instance-info-name">
                         <span id="instance-info-name-label"
                               part="instance-info-name-label">
-                              <slot name="instance-info-name-label-title">Instance</slot>:
+                              <slot name="instance-info-name-label-title">Instance:</slot>
                         </span>
                         <span id="instance-info-name-value"
                               part="instance-info-name-value">
