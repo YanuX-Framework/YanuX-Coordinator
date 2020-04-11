@@ -58,7 +58,7 @@ class ResourceManagermentElement extends LitElement {
         const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
         deleteResourceDialog.close();
         console.log('[YXRME - Delete Resource] Event:', e);
-        let event = new CustomEvent('share-resource', { detail: { resourceId: this.resourceId } });
+        let event = new CustomEvent('delete-resource', { detail: { resourceId: this.resourceId } });
         this.dispatchEvent(event);
     }
 
@@ -181,7 +181,8 @@ class ResourceManagermentElement extends LitElement {
                             id="resource-management-option-${r.id}"
                             class="resource-management-option"
                             part="resource-management-option resource-management-option-${r.id}" 
-                            value="${r.id}">
+                            value="${r.id}"
+                            ?selected="${r.id === this.resourceId}">
                             ${r.name ? `${r.name}: ` : null} ${r.owner}
                             ${this.checkIfOwnerAndResourceNameAreUnique(r) ? ` (${r.id})` : null}
                         </option>

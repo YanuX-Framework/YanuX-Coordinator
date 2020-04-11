@@ -1,3 +1,10 @@
+declare module "*.svg" {
+    const content: any;
+    export default content;
+}
+
+declare module 'node-rules';
+
 declare module 'node-localstorage' {
     var LocalStorage: {
         new(location: string): Storage;
@@ -5,9 +12,3 @@ declare module 'node-localstorage' {
     };
 }
 
-declare module 'node-rules';
-
-declare module "*.svg" {
-    const content: any;
-    export default content;
-}

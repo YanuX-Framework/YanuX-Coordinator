@@ -18,8 +18,10 @@ document.addEventListener("DOMContentLoaded", function (e) {
         'reset-auto-components-distribution',
         (e: CustomEvent) => console.log('[YXCDE] Reset Auto Components Distribution:', e.detail)
     );
-
+    
+    //yanuxResourceManagementElement.setAttribute('resourceId', '5e84f4950f5de41614105259');
     yanuxResourceManagementElement.setAttribute('resources', JSON.stringify(resources));
+    
     yanuxResourceManagementElement.addEventListener(
         'resource-selected',
         (e: CustomEvent) => console.log('[YXRME]: Resource Selected', e.detail)
@@ -31,5 +33,9 @@ document.addEventListener("DOMContentLoaded", function (e) {
     yanuxResourceManagementElement.addEventListener(
         'share-resource',
         (e: CustomEvent) => console.log('[YXRME]: Share Resource', e.detail)
+    );
+    yanuxResourceManagementElement.addEventListener(
+        'delete-resource',
+        (e: CustomEvent) => console.log('[YXRME]: Delete Resource', e.detail)
     );
 });

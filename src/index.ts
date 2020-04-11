@@ -14,6 +14,7 @@ import AbstractCoordinator from "./AbstractCoordinator";
 import FeathersCoordinator from "./FeathersCoordinator";
 import Credentials from "./Credentials";
 import ComponentsRuleEngine from "./ComponentsRuleEngine";
+import ResourceManagementElement from "./ResourceManagementElement";
 import ComponentsDistributionElement from "./ComponentsDistributionElement";
 import InstancesComponentsDistribution from "./InstancesComponentsDistribution";
 
@@ -23,6 +24,7 @@ export {
     FeathersCoordinator,
     Credentials,
     ComponentsRuleEngine,
+    ResourceManagementElement,
     ComponentsDistributionElement,
     InstancesComponentsDistribution
 };
