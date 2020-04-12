@@ -83,9 +83,9 @@ class ResourceManagermentElement extends LitElement {
     static get styles() {
         return css`
         :host {
-            --font-family: Arial, Helvetica, sans-serif;
-            --resource-management-width: max-content;
-            --resource-management-margin: auto;
+            --host-font-family: Arial, Helvetica, sans-serif;
+            --host-display: block;
+            --host-width: max-content;
             --resource-management-icon-size: 24px;
             --resource-management-select-padding: 4px;
             --resource-management-buttons-text-align: center;
@@ -100,15 +100,10 @@ class ResourceManagermentElement extends LitElement {
             --button-padding: 8px 12px;
             --button-border-radius: 8px;
             --button-active-box-shadow: inset 0px 0 32px #00000077;
-        }
 
-        #container {
-            font-family: var(--font-family);
-        }
-
-        #resource-management {
-            width: var(--resource-management-width);
-            margin: var(--resource-management-margin);
+            font-family: var(--host-font-family);
+            display: var(--host-display);
+            width: var(--host-width);
         }
 
         .resource-management-icon {
@@ -169,48 +164,45 @@ class ResourceManagermentElement extends LitElement {
     render(): TemplateResult {
         if (this.resources) {
             return html`
-            <div id="container"
-               part="container">
-               <div id="resource-management"
-                    part="resource-management">
-                    <select id="resource-management-select"
-                            part="resource-management-select"
-                            @change=${this.resourceSelected}>
-                    ${this.resources.map(r => html`
-                        <option
-                            id="resource-management-option-${r.id}"
-                            class="resource-management-option"
-                            part="resource-management-option resource-management-option-${r.id}" 
-                            value="${r.id}"
-                            ?selected="${r.id === this.resourceId}">
-                            ${r.name ? `${r.name}: ` : null} ${r.owner}
-                            ${this.checkIfOwnerAndResourceNameAreUnique(r) ? ` (${r.id})` : null}
-                        </option>
-                    `)}
-                    </select>
-                    <div id="resource-management-buttons" part="resourcer-management-buttons">
-                        <button id="resource-management-button-create" part="resource-management-button-create"
-                            class="resource-management-button" type="button"
-                            @click="${this.showCreateResourceDialog}">
-                            <slot name="resource-management-button-create-icon">
-                                <div id="resource-management-create-icon" class="resource-management-icon">${unsafeSVG(createIcon)}</div>
-                            </slot>
-                        </button> 
-                        <button id="resource-management-button-share" part="resource-management-button-share"
-                            class="resource-management-button" type="button"
-                            @click="${this.showShareResourceDialog}">
-                            <slot name="resource-management-button-share-icon">
-                                <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(shareIcon)}</div>
-                            </slot>
-                        </button>
-                        <button id="resource-management-button-delete" part="resource-management-button-delete"
-                            class="resource-management-button" type="button"
-                            @click="${this.showDeleteResourceDialog}">
-                            <slot name="resource-management-button-delete-icon">
-                                <div id="resource-management-delete-icon" class="resource-management-icon">${unsafeSVG(deleteIcon)}</div>
-                            </slot>
-                        </button>
-                    </div>
+            <div id="resource-management"
+                part="resource-management">
+                <select id="resource-management-select"
+                        part="resource-management-select"
+                        @change=${this.resourceSelected}>
+                ${this.resources.map(r => html`
+                    <option
+                        id="resource-management-option-${r.id}"
+                        class="resource-management-option"
+                        part="resource-management-option resource-management-option-${r.id}" 
+                        value="${r.id}"
+                        ?selected="${r.id === this.resourceId}">
+                        ${r.name ? `${r.name}: ` : null} ${r.owner}
+                        ${this.checkIfOwnerAndResourceNameAreUnique(r) ? ` (${r.id})` : null}
+                    </option>
+                `)}
+                </select>
+                <div id="resource-management-buttons" part="resourcer-management-buttons">
+                    <button id="resource-management-button-create" part="resource-management-button-create"
+                        class="resource-management-button" type="button"
+                        @click="${this.showCreateResourceDialog}">
+                        <slot name="resource-management-button-create-icon">
+                            <div id="resource-management-create-icon" class="resource-management-icon">${unsafeSVG(createIcon)}</div>
+                        </slot>
+                    </button> 
+                    <button id="resource-management-button-share" part="resource-management-button-share"
+                        class="resource-management-button" type="button"
+                        @click="${this.showShareResourceDialog}">
+                        <slot name="resource-management-button-share-icon">
+                            <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(shareIcon)}</div>
+                        </slot>
+                    </button>
+                    <button id="resource-management-button-delete" part="resource-management-button-delete"
+                        class="resource-management-button" type="button"
+                        @click="${this.showDeleteResourceDialog}">
+                        <slot name="resource-management-button-delete-icon">
+                            <div id="resource-management-delete-icon" class="resource-management-icon">${unsafeSVG(deleteIcon)}</div>
+                        </slot>
+                    </button>
                 </div>
                 <div id="dialogs">
                     <paper-dialog id="create-resource-dialog" class="dialog">

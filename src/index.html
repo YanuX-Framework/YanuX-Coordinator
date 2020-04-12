@@ -7,25 +7,42 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title><%= htmlWebpackPlugin.options.title %></title>
     <style>
-        .title {
+        .content {
             font-family: Arial, Helvetica, sans-serif;
             text-align: center;
         }
-        /*yanux-components-distribution {
-            --font-family: 'Times New Roman', Times, serif;
-        }*/
-        /*yanux-components-distribution::part(container) {
+
+        .element {
+            border: 1px solid black;
+            border-radius: 8px;
+            padding: 8px;
+            margin: 8px auto;
+        }
+
+        /*
+        yanux-components-distribution {
+            --host-font-family: 'Times New Roman', Times, serif;
+        }
+        */
+        
+        /*
+        yanux-components-distribution::part(components-distributions-table) {
             color: red;
-        }*/
+        }
+        */
     </style>
 </head>
 
 <body>
-    <h1 class='title'><%= htmlWebpackPlugin.options.title %></h1>
-    <yanux-components-distribution id="ycd" instanceId="5e1f1f35167afc2aaa1515b0">
-    </yanux-components-distribution>
-    <br />
-    <yanux-resource-management id="yrm"></yanux-resource-management>
+    <div class="content">
+        <h1><%= htmlWebpackPlugin.options.title %></h1>
+    </div>
+    <div class="elements">
+        <yanux-resource-management id="yrm" class="element" />
+        </yanux-resource-management>
+        <yanux-components-distribution id="ycd" class="element" instanceId="5e1f1f35167afc2aaa1515b0">
+        </yanux-components-distribution>
+    </div>
 </body>
 
 </html>

@@ -10,7 +10,7 @@
     "build": "npm run compile && npm run package",
     "compile": "npx tsc && npx tsc -p tsconfig-test.json",
     "package": "npx webpack",
-    "serve": "npx http-server ./dist -p 3010 -c-1",
+    "serve": "npx serve ./dist -l 3010",
     "watch": "npm run watch:dev",
     "watch:dev": "npm-run-all --parallel watch:compile watch:package serve",
     "watch:build": "npm-run-all --parallel watch:compile watch:package",
@@ -19,7 +19,7 @@
     "watch:compile-test": "npx tsc -p tsconfig-test.json --watch",
     "watch:package": "npx webpack --watch",
     "start": "npm run serve",
-    "test": "node build/test.js"
+    "test": "node lib/_test/test.js"
   },
   "author": {
     "name": "Pedro Albuquerque Santos",
@@ -28,7 +28,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "http-server": "^0.12.1"
+    "serve": "^11.3.0"
   },
   "devDependencies": {
     "@feathersjs/authentication": "^4.5.2",
@@ -43,7 +43,7 @@
     "@types/socket.io-client": "^1.4.32",
     "cross-fetch": "^3.0.4",
     "html-webpack-plugin": "^4.2.0",
-    "jsrsasign": "^8.0.13",
+    "jsrsasign": "^8.0.14",
     "lit-element": "^2.3.1",
     "lodash": "^4.17.15",
     "node-localstorage": "^2.1.6",

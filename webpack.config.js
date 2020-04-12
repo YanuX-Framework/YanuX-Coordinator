@@ -27,7 +27,7 @@ module.exports = {
   node: { fs: 'empty' },
   plugins: [
     new HtmlWebpackPlugin({
-      title: 'YanuX Coordinator Proving Grounds',
+      title: 'YanuX Coordinator Elements',
       template: 'src/index.html',
       chunks: ['app'],
       inject: 'head'

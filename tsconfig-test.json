@@ -5,7 +5,7 @@
         "src/test.ts"
     ],
     "compilerOptions": {
-        "outDir": "build/",
+        "outDir": "lib/_test/",
         "target": "ES5"
     }
 }
