@@ -50,7 +50,7 @@ class ResourceManagermentElement extends LitElement {
         shareResourceDialog.close();
         const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
         console.log('[YXRME - Share Resource] Event:', e, 'Name:', userEmail);
-        let event = new CustomEvent('share-resource', { detail: { userEmail } });
+        let event = new CustomEvent('share-resource', { detail: { resourceId: this.resourceId, userEmail } });
         this.dispatchEvent(event);
     }
 
