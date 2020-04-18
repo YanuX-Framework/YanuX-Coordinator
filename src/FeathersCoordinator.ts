@@ -56,12 +56,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private brokerPublicKey: string;
     private storage: Storage;
 
-    private subscribeResourcesFunction: (data: any, eventType: string) => void
-    private subscribeResourceFunction: (data: any, eventType: string) => void;
-    private subscribeProxemicsFunction: (data: any, eventType: string) => void;
-    private subscribeInstancesFunction: (data: any, eventType: string) => void;
+    private subscribeResourcesFunctions: { [eventType: string]: (resource: any) => void };
+    private subscribeResourceFunctions: { [eventType: string]: (resource: any) => void };
+    private subscribeProxemicsFunctions: { [eventType: string]: (resource: any) => void };
+    private subscribeInstancesFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeEventsFunction: (data: any, eventType: string) => void;
-    private subscribeReconnectsFunction: (state: any, proxemics: any) => void;
+    private subscribeReconnectsFunction: (resourceState: any, proxemics: any, resourceId: any) => void;
+
+    private _subscribedResourceId: string;
+    public get subscribedResourceId(): string {
+        return this._subscribedResourceId;
+    }
 
     constructor(brokerUrl: string,
         localDeviceUrl: string,
@@ -102,9 +107,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         } else { this.storage = window.localStorage; }
 
 
-        this.subscribeResourceFunction = null;
-        this.subscribeProxemicsFunction = null;
-        this.subscribeInstancesFunction = null;
+        this.subscribeResourcesFunctions = {};
+        this.subscribeResourceFunctions = {};
+        this.subscribeProxemicsFunctions = {};
+        this.subscribeInstancesFunctions = {};
+        this.subscribeEventsFunction = null;
         this.subscribeReconnectsFunction = null;
 
         if (!this.credentials && this.storage.getItem(FeathersCoordinator.LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY)) {
@@ -122,7 +129,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.init().then((resource: any) => {
                 console.log(`[YXC] Reconnected after ${attempt} attempts`);
                 if (this.subscribeReconnectsFunction) {
-                    this.subscribeReconnectsFunction(resource[0], resource[1]);
+                    this.subscribeReconnectsFunction(resource[0], resource[1], resource[2]);
                 }
             }).catch((err: any) => console.error('[YXC] Reconnection Error:', err));
         });
@@ -224,8 +231,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.updateInstanceActiveness()
             }).then((updatedInstance: any) => {
                 console.log('[YXC] Updated Instance Activeness:', updatedInstance);
-                return Promise.all([this.getResourceData(), this.getProxemicsState()]);
-            }).then((results: any) => resolve(results)).catch((err: any) => {
+                return Promise.all([this.getResource(), this.getProxemicsState()]);
+            }).then((results: any) => {
+                const [resource, proxemics] = results;
+                resolve([resource.data, proxemics, resource.id])
+            }).catch((err: any) => {
                 if (!(err instanceof Conflict)) { reject(err); }
             })
         });
@@ -445,8 +455,27 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return this.eventsService.create({ value, name });
     }
 
+    private subscribeService(
+        service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>,
+        subscribeFunctions: { [eventType: string]: (entity: any) => void }
+    ) {
+        for (const eventType in subscribeFunctions) {
+            service.on(eventType, subscribeFunctions[eventType]);
+        }
+    }
+
+    private unsubscribeService(
+        service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>,
+        subscribeFunctions: { [eventType: string]: (entity: any) => void }
+    ) {
+        for (const eventType in subscribeFunctions) {
+            service.off(eventType, subscribeFunctions[eventType]);
+        }
+        subscribeFunctions = {};
+    }
+
     public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
-        let eventListener = (resource: any, eventType: string = 'updated') => {
+        const eventListener = (resource: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
              * I should also enforce that the Client ID of the token that is
@@ -461,29 +490,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 subscriberFunction(new SharedResource(resource), eventType);
             } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
+
         this.unsubscribeResources();
-        //TODO: Make sure that what I really need are the "created", "updated", "patched" and "removed" events.
-        this.resourcesService.on('created', (resource: any) => eventListener(resource, 'created'));
-        this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
-        this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
-        this.resourcesService.on('removed', (resource: any) => eventListener(resource, 'removed'));
-        this.subscribeResourcesFunction = eventListener;
+        this.subscribeResourcesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
+        this.subscribeResourcesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeResourcesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeResourcesFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
+        this.subscribeService(this.resourcesService, this.subscribeResourcesFunctions);
     }
 
     public unsubscribeResources(): void {
-        this.resourcesService.removeListener('created', this.subscribeResourcesFunction);
-        this.resourcesService.removeListener('updated', this.subscribeResourcesFunction);
-        this.resourcesService.removeListener('patched', this.subscribeResourcesFunction);
-        this.resourcesService.removeListener('removed', this.subscribeResourcesFunction);
-        this.subscribeResourcesFunction = null;
+        this.unsubscribeService(this.resourcesService, this.subscribeResourcesFunctions);
     }
 
     public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
-        let eventListener = (resource: any, eventType: string = 'updated') => {
-            let subscribedResourceId: string;
-            if (id) { subscribedResourceId = id; }
+        const eventListener = (resource: any, eventType: string = 'updated') => {
+            if (id) { this._subscribedResourceId = id; }
             else if (this.resource && this.resource.id) {
-                subscribedResourceId = this.resource.id;
+                this._subscribedResourceId = this.resource.id;
             }
             /**
              * TODO: This should be enforced at the Broker level.
@@ -494,7 +518,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * force me to change the way things are handled on the client-side
              * in order to provide extra security.
              */
-            if (subscribedResourceId === resource._id &&
+            if (this.subscribedResourceId === resource._id &&
                 this.client && this.client.raw._id === resource.client &&
                 this.user && (this.user._id === resource.user || resource.sharedWith.some((u: any) => u === this.user._id))) {
                 if (this.resource && this.resource.id === resource._id) {
@@ -504,20 +528,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
-        //TODO: Make sure that I only need "updated" and "patched" events.
-        this.resourcesService.on('updated', (resource: any) => eventListener(resource, 'updated'));
-        this.resourcesService.on('patched', (resource: any) => eventListener(resource, 'patched'));
-        this.subscribeResourceFunction = eventListener;
+        this.subscribeResourceFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
+
     }
 
     public unsubscribeResource(): void {
-        this.resourcesService.removeListener('updated', this.subscribeResourceFunction);
-        this.resourcesService.removeListener('patched', this.subscribeResourceFunction);
-        this.subscribeResourceFunction = null;
+        this.unsubscribeService(this.resourcesService, this.subscribeResourceFunctions);
     }
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
-        let eventListener = (proxemics: any, eventType: string = 'updated') => {
+        const eventListener = (proxemics: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
@@ -531,20 +553,17 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
         this.unsubscribeProxemics();
-        //TODO: Make sure that I only need "updated" and "patched" events.
-        this.proxemicsService.on('updated', (proxemics: any) => eventListener(proxemics, 'updated'));
-        this.proxemicsService.on('patched', (proxemics: any) => eventListener(proxemics, 'patched'));
-        this.subscribeProxemicsFunction = eventListener;
+        this.subscribeProxemicsFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeProxemicsFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeService(this.proxemicsService, this.subscribeProxemicsFunctions);
     }
 
     public unsubscribeProxemics(): void {
-        this.proxemicsService.removeListener('updated', this.subscribeProxemicsFunction);
-        this.proxemicsService.removeListener('patched', this.subscribeProxemicsFunction);
-        this.subscribeProxemicsFunction = null;
+        this.unsubscribeService(this.proxemicsService, this.subscribeProxemicsFunctions);
     }
 
     public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
-        let eventListener = (instance: any, eventType: string = 'updated') => {
+        const eventListener = (instance: any, eventType: string = 'updated') => {
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
@@ -563,16 +582,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
         this.unsubscribeInstances();
-        //TODO: Make sure that I only need "updated" and "patched" events.
-        this.instancesService.on('updated', (instance: any) => eventListener(instance, 'updated'));
-        this.instancesService.on('patched', (instance: any) => eventListener(instance, 'patched'));
-        this.subscribeInstancesFunction = eventListener;
+        this.subscribeInstancesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeInstancesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeService(this.instancesService, this.subscribeInstancesFunctions);
     }
 
     public unsubscribeInstances(): void {
-        this.instancesService.removeListener('updated', this.subscribeInstancesFunction);
-        this.instancesService.removeListener('patched', this.subscribeInstancesFunction);
-        this.subscribeInstancesFunction = null;
+        this.unsubscribeService(this.instancesService, this.subscribeInstancesFunctions);
     }
 
     private cleanUpCachedInstances(): void {
@@ -584,20 +600,20 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {
-        let eventListener = (event: any, eventType: string = 'created') => {
+        const eventListener = (event: any, eventType: string = 'created') => {
             subscriberFunction(event, eventType);
         };
         this.unsubscribeEvents();
-        this.eventsService.on('created', (event: any) => eventListener(event, 'created'));
-        this.subscribeEventsFunction = eventListener;
+        this.subscribeEventsFunction = (event: any) => eventListener(event, 'created');
+        this.eventsService.on('created', this.subscribeEventsFunction);
     }
 
     public unsubscribeEvents(): void {
-        this.eventsService.removeListener('created', this.subscribeEventsFunction);
+        this.eventsService.off('created', this.subscribeEventsFunction);
         this.subscribeEventsFunction = null;
     }
 
-    public subscribeReconnects(subscriberFunction: (state: any, proxemics: any) => void): void {
+    public subscribeReconnects(subscriberFunction: (resourceState: any, proxemics: any, resourceId: any) => void): void {
         this.subscribeReconnectsFunction = subscriberFunction;
     }
 
