@@ -320,7 +320,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public getResourceData(id: string = null): Promise<any> {
-        return this.getResource(id).then(resource => resource.data).catch(err => Promise.reject(err));
+        return this.getResource(id).then(resource => resource.data);
     }
 
     public setResourceData(data: any, id: string = null): Promise<any> {
@@ -504,11 +504,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
+        if (id) { this._subscribedResourceId = id; }
+        else if (this.resource && this.resource.id) {
+            this._subscribedResourceId = this.resource.id;
+        }
         const eventListener = (resource: any, eventType: string = 'updated') => {
-            if (id) { this._subscribedResourceId = id; }
-            else if (this.resource && this.resource.id) {
-                this._subscribedResourceId = this.resource.id;
-            }
             /**
              * TODO: This should be enforced at the Broker level.
              * I should also enforce that the Client ID of the token that is
