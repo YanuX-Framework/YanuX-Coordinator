@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { pull, uniq, flatten } from 'lodash';
 
 import { LitElement, customElement, property, TemplateResult, html, css } from 'lit-element';
 import { unsafeSVG } from 'lit-html/directives/unsafe-svg';
@@ -175,15 +175,10 @@ class ComponentsDistributionElement extends LitElement {
       const instanceInfo = this.componentsDistribution[this.instanceId];
       const instanceIds = Object.keys(this.componentsDistribution);
       const components =
-        _.pull(
-          _.uniq(
-            _.flatten(
-              instanceIds.map(
-                instanceId =>
-                  this.componentsDistribution[instanceId].components ? Object.keys(this.componentsDistribution[instanceId].components) : null
-              )
-            )
-          ), null);
+        pull(uniq(flatten(
+          instanceIds.map(
+            instanceId => this.componentsDistribution[instanceId].components ? Object.keys(this.componentsDistribution[instanceId].components) : null
+          ))), null);
       return html`
         <table id="components-distributions-table"
                 part="components-distributions-table">

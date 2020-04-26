@@ -1,24 +1,15 @@
-export default class Client {
-    public id: string;
+import BaseEntity from './BaseEntity'
 
-    private _raw: any;
-    public get raw(): any {
-        return this._raw;
-    }
-    public set raw(raw: any) {
-        this._raw = raw;
-        this.update(this.raw);
-    }
+export default class Client extends BaseEntity{
+    public clientId: string;
 
-    constructor(clientId: string, raw: any = null) {
-        this.id = clientId;
-        if (raw) {
-            this._raw = raw
-        }
+    constructor(clientId: string, client: any = {}) {
+        super(client);
+        this.clientId = clientId;
     }
 
     update(client: any): any {
-        this.id = client.id;
-        this._raw = client;
+        this.clientId = client.id;
+        super.update(client);
     }
 }

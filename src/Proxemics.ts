@@ -1,26 +1,16 @@
-export default class Proxemics {
+import BaseEntity from "./BaseEntity";
+
+export default class Proxemics extends BaseEntity {
     public id: string;
-    public createdAt: Date;
-    public updatedAt: Date;
+    //TODO: The proxemics state should probably be more formally described and structured so that I can create a type for it.
     public state: any;
-    private _raw: any;
-    public get raw(): any {
-        return this._raw;
-    }
-    public set raw(raw: any) {
-        this._raw = raw;
-        this.update(this.raw);
-    }
 
     constructor(proxemics: any = {}) {
-        this.update(proxemics);
+        super(proxemics);
     }
 
     public update(proxemics: any): void {
-        this.id = proxemics._id;
+        super.update(proxemics);
         this.state = proxemics.state;
-        this.createdAt = new Date(proxemics.createdAt);
-        this.updatedAt = new Date(proxemics.updatedAt);
-        this._raw = proxemics;
     }
 }

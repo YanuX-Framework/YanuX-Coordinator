@@ -1,4 +1,13 @@
-import _ from "lodash";
+import {
+    isUndefined,
+    isNull,
+    isString,
+    isArray,
+    isObjectLike,
+    flatten,
+    flattenDeep
+} from 'lodash';
+
 import RuleEngine from 'node-rules';
 
 export default class ComponentsRuleEngine {
@@ -167,7 +176,7 @@ export default class ComponentsRuleEngine {
                     }
                     this.capabilities[deviceUuid] = capabilities
                     Object.entries(([type, capability]: [string, any]) => {
-                        this.capabilities[deviceUuid][type] = _.flatten([capability]).map(expandCapability)
+                        this.capabilities[deviceUuid][type] = flatten([capability]).map(expandCapability)
                     });
                     return this.capabilities;
                 });
@@ -201,7 +210,7 @@ export default class ComponentsRuleEngine {
                     };
                     const matchCondition = (condition: any, capability: any): boolean => {
                         const matchConditionAux = (condition: any, operator: string = 'AND', enforce: boolean = true): any => {
-                            if (_.isArray(condition)) {
+                            if (isArray(condition)) {
                                 console.log('>>> Condition Array:', condition, 'Capability:', capability, 'Operator:', operator);
                                 const checkEachCondition = (c: any): boolean => matchConditionAux(c, operator);
                                 const fallback = fallbackCheck(enforce);
@@ -212,20 +221,20 @@ export default class ComponentsRuleEngine {
                                     default: return fallback || condition.every(checkEachCondition);
                                 }
                             }
-                            if (!_.isUndefined(condition.values) || !_.isUndefined(condition.value)) {
-                                if (_.isUndefined(condition.operator)) {
+                            if (!isUndefined(condition.values) || !isUndefined(condition.value)) {
+                                if (isUndefined(condition.operator)) {
                                     condition.operator = 'AND';
                                 }
-                                if (_.isString(condition.operator)) {
+                                if (isString(condition.operator)) {
                                     console.log('>>> Condition - Values Array & Operator:', condition, 'Capability:', capability, 'Operator:', operator);
-                                    return matchConditionAux(_.flatten([condition.values || condition.value]), condition.operator, condition.enforce);
+                                    return matchConditionAux(flatten([condition.values || condition.value]), condition.operator, condition.enforce);
                                 }
                             }
-                            if (_.isObjectLike(condition) && _.isString(operator)) {
+                            if (isObjectLike(condition) && isString(operator)) {
                                 console.log('>>> Condition - Object Operator:', condition, 'Capability:', capability, 'Operator:', operator);
                                 const processConditionEntries = ([entryKey, entryValue]: [string, any]): boolean => {
-                                    const capabilityValue = _.flattenDeep([capability[entryKey]]);
-                                    const conditionValue = _.flattenDeep([entryValue.value]);
+                                    const capabilityValue = flattenDeep([capability[entryKey]]);
+                                    const conditionValue = flattenDeep([entryValue.value]);
                                     const fallback = fallbackCheck(entryValue.enforce)
                                     console.log('>>>>', entryValue.operator, ':');
                                     switch (entryValue.operator) {
@@ -247,13 +256,13 @@ export default class ComponentsRuleEngine {
                                             return fallback || conditionValue
                                                 .every((cn: any, i: number): boolean => capabilityValue[i] <= cn);
                                         case 'OR':
-                                            return fallback || _.flatten([entryValue.values]).
+                                            return fallback || flatten([entryValue.values]).
                                                 some((v: any): boolean => matchConditionAux({ [entryKey]: v }));
                                         case 'AND':
-                                            return fallback || _.flatten([entryValue.values])
+                                            return fallback || flatten([entryValue.values])
                                                 .every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
                                         case 'NOT':
-                                            return fallback || _.flatten([entryValue.values])
+                                            return fallback || flatten([entryValue.values])
                                                 .every((v: any): boolean => !matchConditionAux({ [entryKey]: v }));
                                         default:
                                             return fallback || entryValue.every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
@@ -266,11 +275,11 @@ export default class ComponentsRuleEngine {
                                     default: return Object.entries(condition).every(processConditionEntries);
                                 }
                             }
-                            if (_.isArray(capability)) {
+                            if (isArray(capability)) {
                                 console.log('>>> Condition - Match Capability Array:', condition, 'Capability:', capability, 'Operator:', operator);
                                 return capability.includes(condition);
                             }
-                            if (condition == capability || (condition === true && (!_.isUndefined(capability) || !_.isNull(capability)))) {
+                            if (condition == capability || (condition === true && (!isUndefined(capability) || !isNull(capability)))) {
                                 return true;
                             } else {
                                 return false;
@@ -282,7 +291,7 @@ export default class ComponentsRuleEngine {
                     return Object.entries(componentRestrictions).every(([type, condition]: [string, any]): boolean => {
                         console.log('>> Restrictions:', type);
                         const capability = deviceCapabilities[type];
-                        if (_.isArray(capability) && capability.some(c => !_.isString(c))) {
+                        if (isArray(capability) && capability.some(c => !isString(c))) {
                             return capability.some(c => matchCondition(condition, c));
                         }
                         return matchCondition(condition, capability);

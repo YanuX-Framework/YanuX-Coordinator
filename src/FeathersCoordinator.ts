@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { isEqual } from 'lodash';
 import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
 import jsrsasign from 'jsrsasign';
@@ -9,9 +9,10 @@ import socketio from '@feathersjs/socketio-client';
 import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
+import BaseEntity from './BaseEntity';
 import Client from './Client';
 import Credentials from './Credentials';
-import DefaultResource from './Resource';
+import BaseResource from './BaseResource';
 import Proxemics from './Proxemics';
 import Instance from './Instance';
 import SharedResource from './SharedResource';
@@ -33,10 +34,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
     private static CACHED_INSTANCES_MAX_AGE: Number = 10000;
 
-    public user: any;
+    public user: BaseEntity;
     public client: Client;
-    public device: any;
-    public resource: DefaultResource;
+    public device: BaseEntity;
+    public resource: BaseResource;
     public proxemics: Proxemics;
     public instance: Instance;
     public cachedInstances: Map<string, Instance>;
@@ -79,9 +80,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         localStorageLocation: string = './data/localstorage') {
         super();
 
+        //TODO: Perhaps I should create a dedicated "User" class.
+        this.user = new BaseEntity();
         this.client = new Client(clientId);
+        //TODO: Perhaps I should create a dedicated "Device" class.
+        this.device = new BaseEntity();
         this.credentials = credentials;
-        this.resource = new DefaultResource();
+        this.resource = new BaseResource();
         this.proxemics = new Proxemics();
         this.instance = new Instance();
         this.cachedInstances = new Map<string, Instance>();
@@ -181,11 +186,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.feathersClient.service('clients').get(response.client ? response.client._id : response.authentication.payload.client._id)
                 ]);
             }).then((results: any) => {
-                this.user = results[0];
+                this.user.update(results[0]);
                 if (results[1]) {
                     return this.feathersClient.service('clients').get(results[1]);
                 } else {
-                    return this.feathersClient.service('clients').find({ query: { id: this.client.id } });
+                    return this.feathersClient.service('clients').find({ query: { id: this.client.clientId } });
                 }
             }).then((results: any) => {
                 const clients = (results as any).data ? (results as any).data : results;
@@ -193,13 +198,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     if (clients.length === 1) {
                         return clients[0];
                     } else if (clients.length === 0) {
-                        return this.feathersClient.service('clients').create({ id: this.client.id });
+                        return this.feathersClient.service('clients').create({ id: this.client.clientId });
                     } else {
                         throw new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.');
                     }
                 } else { return clients; }
             }).then((client: any) => {
-                this.client.raw = client;
+                this.client.update(client);
                 return fetch(`${this.localDeviceUrl}/deviceInfo`);
             }).then((response: any) => {
                 return response.json();
@@ -207,18 +212,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.devicesService.find({
                     query: {
                         $limit: 1,
-                        user: this.user._id,
+                        user: this.user.id,
                         deviceUuid: deviceInfo.deviceUuid
                     }
                 });
             }).then((results: any) => {
                 const devices = (results as any).data ? (results as any).data : results;
                 if (devices.length === 1) {
-                    this.device = devices[0];
+                    this.device.update(devices[0]);
                     return this.instancesService.create({
-                        user: this.user._id,
-                        client: this.client.raw._id,
-                        device: devices[0]._id
+                        user: this.user.id,
+                        client: this.client.id,
+                        device: this.device.id
                     });
                 } else if (devices.length > 1) {
                     throw new DeviceUuidNotUnique('The impossible has happened! There is more than a device client with the same UUID.');
@@ -234,7 +239,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return Promise.all([this.getResource(), this.getProxemicsState()]);
             }).then((results: any) => {
                 const [resource, proxemics] = results;
-                resolve([resource.data, proxemics, resource.id])
+                resolve([resource.data, proxemics, resource.id]);
             }).catch((err: any) => {
                 if (!(err instanceof Conflict)) { reject(err); }
             })
@@ -251,13 +256,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public getResources(owned: boolean = true, sharedWith: boolean = true): Promise<Array<SharedResource>> {
         return new Promise((resolve, reject) => {
             const orCondition = [];
-            if (owned) { orCondition.push({ user: this.user._id }) }
-            if (sharedWith) { orCondition.push({ sharedWith: this.user._id }) }
+            if (owned) { orCondition.push({ user: this.user.id }) }
+            if (sharedWith) { orCondition.push({ sharedWith: this.user.id }) }
             if (orCondition.length === 0) {
                 throw new UnsupportedConfiguration('Must choose "owned", "sharedWith" or both');
             }
             this.resourcesService.find({
-                query: { $populate: 'user', client: this.client.raw._id, $or: orCondition }
+                query: { $populate: 'user', client: this.client.id, $or: orCondition }
             }).then((resources: any) => {
                 resolve(resources.map((r: any) => new SharedResource(r)));
             }).catch((err: any) => reject(err));
@@ -267,8 +272,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public createResource(resourceName: string = ''): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
             this.resourcesService.create({
-                user: this.user._id,
-                client: this.client.raw._id,
+                user: this.user.id,
+                client: this.client.id,
                 name: resourceName,
                 default: false
             }).then((resource: any) => {
@@ -334,9 +339,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.resourcesService
                     .patch(resourceId, { data: data })
                     .then((resource: any) => {
-                        if (this.resource && this.resource.id === resourceId) {
-                            this.resource.update(resource)
-                        }
+                        this.updateResource(resource);
                         resolve(resource.data)
                     }).catch((err: any) => reject(err));
             } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
@@ -348,7 +351,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.proxemicsService.find({
                 query: {
                     $limit: 1,
-                    user: this.user._id
+                    user: this.user.id
                 }
             }).then((proxemics: any) => {
                 if ((<Array<any>>proxemics).length === 1) {
@@ -356,7 +359,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     return resolve(this.proxemics);
                 } else {
                     this.proxemicsService.create({
-                        user: this.user._id,
+                        user: this.user.id,
                     }).then((proxemics: any) => {
                         this.proxemics.update(proxemics)
                         return resolve(this.proxemics);
@@ -368,25 +371,29 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    private getResource(id: string = null): Promise<DefaultResource> {
+    private getResource(id: string = null): Promise<BaseResource> {
         return new Promise((resolve, reject) => {
             let query: any;
             if (id) {
                 query = { _id: id };
             } else {
-                query = { $limit: 1, user: this.user._id, client: this.client.raw._id, default: true };
+                query = { $limit: 1, user: this.user.id, client: this.client.id, default: true };
             }
             this.resourcesService.find({ query }).then((resources: any) => {
                 if ((<Array<any>>resources).length === 1) {
-                    this.resource.update((<any>resources)[0])
-                    return resolve(this.resource);
+                    const resource = (<any>resources)[0];
+                    if (id) { resolve(new BaseResource(resource)); }
+                    else {
+                        this.updateResource(resource);
+                        resolve(this.resource);
+                    }
                 } else if (!id) {
                     this.resourcesService.create({
-                        user: this.user._id,
-                        client: this.client.raw._id,
+                        user: this.user.id,
+                        client: this.client.id,
                         default: true
                     }).then((resource: any) => {
-                        this.resource.update(resource);
+                        this.updateResource(resource);
                         return resolve(this.resource);
                     }).catch((err: any) => {
                         if (!(err instanceof Conflict)) {
@@ -398,6 +405,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
+    private updateResource(resource: any): void {
+        if (this.resource && (!this.resource.id || this.resource.id === resource._id)) {
+            this.resource.update(resource);
+            if (!this.subscribedResourceId) {
+                this._subscribedResourceId = this.resource.id;
+            }
+        }
+    }
+
     public getProxemicsState(): Promise<any> {
         return this.getProxemics().then(proxemics => proxemics.state).catch(err => Promise.reject(err));
     }
@@ -405,8 +421,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public getInstances(extraConditions: any): Promise<any> {
         const query: any = {
             $populate: 'device',
-            user: this.user._id,
-            client: this.client.raw._id
+            user: this.user.id,
+            client: this.client.id
         };
         Object.assign(query, extraConditions);
         return this.instancesService.find({ query })
@@ -485,8 +501,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * force me to change the way things are handled on the client-side
              * in order to provide extra security.
              */
-            if (this.client && this.client.raw._id === resource.client &&
-                this.user && (this.user._id === resource.user || resource.sharedWith.some((u: any) => u === this.user._id))) {
+            if (this.client && this.client.id === resource.client &&
+                this.user && (this.user.id === resource.user || resource.sharedWith.some((u: any) => u === this.user.id))) {
                 subscriberFunction(new SharedResource(resource), eventType);
             } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
@@ -519,11 +535,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * in order to provide extra security.
              */
             if (this.subscribedResourceId === resource._id &&
-                this.client && this.client.raw._id === resource.client &&
-                this.user && (this.user._id === resource.user || resource.sharedWith.some((u: any) => u === this.user._id))) {
-                if (this.resource && this.resource.id === resource._id) {
-                    this.resource.update(resource);
-                }
+                this.client && this.client.id === resource.client &&
+                this.user && (this.user.id === resource.user || resource.sharedWith.some((u: any) => u === this.user.id))) {
+                this.updateResource(resource)
                 subscriberFunction(new SharedResource(resource).data, eventType);
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
@@ -545,8 +559,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             if (this.proxemics && this.proxemics.id === proxemics._id &&
-                this.user && this.user._id === proxemics.user) {
-                if (!_.isEqual(proxemics.state, this.proxemics.state)) {
+                this.user && this.user.id === proxemics.user) {
+                if (!isEqual(proxemics.state, this.proxemics.state)) {
                     this.proxemics.update(proxemics);
                     subscriberFunction(this.proxemics.state, eventType);
                 }
@@ -569,8 +583,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             const newInstance = new Instance(instance);
-            if (this.user && this.user._id === instance.user &&
-                this.client && this.client.raw && this.client.raw._id === instance.client) {
+            if (this.user && this.user.id === instance.user &&
+                this.client && this.client.id === instance.client) {
                 if (this.instance.id === newInstance.id) {
                     this.instance = newInstance;
                 }
