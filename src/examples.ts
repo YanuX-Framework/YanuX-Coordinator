@@ -35,32 +35,43 @@ export const componentsDistribution = {
 export const resources = [{
     id: '5e8264de675b5b44325d8dff',
     owner: 'test_developer_0@yanux.org',
-    default: true,
-    data: {
-        message: 'in a bottle'
+    user: {
+        id: '5e879dc892bb3a6fd92d3c00',
+        email: 'test_developer_0@yanux.org'
     },
-    createdAt: '2020-03-30T21:30:06.262Z',
-    updatedAt: '2020-04-01T19:56:09.584Z'
-},
-{
+    default: true,
+    sharedWith: [{
+        id: '5e879dc892bb3a6fd92d3c10',
+        email: 'test_user_10@yanux.org'
+    }, {
+        id: '5e879dc892bb3a6fd92d3c11',
+        email: 'test_user_11@yanux.org'
+    }, {
+        id: '5e879dc892bb3a6fd92d3c12',
+        email: 'test_user_12@yanux.org'
+    }]
+}, {
     id: '5e84f4950f5de41614105259',
     owner: 'test_user_0@yanux.org',
+    user: {
+        id: '5e879dc892bb3a6fd92d3c01',
+        email: 'test_user_0@yanux.org'
+    },
     name: 'Bottled Message',
     default: false,
-    data: {
-        message: 'in a can'
-    },
-    createdAt: '2020-04-01T20:07:49.719Z',
-    updatedAt: '2020-04-03T20:37:24.510Z'
-},
-{
+    sharedWith: [{
+        id: '5e879dc892bb3a6fd92d3c10',
+        email: 'test_user_10@yanux.org'
+    }, {
+        id: '5e879dc892bb3a6fd92d3c11',
+        email: 'test_user_11@yanux.org'
+    }, {
+        id: '5e879dc892bb3a6fd92d3c12',
+        email: 'test_user_12@yanux.org'
+    }]
+}, {
     id: '5e879dc892bb3a6fd92d3c15',
     owner: 'test_user_1@yanux.org',
     name: 'Bottled Message',
-    default: false,
-    data: {
-        message: 'in a box'
-    },
-    createdAt: '2020-04-03T20:34:16.375Z',
-    updatedAt: '2020-04-03T20:34:16.375Z'
+    default: false
 }];

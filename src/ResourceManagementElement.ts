@@ -10,7 +10,9 @@ import { PaperDialogElement } from '@polymer/paper-dialog/paper-dialog.js';
 
 @customElement('yanux-resource-management')
 class ResourceManagermentElement extends LitElement {
-    @property({ type: String, reflect: true }) resourceId: string;
+    @property({ type: String, reflect: true }) userId: string;
+    @property({ type: String, reflect: true }) selectedResourceId: string;
+    @property({ type: Object, reflect: true }) selectedResource: SharedResource
     @property({ type: Array, reflect: true }) resources: Array<SharedResource>
 
     checkIfOwnerAndResourceNameAreUnique(resource: SharedResource): boolean {
@@ -19,21 +21,22 @@ class ResourceManagermentElement extends LitElement {
 
     resourceSelected(e: Event) {
         const resourceSelect = e.target as HTMLSelectElement;
-        const selectedResourceId = resourceSelect.value;
-        this.resourceId = selectedResourceId;
-        console.log('[YXRME - Selected] ResourceId:', selectedResourceId);
+        this.selectedResourceId = resourceSelect.value;
+        this.selectedResource = this.resources[resourceSelect.selectedIndex];
+        console.log('[YXRME - Selected] ResourceId:', this.selectedResourceId);
         let event = new CustomEvent('resource-selected', {
             detail: {
-                selectedResourceId,
-                resource: this.resources[resourceSelect.selectedIndex]
+                selectedResourceId: this.selectedResourceId,
+                resource: this.selectedResource
             }
         });
         this.dispatchEvent(event);
     }
 
     updated(_changedProperties: PropertyValues) {
-        const resourceManagementSelect = this.shadowRoot.getElementById('resource-management-select') as HTMLSelectElement;
-        this.resourceId = resourceManagementSelect ? resourceManagementSelect.value : null;
+        const resourceSelectEl = this.shadowRoot.getElementById('resource-management-select') as HTMLSelectElement;
+        this.selectedResourceId = resourceSelectEl ? resourceSelectEl.value : null;
+        this.selectedResource = resourceSelectEl && this.resources ? this.resources[resourceSelectEl.selectedIndex] : null;
     }
 
     createResource(e: Event) {
@@ -50,7 +53,14 @@ class ResourceManagermentElement extends LitElement {
         shareResourceDialog.close();
         const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
         console.log('[YXRME - Share Resource] Event:', e, 'Name:', userEmail);
-        let event = new CustomEvent('share-resource', { detail: { resourceId: this.resourceId, userEmail } });
+        let event = new CustomEvent('share-resource',
+            {
+                detail: {
+                    resourceId: this.selectedResourceId,
+                    resource: this.selectedResource,
+                    userEmail
+                }
+            });
         this.dispatchEvent(event);
     }
 
@@ -58,7 +68,30 @@ class ResourceManagermentElement extends LitElement {
         const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
         deleteResourceDialog.close();
         console.log('[YXRME - Delete Resource] Event:', e);
-        let event = new CustomEvent('delete-resource', { detail: { resourceId: this.resourceId } });
+        let event = new CustomEvent('delete-resource', {
+            detail: {
+                resourceId: this.selectedResourceId,
+                resource: this.selectedResource
+            }
+        });
+        this.dispatchEvent(event);
+    }
+
+    unshareResource(e: Event) {
+        const unshareResourceDialog = this.shadowRoot.getElementById('unshare-resource-dialog') as PaperDialogElement;
+        unshareResourceDialog.close();
+        console.log('[YXRME - Unshare Resource] Event:', e);
+
+        const sharedWithSelectEl = this.shadowRoot.getElementById('resource-management-sharedwith-select') as HTMLSelectElement;
+        const user = sharedWithSelectEl && this.selectedResource && this.selectedResource.sharedWith ? this.selectedResource.sharedWith[sharedWithSelectEl.selectedIndex] : null;
+
+        let event = new CustomEvent('unshare-resource', {
+            detail: {
+                resourceId: this.selectedResourceId,
+                resource: this.selectedResource,
+                userEmail: user.email
+            }
+        });
         this.dispatchEvent(event);
     }
 
@@ -80,30 +113,61 @@ class ResourceManagermentElement extends LitElement {
         deleteResourceDialog.open();
     }
 
+    showUnshareResourceDialog(e: Event) {
+        console.log('[YXRME - Show Delete Resource Dialog] Event:', e);
+        const unshareResourceDialog = this.shadowRoot.getElementById('unshare-resource-dialog') as PaperDialogElement;
+        unshareResourceDialog.open();
+    }
+
     static get styles() {
         return css`
         :host {
             --host-font-family: Arial, Helvetica, sans-serif;
             --host-display: block;
             --host-width: max-content;
-            --resource-management-icon-size: 24px;
+
+            --resource-management-text-align: center;
             --resource-management-select-padding: 4px;
-            --resource-management-buttons-text-align: center;
-            --dialog-form-margin: auto auto 12px auto;
-            --dialog-form-margin-fields: 24px auto auto auto;
-            --dialog-form-buttons-display: flex;
-            --dialog-form-buttons-jutify-content: end;
-            --dialog-form-buttons-margin: 12px auto auto auto;
+            --resource-management-icon-size: 24px;
+            --resource-management-sharedwith-title-font-weight: bold;
+            --resource-management-sharedwith-title-font-size: 0.8em;
+
             --button-outline: 0;
+            --button-vertical-align: middle;
             --button-border: 1px solid #ccc;
             --button-margin: 4px;
             --button-padding: 8px 12px;
             --button-border-radius: 8px;
             --button-active-box-shadow: inset 0px 0 32px #00000077;
+            --small-button-padding: 4px 6px;
+
+            --dialog-form-margin: auto auto 12px auto;
+            --dialog-form-margin-fields: 24px auto auto auto;
+            --dialog-form-buttons-display: flex;
+            --dialog-form-buttons-jutify-content: end;
+            --dialog-form-buttons-margin: 12px auto auto auto;
+            --dialog-label-font-weight: bold;
+            --dialog-input-padding: 8px;
 
             font-family: var(--host-font-family);
             display: var(--host-display);
             width: var(--host-width);
+        }
+
+
+        #resource-management,
+        #resource-management-buttons {
+            text-align: var(--resource-management-text-align);
+        }
+
+        #resource-management-select,
+        #resource-management-sharedwith-select {
+            padding: var(--resource-management-select-padding);
+        }
+
+        #resource-management-sharedwith-title{
+            font-weight: var(--resource-management-sharedwith-title-font-weight);
+            font-size: var(--resource-management-sharedwith-title-font-size);
         }
 
         .resource-management-icon {
@@ -111,13 +175,29 @@ class ResourceManagermentElement extends LitElement {
             height: var(--resource-management-icon-size);
         }
 
-        #resource-management-select {
-            padding: var(--resource-management-select-padding);
-            appearance: none;
+        .resource-management-sharedwith-icon {
+            width: var(--resource-management-icon-size);
+            height: var(--resource-management-icon-size);
         }
 
-        #resource-management-buttons {
-            text-align: var(--resource-management-buttons-text-align);
+        .button:enabled:active {
+            box-shadow: var(--button-active-box-shadow);
+        }
+
+        .button:focus {
+            outline: var(--button-outline);
+        }
+
+        .button {
+            border: var(--button-border);
+            padding: var(--button-padding);
+            border-radius: var(--button-border-radius);
+            margin: var(--button-margin);
+            vertical-align: var(--button-vertical-align);
+        }
+
+        .small-button {
+            padding: var(--small-button-padding);
         }
 
         .dialog-form {
@@ -132,31 +212,14 @@ class ResourceManagermentElement extends LitElement {
             display: var(--dialog-form-buttons-display);;
             justify-content: var(--dialog-form-buttons-jutify-content);
             margin: var(--dialog-form-buttons-margin);
-        }
-
-        button:focus {
-            outline: var(--button-outline);
-        }
-
-        .resource-management-button,
-        .dialog-button {
-            border: var(--button-border);
-            padding: var(--button-padding);
-            border-radius: var(--button-border-radius);
-            margin: var(--button-margin);
-        }
-
-        .dialog-button:active,
-        .resource-management-button:active {
-            box-shadow: var(--button-active-box-shadow);
-        }
+        }        
 
         .dialog-label {
-            font-weight: bold;
+            font-weight: var(--dialog-label-font-weight);
         }
 
         .dialog-input {
-            padding: 8px;
+            padding: var(--dialog-input-padding);
         }
         `;
     }
@@ -164,45 +227,87 @@ class ResourceManagermentElement extends LitElement {
     render(): TemplateResult {
         if (this.resources) {
             return html`
-            <div id="resource-management"
-                part="resource-management">
-                <select id="resource-management-select"
-                        part="resource-management-select"
-                        @change=${this.resourceSelected}>
-                ${this.resources.map(r => html`
-                    <option
-                        id="resource-management-option-${r.id}"
-                        class="resource-management-option"
-                        part="resource-management-option resource-management-option-${r.id}" 
-                        value="${r.id}"
-                        ?selected="${r.id === this.resourceId}">
-                        ${r.name ? `${r.name}: ` : null} ${r.owner}
-                        ${this.checkIfOwnerAndResourceNameAreUnique(r) ? ` (${r.id})` : null}
-                    </option>
-                `)}
-                </select>
-                <div id="resource-management-buttons" part="resourcer-management-buttons">
-                    <button id="resource-management-button-create" part="resource-management-button-create"
-                        class="resource-management-button" type="button"
-                        @click="${this.showCreateResourceDialog}">
-                        <slot name="resource-management-button-create-icon">
-                            <div id="resource-management-create-icon" class="resource-management-icon">${unsafeSVG(createIcon)}</div>
-                        </slot>
-                    </button> 
-                    <button id="resource-management-button-share" part="resource-management-button-share"
-                        class="resource-management-button" type="button"
-                        @click="${this.showShareResourceDialog}">
-                        <slot name="resource-management-button-share-icon">
-                            <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(shareIcon)}</div>
-                        </slot>
-                    </button>
-                    <button id="resource-management-button-delete" part="resource-management-button-delete"
-                        class="resource-management-button" type="button"
-                        @click="${this.showDeleteResourceDialog}">
-                        <slot name="resource-management-button-delete-icon">
-                            <div id="resource-management-delete-icon" class="resource-management-icon">${unsafeSVG(deleteIcon)}</div>
-                        </slot>
-                    </button>
+            <div id="container"
+                part="container">
+                <div id="resource-management"
+                    part="resource-management">
+
+                    <select id="resource-management-select"
+                            part="resource-management-select"
+                            @change=${this.resourceSelected}>
+                    ${this.resources.map(r => html`
+                        <option id="resource-management-option-${r.id}"
+                            class="resource-management-option"
+                            part="resource-management-option resource-management-option-${r.id}" 
+                            value="${r.id}"
+                            ?selected="${r.id === this.selectedResourceId}">
+                            ${r.name ? `${r.name}: ` : null} ${r.owner}
+                            ${this.checkIfOwnerAndResourceNameAreUnique(r) ? ` (${r.id})` : null}
+                            ${r.default ? `- default` : null}
+                        </option>
+                    `)}
+                    </select>
+
+                    <div id="resource-management-buttons" part="resourcer-management-buttons">
+                        <button id="resource-management-button-create" part="resource-management-button-create"
+                            class="button resource-management-button" type="button"
+                            @click="${this.showCreateResourceDialog}">
+                            <slot name="resource-management-button-create-icon">
+                                <div id="resource-management-create-icon" class="resource-management-icon">${unsafeSVG(createIcon)}</div>
+                            </slot>
+                        </button>
+
+                        <button id="resource-management-button-share" part="resource-management-button-share"
+                            class="button resource-management-button" type="button"
+                            @click="${this.showShareResourceDialog}">
+                            <slot name="resource-management-button-share-icon">
+                                <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(shareIcon)}</div>
+                            </slot>
+                        </button>
+
+                        <button id="resource-management-button-delete" part="resource-management-button-delete"
+                            class="button resource-management-button" type="button"
+                            @click="${this.showDeleteResourceDialog}">
+                            <slot name="resource-management-button-delete-icon">
+                                <div id="resource-management-delete-icon" class="resource-management-icon">${unsafeSVG(deleteIcon)}</div>
+                            </slot>
+                        </button>
+                    </div>
+
+                    <div id="resource-management-sharedwith"
+                        part="resource-management-sharedwith">
+                        ${this.selectedResource && this.selectedResource.sharedWith && this.selectedResource.sharedWith.length > 0 ? html`
+                        <span id="resource-management-sharedwith-title"
+                            part=resource-management-sharedwith-title">
+                            <slot name="resource-management-sharedwith-title">
+                                Shared with:
+                            </slot>
+                        </span>
+                        <select id="resource-management-sharedwith-select"
+                                part="resource-management-sharedwith-select">
+                            ${this.selectedResource.sharedWith.map(u => html`
+                                <option id="resource-management-sharedwith-option-${u.id}"
+                                    class="resource-management-sharedwith-option"
+                                    part="resource-management-sharedwith-option resource-management-sharedwith-option-${u.id}"
+                                    value="${u.id}">
+                                    ${u.email}
+                                </option>
+                            `)}
+                        </select>
+                        <span id="resource-management-sharedwith-buttons" part="resourcer-management-sharedwith-buttons">
+                            <button id="resource-management-sharedwith-button-delete" part="resource-management-sharedwith-button-delete"
+                                class="button small-button resource-management-sharedwith-button" type="button"
+                                ?disabled=${this.userId && this.selectedResource && this.selectedResource.user && this.selectedResource.user.id !== this.userId}
+                                @click="${this.showUnshareResourceDialog}>
+                                <slot name="resource-management-sharedwith-button-delete-icon">
+                                    <div id="resource-management-sharedwith-delete-icon" class="resource-management-sharedwith-icon">
+                                        ${unsafeSVG(deleteIcon)}
+                                    </div>
+                                </slot>
+                            </button>
+                        </span>
+                        ` : null}
+                    </div>
                 </div>
                 <div id="dialogs">
                     <paper-dialog id="create-resource-dialog" class="dialog">
@@ -215,15 +320,16 @@ class ResourceManagermentElement extends LitElement {
                                 <input class="dialog-input" id="create-resource-name" name="create-resource-name" type="text" required>
                             </div>
                             <div class="buttons">
-                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
                                     <slot name="create-resource-cancel">Cancel</slot>
                                 </button>
-                                <button class="dialog-button dialog-button-ok" type="submit" autofocus>
+                                <button class="button dialog-button dialog-button-ok" type="submit" autofocus>
                                     <slot name="create-resource-ok">OK</slot>
                                 </button>
                             </div>
                         </form>
                     </paper-dialog>
+
                     <paper-dialog id="share-resource-dialog">
                         <form id="share-resource-dialog-form" class="dialog-form" @submit="${this.shareResource}" action="javascript:void(0);">
                             <h2>Share Resource</h2>
@@ -234,15 +340,16 @@ class ResourceManagermentElement extends LitElement {
                                 <input class="dialog-input" id="share-resource-email" name="share-resource-email" type="email" required>
                             </div>
                             <div class="buttons">
-                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
                                     <slot name="create-resource-cancel">Cancel</slot>
                                 </button>
-                                <button class="dialog-button dialog-button-ok" type="submit" autofocus>
+                                <button class="button dialog-button dialog-button-ok" type="submit" autofocus>
                                     <slot name="create-resource-ok">OK</slot>
                                 </button>
                             </div>
                         </form>
                     </paper-dialog>
+
                     <paper-dialog id="delete-resource-dialog">
                         <div class="dialog-form">
                             <h2>Delete Resource</h2>
@@ -250,10 +357,27 @@ class ResourceManagermentElement extends LitElement {
                                 <slot name="delete-resource-message">Are you sure you want to delete the currently selected resource?</slot>
                             </div>
                             <div class="buttons">
-                                <button class="dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
                                     <slot name="create-resource-cancel">Cancel</slot>
                                 </button>
-                                <button class="dialog-button dialog-button-ok" type="button" @click="${this.deleteResource}" dialog-confirm autofocus>
+                                <button class="button dialog-button dialog-button-ok" type="button" @click="${this.deleteResource}" dialog-confirm autofocus>
+                                    <slot name="create-resource-ok">OK</slot>
+                                </button>
+                            </div>
+                        </div>
+                    </paper-dialog>
+
+                    <paper-dialog id="unshare-resource-dialog">
+                        <div class="dialog-form">
+                            <h2>Unshare Resource</h2>
+                            <div class="fields">
+                                <slot name="unshare-resource-message">Are you sure you want to stop the currently selected user from accessing this resource?</slot>
+                            </div>
+                            <div class="buttons">
+                                <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                    <slot name="create-resource-cancel">Cancel</slot>
+                                </button>
+                                <button class="button dialog-button dialog-button-ok" type="button" @click="${this.unshareResource}" dialog-confirm autofocus>
                                     <slot name="create-resource-ok">OK</slot>
                                 </button>
                             </div>

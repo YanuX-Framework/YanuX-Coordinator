@@ -12,12 +12,12 @@ class ComponentsDistributionElement extends LitElement {
   @property({ type: String, reflect: true }) instanceId: string;
   @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution;
 
-  private instanceAutoButtonTitle: string;
-
   checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
     return Object.entries(this.componentsDistribution)
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
-        instanceId !== currInstanceId && instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid);
+        instanceId !== currInstanceId &&
+        this.componentsDistribution[instanceId] &&
+        instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid);
   }
 
   handleCheckboxClick(instanceId: string, component: string) {

@@ -10,6 +10,7 @@ import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
 import BaseEntity from './BaseEntity';
+import User from './User';
 import Client from './Client';
 import Credentials from './Credentials';
 import BaseResource from './BaseResource';
@@ -80,10 +81,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         localStorageLocation: string = './data/localstorage') {
         super();
 
-        //TODO: Perhaps I should create a dedicated "User" class.
-        this.user = new BaseEntity();
+        this.user = new User();
         this.client = new Client(clientId);
-        //TODO: Perhaps I should create a dedicated "Device" class.
+        //TODO: Perhaps I should create a dedicated "Device" class and expand each of the other service entity classes to encompass all that returned from the server.
         this.device = new BaseEntity();
         this.credentials = credentials;
         this.resource = new BaseResource();
@@ -136,7 +136,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (this.subscribeReconnectsFunction) {
                     this.subscribeReconnectsFunction(resource[0], resource[1], resource[2]);
                 }
-            }).catch((err: any) => console.error('[YXC] Reconnection Error:', err));
+            }).catch((e: Error) => console.error('[YXC] Reconnection Error:', e));
         });
         /* TODO:
          * Perhaps I should deal with ALL/MOST of the Socket.io events!
@@ -240,8 +240,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then((results: any) => {
                 const [resource, proxemics] = results;
                 resolve([resource.data, proxemics, resource.id]);
-            }).catch((err: any) => {
-                if (!(err instanceof Conflict)) { reject(err); }
+            }).catch((e: Error) => {
+                if (!(e instanceof Conflict)) { reject(e); }
             })
         });
     }
@@ -262,10 +262,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 throw new UnsupportedConfiguration('Must choose "owned", "sharedWith" or both');
             }
             this.resourcesService.find({
-                query: { $populate: 'user', client: this.client.id, $or: orCondition }
+                /**
+                 * TODO:
+                 * Sorting by "default: -1" puts default resources at the top. Howver, it does not guarantee that the one at the top is the one owned by the current user.
+                 * Therefore, I must either find a way to enforce this or I should just forbid sharing of default resources altogether.
+                 */
+                query: { $populate: ['user', 'sharedWith'], client: this.client.id, $or: orCondition, $sort: { default: -1 } }
             }).then((resources: any) => {
                 resolve(resources.map((r: any) => new SharedResource(r)));
-            }).catch((err: any) => reject(err));
+            }).catch((e: Error) => reject(e));
         });
     }
 
@@ -278,7 +283,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 default: false
             }).then((resource: any) => {
                 resolve(new SharedResource(resource))
-            }).catch((e: Error) => { reject(e) })
+            }).catch((e: Error) => reject(e))
         });
     }
 
@@ -288,7 +293,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.resourcesService.remove(id)
                 .then((resource: any) => {
                     resolve(new SharedResource(resource))
-                }).catch((e: Error) => { reject(e) })
+                }).catch((e: Error) => reject(e))
         });
     }
 
@@ -304,7 +309,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else {
                     return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } });
                 }
-            }).then(resource => { resolve(new SharedResource(resource)); }).catch(err => { reject(err); })
+            }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
         });
     }
 
@@ -320,7 +325,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 } else {
                     return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } });
                 }
-            }).then(resource => { resolve(new SharedResource(resource)); }).catch(err => { reject(err); })
+            }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
         });
     }
 
@@ -341,7 +346,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     .then((resource: any) => {
                         this.updateResource(resource);
                         resolve(resource.data)
-                    }).catch((err: any) => reject(err));
+                    }).catch((e: Error) => reject(e));
             } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
         });
     }
@@ -363,11 +368,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     }).then((proxemics: any) => {
                         this.proxemics.update(proxemics)
                         return resolve(this.proxemics);
-                    }).catch((err: any) => {
-                        if (!(err instanceof Conflict)) { reject(err); }
+                    }).catch((e: Error) => {
+                        if (!(e instanceof Conflict)) { reject(e); }
                     })
                 }
-            }).catch((err: any) => reject(err));
+            }).catch((e: Error) => reject(e));
         });
     }
 
@@ -395,13 +400,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     }).then((resource: any) => {
                         this.updateResource(resource);
                         return resolve(this.resource);
-                    }).catch((err: any) => {
-                        if (!(err instanceof Conflict)) {
-                            reject(err);
+                    }).catch((e: Error) => {
+                        if (!(e instanceof Conflict)) {
+                            reject(e);
                         } else { resolve(this.resource); }
                     });
                 } else { reject(new ResourceNotFound('Resource Not Found')); }
-            }).catch((err: any) => reject(err));
+            }).catch((e: Error) => reject(e));
         });
     }
 
@@ -415,7 +420,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public getProxemicsState(): Promise<any> {
-        return this.getProxemics().then(proxemics => proxemics.state).catch(err => Promise.reject(err));
+        return this.getProxemics().then(proxemics => proxemics.state).catch((e: Error) => Promise.reject(e));
     }
 
     public getInstances(extraConditions: any): Promise<any> {
@@ -446,7 +451,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     .then((instance: any) => {
                         this.instance.update(instance);
                         resolve(instance)
-                    }).catch((err: any) => reject(err));
+                    }).catch((e: Error) => reject(e));
             } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
         });
     }
@@ -461,7 +466,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                             this.instance.update(instance);
                         }
                         resolve(instance)
-                    }).catch((err: any) => reject(err));
+                    }).catch((e: Error) => reject(e));
             } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
 
         });
