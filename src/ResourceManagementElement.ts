@@ -1,12 +1,13 @@
 import { LitElement, customElement, property, TemplateResult, html, css, PropertyValues } from 'lit-element';
 import { unsafeSVG } from 'lit-html/directives/unsafe-svg';
+
 import '@polymer/paper-dialog/paper-dialog.js';
+import { PaperDialogElement } from '@polymer/paper-dialog/paper-dialog.js';
 
 import SharedResource from './SharedResource';
 import createIcon from './assets/icons/create-black.svg';
 import shareIcon from './assets/icons/share-black.svg';
 import deleteIcon from './assets/icons/delete-black.svg';
-import { PaperDialogElement } from '@polymer/paper-dialog/paper-dialog.js';
 
 @customElement('yanux-resource-management')
 class ResourceManagermentElement extends LitElement {

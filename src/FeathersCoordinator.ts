@@ -52,6 +52,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private resourceSubscriptionsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
@@ -59,6 +60,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private storage: Storage;
 
     private subscribeResourcesFunctions: { [eventType: string]: (resource: any) => void };
+    private subscribeResourceSubscriptionsFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeResourceFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeProxemicsFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeInstancesFunctions: { [eventType: string]: (resource: any) => void };
@@ -100,6 +102,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
         this.resourcesService = this.feathersClient.service('resources');
+        this.resourceSubscriptionsService = this.feathersClient.service('resource-subscriptions');
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
@@ -113,6 +116,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
 
         this.subscribeResourcesFunctions = {};
+        this.subscribeResourceSubscriptionsFunctions = {};
         this.subscribeResourceFunctions = {};
         this.subscribeProxemicsFunctions = {};
         this.subscribeInstancesFunctions = {};
@@ -226,9 +230,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         device: this.device.id
                     });
                 } else if (devices.length > 1) {
-                    throw new DeviceUuidNotUnique('The impossible has happened! There is more than a device client with the same UUID.');
+                    throw new DeviceUuidNotUnique('There is more than a device client with the same UUID.');
                 } else {
-                    throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found!');
+                    throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found.');
                 }
             }).then((instance: any) => {
                 this.instance.update(instance);
@@ -239,7 +243,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return Promise.all([this.getResource(), this.getProxemicsState()]);
             }).then((results: any) => {
                 const [resource, proxemics] = results;
-                resolve([resource.data, proxemics, resource.id]);
+                this.updateResourceSubscription()
+                    .then(() => resolve([resource.data, proxemics, resource.id]))
+                    .catch(e => reject(e));
             }).catch((e: Error) => {
                 if (!(e instanceof Conflict)) { reject(e); }
             })
@@ -542,7 +548,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             if (this.subscribedResourceId === resource._id &&
                 this.client && this.client.id === resource.client &&
                 this.user && (this.user.id === resource.user || resource.sharedWith.some((u: any) => u === this.user.id))) {
-                this.updateResource(resource)
+                this.updateResource(resource);
                 subscriberFunction(new SharedResource(resource).data, eventType);
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
@@ -550,11 +556,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeResourceFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
         this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
         this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
-
+        this.updateResourceSubscription();
     }
 
     public unsubscribeResource(): void {
         this.unsubscribeService(this.resourcesService, this.subscribeResourceFunctions);
+    }
+
+    private updateResourceSubscription(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            if (this.user.id && this.client.id && this.subscribedResourceId) {
+                this.resourceSubscriptionsService.patch(null,
+                    { user: this.user.id, client: this.client.id, resource: this.subscribedResourceId },
+                    { query: { user: this.user.id, client: this.client.id } })
+                    //TODO: Create a class representing a ResouceSubscription to wrap the value resturned from server.
+                    .then(resourceSubscription => resolve(resourceSubscription))
+                    .catch(e => reject(e));
+            } else { resolve() };
+        });
     }
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
