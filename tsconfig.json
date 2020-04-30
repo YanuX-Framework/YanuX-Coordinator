@@ -19,7 +19,6 @@
             "ScriptHost"
         ],
         "noImplicitAny": true,
-        "skipLibCheck": true,
         "sourceMap": true,
         "declaration": true,
         "esModuleInterop": true,

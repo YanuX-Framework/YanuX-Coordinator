@@ -501,35 +501,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         subscribeFunctions = {};
     }
 
-    public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
-        const eventListener = (resource: any, eventType: string = 'updated') => {
-            /**
-             * TODO: This should be enforced at the Broker level.
-             * I should also enforce that the Client ID of the token that is
-             * used for authentication matches the provided clientId.
-             * However, I have yet to find a straightforward way of doing so.
-             * I will surely have to make some server-side ajustments that may
-             * force me to change the way things are handled on the client-side
-             * in order to provide extra security.
-             */
-            if (this.client && this.client.id === resource.client &&
-                this.user && (this.user.id === resource.user || resource.sharedWith.some((u: any) => u === this.user.id))) {
-                subscriberFunction(new SharedResource(resource), eventType);
-            } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
-        };
-
-        this.unsubscribeResources();
-        this.subscribeResourcesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
-        this.subscribeResourcesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
-        this.subscribeResourcesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
-        this.subscribeResourcesFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
-        this.subscribeService(this.resourcesService, this.subscribeResourcesFunctions);
-    }
-
-    public unsubscribeResources(): void {
-        this.unsubscribeService(this.resourcesService, this.subscribeResourcesFunctions);
-    }
-
     public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
         if (id) { this._subscribedResourceId = id; }
         else if (this.resource && this.resource.id) {
@@ -547,7 +518,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             if (this.subscribedResourceId === resource._id &&
                 this.client && this.client.id === resource.client &&
-                this.user && (this.user.id === resource.user || resource.sharedWith.some((u: any) => u === this.user.id))) {
+                this.user && (this.user.id === resource.user ||
+                    (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
                 this.updateResource(resource);
                 subscriberFunction(new SharedResource(resource).data, eventType);
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
@@ -561,6 +533,59 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public unsubscribeResource(): void {
         this.unsubscribeService(this.resourcesService, this.subscribeResourceFunctions);
+    }
+
+    public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
+        const eventListener = (resource: any, eventType: string = 'updated') => {
+            /**
+             * TODO: This should be enforced at the Broker level.
+             * [Read the similar comment on the 'subscribeResource' method for an explanation.]
+             */
+            if (this.client && this.client.id === resource.client &&
+                this.user && (this.user.id === resource.user ||
+                    (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
+                subscriberFunction(new SharedResource(resource), eventType);
+            } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
+        };
+
+        this.unsubscribeResources();
+        this.subscribeResourcesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
+        this.subscribeResourcesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeResourcesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeResourcesFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
+        this.subscribeService(this.resourcesService, this.subscribeResourcesFunctions);
+    }
+
+    public unsubscribeResources(): void {
+        this.unsubscribeService(this.resourcesService, this.subscribeResourcesFunctions);
+    }
+
+    public subscribeResourceSubscriptions(subscriberFunction: (data: any, eventType: string) => void): void {
+        let currentResourceSubscription: any;
+        const eventListener = (resourceSubscription: any, eventType: string = 'updated') => {
+            /**
+             * TODO: This should be enforced at the Broker level.
+             * [Read the similar comment on the 'subscribeResource' method for an explanation.]
+             */
+            if (this.client && this.client.id === resourceSubscription.client &&
+                this.user && this.user.id === resourceSubscription.user &&
+                !currentResourceSubscription ||
+                (currentResourceSubscription && currentResourceSubscription.resource !== resourceSubscription.resource)) {
+                //TODO: Perhaps I should create ResourceSubscription class to wrap around the value returned from the broker.
+                currentResourceSubscription = resourceSubscription;
+                subscriberFunction(currentResourceSubscription, eventType);
+            } else { console.error('[YXC] subscribeResourceSubscriptions - Ignored Event Type:', eventType, 'on Resource:', resourceSubscription); }
+        };
+        this.unsubscribeResourceSubscriptions();
+        this.subscribeResourceSubscriptionsFunctions['created'] = (resource: any) => eventListener(resource, 'created');
+        this.subscribeResourceSubscriptionsFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeResourceSubscriptionsFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeResourceSubscriptionsFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
+        this.subscribeService(this.resourceSubscriptionsService, this.subscribeResourceSubscriptionsFunctions);
+    }
+
+    public unsubscribeResourceSubscriptions(): void {
+        this.unsubscribeService(this.resourceSubscriptionsService, this.subscribeResourceSubscriptionsFunctions);
     }
 
     private updateResourceSubscription(): Promise<any> {

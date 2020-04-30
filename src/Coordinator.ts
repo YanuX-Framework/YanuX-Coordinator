@@ -16,10 +16,12 @@ export default interface Coordinator {
     updateInstanceActiveness(): Promise<any>;
     setComponentDistribution(components: any, auto: Boolean, instanceId: string): Promise<any>;
     emitEvent(value: any, name: string): Promise<any>;
-    subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void;
-    unsubscribeResources(): void;
     subscribeResource(subscriberFunction: (data: any, eventType: string, ) => void, id: string): void;
     unsubscribeResource(): void;
+    subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void;
+    unsubscribeResources(): void;
+    subscribeResourceSubscriptions(subscriberFunction: (data: any, eventType: string) => void): void;
+    unsubscribeResourceSubscriptions(): void;
     subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void;
     unsubscribeProxemics(): void;
     subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void;
