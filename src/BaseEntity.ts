@@ -2,7 +2,7 @@ import { isNil } from 'lodash';
 
 export default class BaseEntity {
     public id: string;
-    public bokerName: string;
+    public brokerName: string;
     public createdAt: Date;
     public updatedAt: Date;
 
@@ -20,7 +20,7 @@ export default class BaseEntity {
 
     update(entity: any): any {
         this.id = entity._id
-        this.bokerName = entity.bokerName;
+        this.brokerName = entity.brokerName;
         this.createdAt = new Date(entity.createdAt);
         this.updatedAt = new Date(entity.updatedAt);
         //this._raw = entity;

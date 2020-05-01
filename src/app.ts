@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", function (e) {
     
     yanuxResourceManagementElement.setAttribute('userId', '5e879dc892bb3a6fd92d3c01');
     yanuxResourceManagementElement.setAttribute('resources', JSON.stringify(resources));
-    
+    yanuxResourceManagementElement.setAttribute('selectedResourceId', '5e84f4950f5de41614105259');
+
     yanuxResourceManagementElement.addEventListener(
         'resource-selected',
         (e: CustomEvent) => console.log('[YXRME]: Resource Selected', e.detail)

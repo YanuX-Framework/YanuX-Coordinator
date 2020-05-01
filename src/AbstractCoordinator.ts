@@ -21,8 +21,8 @@ export default abstract class AbstractCoordinator implements Coordinator {
     public abstract unsubscribeResource(): void;
     public abstract subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void;
     public abstract unsubscribeResources(): void;
-    public abstract subscribeResourceSubscriptions(subscriberFunction: (data: any, eventType: string) => void): void;
-    public abstract unsubscribeResourceSubscriptions(): void;
+    public abstract subscribeResourceSubscription(subscriberFunction: (data: any, eventType: string) => void): void;
+    public abstract unsubscribeResourceSubscription(): void;
     public abstract subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void;
     public abstract unsubscribeProxemics(): void;
     public abstract subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void;

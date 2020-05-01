@@ -36,8 +36,8 @@ class ResourceManagermentElement extends LitElement {
 
     updated(_changedProperties: PropertyValues) {
         const resourceSelectEl = this.shadowRoot.getElementById('resource-management-select') as HTMLSelectElement;
-        this.selectedResourceId = resourceSelectEl ? resourceSelectEl.value : null;
         this.selectedResource = resourceSelectEl && this.resources ? this.resources[resourceSelectEl.selectedIndex] : null;
+        this.selectedResourceId = this.selectedResource ? this.selectedResource.id : this.selectedResourceId;
     }
 
     createResource(e: Event) {

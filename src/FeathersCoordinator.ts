@@ -20,14 +20,12 @@ import SharedResource from './SharedResource';
 
 import ClientNameNotUnique from './errors/ClientNameNotUnique';
 import DeviceNotFoundError from './errors/DeviceNotFoundError';
-import DeviceUuidNotUnique from './errors/DeviceUuidNotUnique';
 import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
 import UnavailableResourceId from './errors/UnavailableResourceId';
 import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFoundError from './errors/UserNotFoundError';
-
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -52,7 +50,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
-    private resourceSubscriptionsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    private resourceSubscriptionService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
@@ -60,7 +58,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private storage: Storage;
 
     private subscribeResourcesFunctions: { [eventType: string]: (resource: any) => void };
-    private subscribeResourceSubscriptionsFunctions: { [eventType: string]: (resource: any) => void };
+    private subscribeResourceSubscriptionFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeResourceFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeProxemicsFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeInstancesFunctions: { [eventType: string]: (resource: any) => void };
@@ -102,7 +100,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.devicesService = this.feathersClient.service('devices');
         this.instancesService = this.feathersClient.service('instances');
         this.resourcesService = this.feathersClient.service('resources');
-        this.resourceSubscriptionsService = this.feathersClient.service('resource-subscriptions');
+        this.resourceSubscriptionService = this.feathersClient.service('resource-subscriptions');
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
@@ -116,7 +114,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
 
         this.subscribeResourcesFunctions = {};
-        this.subscribeResourceSubscriptionsFunctions = {};
+        this.subscribeResourceSubscriptionFunctions = {};
         this.subscribeResourceFunctions = {};
         this.subscribeProxemicsFunctions = {};
         this.subscribeInstancesFunctions = {};
@@ -194,17 +192,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (results[1]) {
                     return this.feathersClient.service('clients').get(results[1]);
                 } else {
-                    return this.feathersClient.service('clients').find({ query: { id: this.client.clientId } });
+                    return this.feathersClient.service('clients').find({ query: { $limit: 1, id: this.client.clientId } });
                 }
             }).then((results: any) => {
                 const clients = (results as any).data ? (results as any).data : results;
                 if (Array.isArray(clients)) {
                     if (clients.length === 1) {
                         return clients[0];
-                    } else if (clients.length === 0) {
-                        return this.feathersClient.service('clients').create({ id: this.client.clientId });
                     } else {
-                        throw new ClientNameNotUnique('The impossible has happened! There is more than a single client with the same UNIQUE name.');
+                        return this.feathersClient.service('clients').create({ id: this.client.clientId });
                     }
                 } else { return clients; }
             }).then((client: any) => {
@@ -229,8 +225,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         client: this.client.id,
                         device: this.device.id
                     });
-                } else if (devices.length > 1) {
-                    throw new DeviceUuidNotUnique('There is more than a device client with the same UUID.');
                 } else {
                     throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found.');
                 }
@@ -255,6 +249,63 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public logout() { this.feathersClient.logout(); }
 
     public isConnected(): boolean { return this.socket.connected; }
+
+    public getResourceData(id: string = null): Promise<any> {
+        return this.getResource(id).then(resource => resource.data);
+    }
+
+    public setResourceData(data: any, id: string = null): Promise<any> {
+        return new Promise<any>((resolve, reject) => {
+            let resourceId: string;
+            if (id) { resourceId = id; }
+            else if (this.resource && this.resource.id) {
+                resourceId = this.resource.id;
+            }
+            if (resourceId) {
+                this.resourcesService
+                    .patch(resourceId, { data: data })
+                    .then((resource: any) => {
+                        this.updateResource(resource);
+                        resolve(resource.data)
+                    }).catch((e: Error) => reject(e));
+            } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
+        });
+    }
+
+    private getResource(id: string = null): Promise<BaseResource> {
+        return new Promise((resolve, reject) => {
+            const retrieveResource = () => {
+                let query: any;
+                if (id) { query = { _id: id }; }
+                else { query = { $limit: 1, user: this.user.id, client: this.client.id, default: true }; }
+                this.resourcesService.find({ query }).then((resources: any) => {
+                    if ((<Array<any>>resources).length === 1) {
+                        const resource = (<any>resources)[0];
+                        if (id) { resolve(new BaseResource(resource)); }
+                        else { this.updateResource(resource); resolve(this.resource); }
+                    } else if (!id) {
+                        this.resourcesService.create({ user: this.user.id, client: this.client.id, default: true })
+                            .then((resource: any) => { this.updateResource(resource); return resolve(this.resource); })
+                            .catch((e: Error) => {
+                                if (!(e instanceof Conflict)) { reject(e); }
+                                else { resolve(this.resource); }
+                            });
+                    } else { reject(new ResourceNotFound('Resource Not Found')); }
+                }).catch((e: Error) => reject(e));
+            }
+            this.getResourceSubscription().then(resourceSubscription => {
+                if (resourceSubscription && resourceSubscription.resource) {
+                    return this.resourcesService.get(resourceSubscription.resource)
+                } else { return Promise.resolve(); }
+            }).then(resource => {
+                if (resource) {
+                    this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
+                    if (id) { resolve(new BaseResource(resource)); }
+                    else { this.updateResource(resource); resolve(this.resource); }
+                } else { retrieveResource() }
+            }).catch(e => retrieveResource());
+        });
+    }
 
     //TODO:
     //I encapsulated the response into something that has a specific type.
@@ -287,9 +338,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 client: this.client.id,
                 name: resourceName,
                 default: false
-            }).then((resource: any) => {
-                resolve(new SharedResource(resource))
-            }).catch((e: Error) => reject(e))
+            }).then((resource: any) => resolve(new SharedResource(resource))).catch((e: Error) => reject(e))
         });
     }
 
@@ -297,9 +346,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public deleteResource(id: string): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
             this.resourcesService.remove(id)
-                .then((resource: any) => {
-                    resolve(new SharedResource(resource))
-                }).catch((e: Error) => reject(e))
+                .then((resource: any) => resolve(new SharedResource(resource))).catch((e: Error) => reject(e))
         });
     }
 
@@ -307,14 +354,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         return new Promise((resolve, reject) => {
             Promise.all([
                 this.resourcesService.get(resourceId),
-                this.usersService.find({ $limit: 1, query: { email: userEmail } })
+                this.usersService.find({ query: { $limit: 1, email: userEmail } })
             ]).then(results => {
                 let [resource, users] = results;
-                if (users.length !== 1) {
-                    throw new UserNotFoundError('Could not find a user with the given e-mail address.')
-                } else {
-                    return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } });
-                }
+                if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
+                else { return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
         });
     }
@@ -326,115 +370,55 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.usersService.find({ $limit: 1, query: { email: userEmail } })
             ]).then(results => {
                 let [resource, users] = results;
-                if (users.length !== 1) {
-                    throw new UserNotFoundError('Could not find a user with the given e-mail address.')
-                } else {
-                    return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } });
-                }
+                if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
+                else { return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
-        });
-    }
-
-    public getResourceData(id: string = null): Promise<any> {
-        return this.getResource(id).then(resource => resource.data);
-    }
-
-    public setResourceData(data: any, id: string = null): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            let resourceId: string;
-            if (id) { resourceId = id; }
-            else if (this.resource && this.resource.id) {
-                resourceId = this.resource.id;
-            }
-            if (resourceId) {
-                this.resourcesService
-                    .patch(resourceId, { data: data })
-                    .then((resource: any) => {
-                        this.updateResource(resource);
-                        resolve(resource.data)
-                    }).catch((e: Error) => reject(e));
-            } else { reject(new UnavailableResourceId('Unavailable Resource Id')) }
-        });
-    }
-
-    private getProxemics(): Promise<Proxemics> {
-        return new Promise((resolve, reject) => {
-            this.proxemicsService.find({
-                query: {
-                    $limit: 1,
-                    user: this.user.id
-                }
-            }).then((proxemics: any) => {
-                if ((<Array<any>>proxemics).length === 1) {
-                    this.proxemics.update((<any>proxemics)[0])
-                    return resolve(this.proxemics);
-                } else {
-                    this.proxemicsService.create({
-                        user: this.user.id,
-                    }).then((proxemics: any) => {
-                        this.proxemics.update(proxemics)
-                        return resolve(this.proxemics);
-                    }).catch((e: Error) => {
-                        if (!(e instanceof Conflict)) { reject(e); }
-                    })
-                }
-            }).catch((e: Error) => reject(e));
-        });
-    }
-
-    private getResource(id: string = null): Promise<BaseResource> {
-        return new Promise((resolve, reject) => {
-            let query: any;
-            if (id) {
-                query = { _id: id };
-            } else {
-                query = { $limit: 1, user: this.user.id, client: this.client.id, default: true };
-            }
-            this.resourcesService.find({ query }).then((resources: any) => {
-                if ((<Array<any>>resources).length === 1) {
-                    const resource = (<any>resources)[0];
-                    if (id) { resolve(new BaseResource(resource)); }
-                    else {
-                        this.updateResource(resource);
-                        resolve(this.resource);
-                    }
-                } else if (!id) {
-                    this.resourcesService.create({
-                        user: this.user.id,
-                        client: this.client.id,
-                        default: true
-                    }).then((resource: any) => {
-                        this.updateResource(resource);
-                        return resolve(this.resource);
-                    }).catch((e: Error) => {
-                        if (!(e instanceof Conflict)) {
-                            reject(e);
-                        } else { resolve(this.resource); }
-                    });
-                } else { reject(new ResourceNotFound('Resource Not Found')); }
-            }).catch((e: Error) => reject(e));
         });
     }
 
     private updateResource(resource: any): void {
         if (this.resource && (!this.resource.id || this.resource.id === resource._id)) {
             this.resource.update(resource);
-            if (!this.subscribedResourceId) {
-                this._subscribedResourceId = this.resource.id;
-            }
+            if (!this.subscribedResourceId) { this._subscribedResourceId = this.resource.id; }
         }
+    }
+
+    private getResourceSubscription(): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.resourceSubscriptionService.find({ query: { $limit: 1, user: this.user.id, client: this.client.id } })
+                .then(resourceSubscriptions => {
+                    if (resourceSubscriptions.length === 1) { resolve(resourceSubscriptions[0]); }
+                    else if (resourceSubscriptions.length === 0) { resolve(); }
+                }).catch(e => reject(e));
+        });
     }
 
     public getProxemicsState(): Promise<any> {
         return this.getProxemics().then(proxemics => proxemics.state).catch((e: Error) => Promise.reject(e));
     }
 
+    private getProxemics(): Promise<Proxemics> {
+        return new Promise((resolve, reject) => {
+            this.proxemicsService.find({ query: { $limit: 1, user: this.user.id } })
+                .then((proxemics: any) => {
+                    if ((<Array<any>>proxemics).length === 1) {
+                        this.proxemics.update((<any>proxemics)[0]);
+                        return resolve(this.proxemics);
+                    } else {
+                        this.proxemicsService.create({ user: this.user.id })
+                            .then((proxemics: any) => {
+                                this.proxemics.update(proxemics)
+                                return resolve(this.proxemics);
+                            }).catch((e: Error) => {
+                                if (!(e instanceof Conflict)) { reject(e); }
+                            });
+                    }
+                }).catch((e: Error) => reject(e));
+        });
+    }
+
     public getInstances(extraConditions: any): Promise<any> {
-        const query: any = {
-            $populate: 'device',
-            user: this.user.id,
-            client: this.client.id
-        };
+        const query: any = { $populate: 'device', user: this.user.id, client: this.client.id };
         Object.assign(query, extraConditions);
         return this.instancesService.find({ query })
     }
@@ -560,7 +544,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.unsubscribeService(this.resourcesService, this.subscribeResourcesFunctions);
     }
 
-    public subscribeResourceSubscriptions(subscriberFunction: (data: any, eventType: string) => void): void {
+    public subscribeResourceSubscription(subscriberFunction: (data: any, eventType: string) => void): void {
         let currentResourceSubscription: any;
         const eventListener = (resourceSubscription: any, eventType: string = 'updated') => {
             /**
@@ -574,24 +558,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 //TODO: Perhaps I should create ResourceSubscription class to wrap around the value returned from the broker.
                 currentResourceSubscription = resourceSubscription;
                 subscriberFunction(currentResourceSubscription, eventType);
-            } else { console.error('[YXC] subscribeResourceSubscriptions - Ignored Event Type:', eventType, 'on Resource:', resourceSubscription); }
+            } else { console.error('[YXC] subscribeResourceSubscriptions - Ignored Event Type:', eventType, 'on ResourceSubscription:', resourceSubscription); }
         };
-        this.unsubscribeResourceSubscriptions();
-        this.subscribeResourceSubscriptionsFunctions['created'] = (resource: any) => eventListener(resource, 'created');
-        this.subscribeResourceSubscriptionsFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
-        this.subscribeResourceSubscriptionsFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
-        this.subscribeResourceSubscriptionsFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
-        this.subscribeService(this.resourceSubscriptionsService, this.subscribeResourceSubscriptionsFunctions);
+        this.unsubscribeResourceSubscription();
+        this.subscribeResourceSubscriptionFunctions['created'] = (resource: any) => eventListener(resource, 'created');
+        this.subscribeResourceSubscriptionFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
+        this.subscribeResourceSubscriptionFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeResourceSubscriptionFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
+        this.subscribeService(this.resourceSubscriptionService, this.subscribeResourceSubscriptionFunctions);
     }
 
-    public unsubscribeResourceSubscriptions(): void {
-        this.unsubscribeService(this.resourceSubscriptionsService, this.subscribeResourceSubscriptionsFunctions);
+    public unsubscribeResourceSubscription(): void {
+        this.unsubscribeService(this.resourceSubscriptionService, this.subscribeResourceSubscriptionFunctions);
     }
 
     private updateResourceSubscription(): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.user.id && this.client.id && this.subscribedResourceId) {
-                this.resourceSubscriptionsService.patch(null,
+                this.resourceSubscriptionService.patch(null,
                     { user: this.user.id, client: this.client.id, resource: this.subscribedResourceId },
                     { query: { user: this.user.id, client: this.client.id } })
                     //TODO: Create a class representing a ResouceSubscription to wrap the value resturned from server.
