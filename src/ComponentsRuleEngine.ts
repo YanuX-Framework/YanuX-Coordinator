@@ -90,20 +90,8 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
-            name: 'Start with the default components configuration',
-            priority: 3,
-            condition: function (R: any) {
-                R.when(this.defaultComponentsConfig && !this.componentsConfig);
-            },
-            consequence: function (R: any) {
-                this.componentsConfig = this.defaultComponentsConfig;
-                R.next();
-            }
-        });
-
-        this.R.register({
             name: 'Use the current configuration of the local device\'s instance if there is already a manual component distribition attributed to it',
-            priority: 2,
+            priority: 3,
             condition: function (R: any) {
                 this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
                 R.when(!this.ignoreManual
@@ -116,6 +104,18 @@ export default class ComponentsRuleEngine {
                 this.componentsConfig = this.localInstance.componentsDistribution.components;
                 this.auto = false;
                 R.stop();
+            }
+        });
+
+        this.R.register({
+            name: 'Start with the default components configuration',
+            priority: 2,
+            condition: function (R: any) {
+                R.when(this.defaultComponentsConfig && !this.componentsConfig);
+            },
+            consequence: function (R: any) {
+                this.componentsConfig = this.defaultComponentsConfig;
+                R.next();
             }
         });
 

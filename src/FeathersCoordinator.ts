@@ -142,11 +142,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
          * https://socket.io/docs/client-api/#Event-%E2%80%98connect-error%E2%80%99
          */
         feathersSocketClient.io.on('connect_error', (error: any) => { console.error('[YXC] Connection Error:', error); })
-
-        if (typeof window !== 'undefined') {
-            //TODO: If this stops working, look into somehow using a Web Worker.
-            window.addEventListener('beforeunload', () => { this.setInstanceActiveness(false); });
-        }
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', () => { this.setInstanceActiveness(!document.hidden); });
         }
@@ -497,6 +492,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this._subscribedResourceId = this.resource.id;
         }
         const eventListener = (resource: any, eventType: string = 'updated') => {
+            console.log('[YXC] Subscribed Resource:', resource, 'Event Type:', eventType);
             /**
              * TODO: This should be enforced at the Broker level.
              * I should also enforce that the Client ID of the token that is
@@ -515,8 +511,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
+        this.subscribeResourceFunctions['created'] = (resource: any) => eventListener(resource, 'created');
         this.subscribeResourceFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
         this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeResourceFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
         return this.updateResourceSubscription();
     }
@@ -527,6 +525,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (resource: any, eventType: string = 'updated') => {
+            console.log('[YXC] Subscribed Resources:', resource, 'Event Type:', eventType);
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
@@ -553,6 +552,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public subscribeResourceSubscription(subscriberFunction: (data: any, eventType: string) => void): void {
         let currentResourceSubscription: any;
         const eventListener = (resourceSubscription: any, eventType: string = 'updated') => {
+            console.log('[YXC] Subscribed Resource Subscription:', resourceSubscription, 'Event Type:', eventType);
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
@@ -593,6 +593,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (proxemics: any, eventType: string = 'updated') => {
+            console.log('[YXC] Subscribed Proxemics:', proxemics, 'Event Type:', eventType);
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
@@ -606,8 +607,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
         this.unsubscribeProxemics();
+        this.subscribeProxemicsFunctions['created'] = (resource: any) => eventListener(resource, 'created');
         this.subscribeProxemicsFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
         this.subscribeProxemicsFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeProxemicsFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.proxemicsService, this.subscribeProxemicsFunctions);
     }
 
@@ -617,17 +620,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (instance: any, eventType: string = 'updated') => {
+            console.log('[YXC] Subscribed Instance:', instance, 'Event Type:', eventType);
+            const newInstance = new Instance(instance);
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
-            const newInstance = new Instance(instance);
             if (this.user && this.user.id === instance.user &&
                 this.client && this.client.id === instance.client) {
                 if (this.instance.id === newInstance.id) {
                     this.instance = newInstance;
                 }
-                if (!newInstance.equals(this.cachedInstances.get(newInstance.id))) {
+                if (eventType === 'removed' || !newInstance.equals(this.cachedInstances.get(newInstance.id))) {
                     subscriberFunction(instance, eventType);
                 }
                 this.cachedInstances.set(newInstance.id, newInstance);
@@ -635,8 +639,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
         this.unsubscribeInstances();
+        this.subscribeInstancesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
         this.subscribeInstancesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
         this.subscribeInstancesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeInstancesFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.instancesService, this.subscribeInstancesFunctions);
     }
 
@@ -654,6 +660,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (event: any, eventType: string = 'created') => {
+            console.log('[YXC] Subscribed Event:', event, 'Event Type:', eventType);
             subscriberFunction(event, eventType);
         };
         this.unsubscribeEvents();
