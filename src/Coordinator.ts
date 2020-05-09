@@ -1,13 +1,13 @@
 import SharedResource from "./SharedResource";
 
 export default interface Coordinator {
-    getResourceData(id: string): Promise<any>;
+    getResourceData(resourceId: string): Promise<any>;
     setResourceData(data: any, id: string): Promise<any>;
     getResources(): Promise<Array<SharedResource>>;
     createResource(resourceName: string): Promise<SharedResource>;
-    deleteResource(id: string): Promise<SharedResource>;
-    shareResource(resourceId: string, userEmail: string): Promise<SharedResource>;
-    unshareResource(resourceId: string, userEmail: string): Promise<SharedResource>;
+    deleteResource(resourceId: string): Promise<SharedResource>;
+    shareResource(userEmail: string, resourceId: string): Promise<SharedResource>;
+    unshareResource(userEmail: string, resourceId: string): Promise<SharedResource>;
     getProxemicsState(): Promise<any>;
     getProxemicsState(state: any): Promise<any>;
     getInstances(extraConditions: any): Promise<any>;
@@ -16,7 +16,7 @@ export default interface Coordinator {
     updateInstanceActiveness(): Promise<any>;
     setComponentDistribution(components: any, auto: Boolean, instanceId: string): Promise<any>;
     emitEvent(value: any, name: string): Promise<any>;
-    subscribeResource(subscriberFunction: (data: any, eventType: string, ) => void, id: string): void;
+    subscribeResource(subscriberFunction: (data: any, eventType: string, ) => void, resourceId: string): Promise<any>;
     unsubscribeResource(): void;
     subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void;
     unsubscribeResources(): void;

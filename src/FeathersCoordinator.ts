@@ -18,7 +18,6 @@ import Proxemics from './Proxemics';
 import Instance from './Instance';
 import SharedResource from './SharedResource';
 
-import ClientNameNotUnique from './errors/ClientNameNotUnique';
 import DeviceNotFoundError from './errors/DeviceNotFoundError';
 import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
 import UnavailableResourceId from './errors/UnavailableResourceId';
@@ -66,9 +65,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private subscribeReconnectsFunction: (resourceState: any, proxemics: any, resourceId: any) => void;
 
     private _subscribedResourceId: string;
-    public get subscribedResourceId(): string {
-        return this._subscribedResourceId;
-    }
+    public get subscribedResourceId(): string { return this._subscribedResourceId; }
 
     constructor(brokerUrl: string,
         localDeviceUrl: string,
@@ -145,8 +142,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
          * https://socket.io/docs/client-api/#Event-%E2%80%98connect-error%E2%80%99
          */
         feathersSocketClient.io.on('connect_error', (error: any) => { console.error('[YXC] Connection Error:', error); })
+
+        if (typeof window !== 'undefined') {
+            //TODO: If this stops working, look into somehow using a Web Worker.
+            window.addEventListener('beforeunload', () => { this.setInstanceActiveness(false); });
+        }
         if (typeof document !== 'undefined') {
-            document.addEventListener('visibilitychange', () => this.setInstanceActiveness(!document.hidden));
+            document.addEventListener('visibilitychange', () => { this.setInstanceActiveness(!document.hidden); });
         }
     }
 
@@ -250,17 +252,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public isConnected(): boolean { return this.socket.connected; }
 
-    public getResourceData(id: string = null): Promise<any> {
-        return this.getResource(id).then(resource => resource.data);
+    public getResourceData(resourceId: string = null): Promise<any> {
+        return this.getResource(resourceId).then(resource => resource.data);
     }
 
-    public setResourceData(data: any, id: string = null): Promise<any> {
+    public setResourceData(data: any, resourceId: string = this.subscribedResourceId): Promise<any> {
         return new Promise<any>((resolve, reject) => {
-            let resourceId: string;
-            if (id) { resourceId = id; }
-            else if (this.resource && this.resource.id) {
-                resourceId = this.resource.id;
-            }
+            if (!resourceId && this.resource && this.resource.id) { resourceId = this.resource.id; }
             if (resourceId) {
                 this.resourcesService
                     .patch(resourceId, { data: data })
@@ -272,18 +270,19 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    private getResource(id: string = null): Promise<BaseResource> {
+    private getResource(resourceId: string = this.subscribedResourceId): Promise<BaseResource> {
         return new Promise((resolve, reject) => {
             const retrieveResource = () => {
                 let query: any;
-                if (id) { query = { _id: id }; }
+                if (resourceId) { query = { _id: resourceId }; }
+                else if (this.resource && this.resource.id) { query = { _id: this.resource.id }; }
                 else { query = { $limit: 1, user: this.user.id, client: this.client.id, default: true }; }
                 this.resourcesService.find({ query }).then((resources: any) => {
                     if ((<Array<any>>resources).length === 1) {
                         const resource = (<any>resources)[0];
-                        if (id) { resolve(new BaseResource(resource)); }
+                        if (resourceId) { resolve(new BaseResource(resource)); }
                         else { this.updateResource(resource); resolve(this.resource); }
-                    } else if (!id) {
+                    } else if (!resourceId) {
                         this.resourcesService.create({ user: this.user.id, client: this.client.id, default: true })
                             .then((resource: any) => { this.updateResource(resource); return resolve(this.resource); })
                             .catch((e: Error) => {
@@ -300,7 +299,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(resource => {
                 if (resource) {
                     this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
-                    if (id) { resolve(new BaseResource(resource)); }
+                    if (resourceId) { resolve(new BaseResource(resource)); }
                     else { this.updateResource(resource); resolve(this.resource); }
                 } else { retrieveResource() }
             }).catch(e => retrieveResource());
@@ -343,14 +342,21 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     //TODO: Ensure that only the owner can delete the resource
-    public deleteResource(id: string): Promise<SharedResource> {
+    public deleteResource(resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
-            this.resourcesService.remove(id)
+            this.resourcesService.remove(resourceId)
                 .then((resource: any) => resolve(new SharedResource(resource))).catch((e: Error) => reject(e))
         });
     }
 
-    public shareResource(resourceId: string, userEmail: string): Promise<SharedResource> {
+    public renameResource(name: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
+        return new Promise((resolve, reject) => {
+            this.resourcesService.patch(resourceId, { name })
+                .then((resource: any) => resolve(new SharedResource(resource))).catch((e: Error) => reject(e))
+        });
+    }
+
+    public shareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
             Promise.all([
                 this.resourcesService.get(resourceId),
@@ -363,7 +369,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public unshareResource(resourceId: string, userEmail: string): Promise<SharedResource> {
+    public unshareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
             Promise.all([
                 this.resourcesService.get(resourceId),
@@ -485,8 +491,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         subscribeFunctions = {};
     }
 
-    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, id: string = null): void {
-        if (id) { this._subscribedResourceId = id; }
+    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, resourceId: string): Promise<any> {
+        if (resourceId) { this._subscribedResourceId = resourceId; }
         else if (this.resource && this.resource.id) {
             this._subscribedResourceId = this.resource.id;
         }
@@ -512,7 +518,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeResourceFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
         this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
         this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
-        this.updateResourceSubscription();
+        return this.updateResourceSubscription();
     }
 
     public unsubscribeResource(): void {

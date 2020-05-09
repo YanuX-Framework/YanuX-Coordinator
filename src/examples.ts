@@ -57,7 +57,7 @@ export const resources = [{
         id: '5e879dc892bb3a6fd92d3c01',
         email: 'test_user_0@yanux.org'
     },
-    name: 'Bottled Message',
+    name: 'Unbottled Message',
     default: false,
     sharedWith: [{
         id: '5e879dc892bb3a6fd92d3c10',

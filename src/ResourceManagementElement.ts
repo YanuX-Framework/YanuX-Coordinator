@@ -6,6 +6,7 @@ import { PaperDialogElement } from '@polymer/paper-dialog/paper-dialog.js';
 
 import SharedResource from './SharedResource';
 import createIcon from './assets/icons/create-black.svg';
+import renameIcon from './assets/icons/rename-black.svg';
 import shareIcon from './assets/icons/share-black.svg';
 import deleteIcon from './assets/icons/delete-black.svg';
 
@@ -28,6 +29,7 @@ class ResourceManagermentElement extends LitElement {
         let event = new CustomEvent('resource-selected', {
             detail: {
                 selectedResourceId: this.selectedResourceId,
+                resourceId: this.selectedResourceId,
                 resource: this.selectedResource
             }
         });
@@ -49,19 +51,18 @@ class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    shareResource(e: Event) {
-        const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
-        shareResourceDialog.close();
-        const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
-        console.log('[YXRME - Share Resource] Event:', e, 'Name:', userEmail);
-        let event = new CustomEvent('share-resource',
-            {
-                detail: {
-                    resourceId: this.selectedResourceId,
-                    resource: this.selectedResource,
-                    userEmail
-                }
-            });
+    renameResource(e: Event) {
+        const renameResourceDialog = this.shadowRoot.getElementById('rename-resource-dialog') as PaperDialogElement;
+        renameResourceDialog.close();
+        const resourceName = (this.shadowRoot.getElementById('rename-resource-name') as HTMLInputElement).value;
+        console.log('[YXRME - Rename Resource] Event:', e, 'Name:', resourceName);
+        let event = new CustomEvent('rename-resource', {
+            detail: {
+                resourceId: this.selectedResourceId,
+                resource: this.selectedResource,
+                resourceName
+            }
+        });
         this.dispatchEvent(event);
     }
 
@@ -73,6 +74,21 @@ class ResourceManagermentElement extends LitElement {
             detail: {
                 resourceId: this.selectedResourceId,
                 resource: this.selectedResource
+            }
+        });
+        this.dispatchEvent(event);
+    }
+
+    shareResource(e: Event) {
+        const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
+        shareResourceDialog.close();
+        const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
+        console.log('[YXRME - Share Resource] Event:', e, 'Name:', userEmail);
+        let event = new CustomEvent('share-resource', {
+            detail: {
+                resourceId: this.selectedResourceId,
+                resource: this.selectedResource,
+                userEmail
             }
         });
         this.dispatchEvent(event);
@@ -102,16 +118,22 @@ class ResourceManagermentElement extends LitElement {
         createResourceDialog.open();
     }
 
-    showShareResourceDialog(e: Event) {
-        console.log('[YXRME - Show Share Resource Dialog] Event:', e);
-        const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
-        shareResourceDialog.open();
+    showRenameResourceDialog(e: Event) {
+        console.log('[YXRME - Show Rename Resource Dialog] Event:', e);
+        const renameResourceDialog = this.shadowRoot.getElementById('rename-resource-dialog') as PaperDialogElement;
+        renameResourceDialog.open();
     }
 
     showDeleteResourceDialog(e: Event) {
         console.log('[YXRME - Show Delete Resource Dialog] Event:', e);
         const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
         deleteResourceDialog.open();
+    }
+
+    showShareResourceDialog(e: Event) {
+        console.log('[YXRME - Show Share Resource Dialog] Event:', e);
+        const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
+        shareResourceDialog.open();
     }
 
     showUnshareResourceDialog(e: Event) {
@@ -260,6 +282,14 @@ class ResourceManagermentElement extends LitElement {
 
                         <button id="resource-management-button-share" part="resource-management-button-share"
                             class="button resource-management-button" type="button"
+                            @click="${this.showRenameResourceDialog}">
+                            <slot name="resource-management-button-share-icon">
+                                <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(renameIcon)}</div>
+                            </slot>
+                        </button>
+
+                        <button id="resource-management-button-share" part="resource-management-button-share"
+                            class="button resource-management-button" type="button"
                             @click="${this.showShareResourceDialog}">
                             <slot name="resource-management-button-share-icon">
                                 <div id="resource-management-share-icon" class="resource-management-icon">${unsafeSVG(shareIcon)}</div>
@@ -313,7 +343,7 @@ class ResourceManagermentElement extends LitElement {
                 <div id="dialogs">
                     <paper-dialog id="create-resource-dialog" class="dialog">
                         <form id="create-resource-dialog-form" class="dialog-form" @submit="${this.createResource}" action="javascript:void(0);">
-                            <h2>Create Resource</h2>
+                            <h2><slot name="create-resource-title">Create Resource</slot></h2>
                             <div class="fields">
                                 <label class="dialog-label" for="create-resource-name">
                                     <slot name="create-resource-name-label">Name:</slot>
@@ -331,9 +361,30 @@ class ResourceManagermentElement extends LitElement {
                         </form>
                     </paper-dialog>
 
+                    <paper-dialog id="rename-resource-dialog" class="dialog">
+                        <form id="rename-resource-dialog-form" class="dialog-form" @submit="${this.renameResource}" action="javascript:void(0);">
+                            <h2><slot name="rename-resource-title">Rename Resource</slot></h2>
+                            <div class="fields">
+                                <label class="dialog-label" for="rename-resource-name">
+                                    <slot name="rename-resource-name-label">Name:</slot>
+                                </label>
+                                <input class="dialog-input" id="rename-resource-name" name="rename-resource-name" type="text" required
+                                        .value="${this.selectedResource ? (this.selectedResource.name ? this.selectedResource.name : '') : ''}">
+                            </div>
+                            <div class="buttons">
+                                <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
+                                    <slot name="rename-resource-cancel">Cancel</slot>
+                                </button>
+                                <button class="button dialog-button dialog-button-ok" type="submit" autofocus>
+                                    <slot name="rename-resource-ok">OK</slot>
+                                </button>
+                            </div>
+                        </form>
+                    </paper-dialog>
+
                     <paper-dialog id="share-resource-dialog">
                         <form id="share-resource-dialog-form" class="dialog-form" @submit="${this.shareResource}" action="javascript:void(0);">
-                            <h2>Share Resource</h2>
+                            <h2><slot name="share-resource-title">Share Resource</slot></h2>
                             <div class="fields">
                                 <label class="dialog-label" for="share-resource-email">
                                     <slot name="share-resource-email-label">Email:</slot>
@@ -353,7 +404,7 @@ class ResourceManagermentElement extends LitElement {
 
                     <paper-dialog id="delete-resource-dialog">
                         <div class="dialog-form">
-                            <h2>Delete Resource</h2>
+                            <h2><slot name="delete-resource-title">Delete Resource</slot></h2>
                             <div class="fields">
                                 <slot name="delete-resource-message">Are you sure you want to delete the currently selected resource?</slot>
                             </div>
@@ -370,7 +421,7 @@ class ResourceManagermentElement extends LitElement {
 
                     <paper-dialog id="unshare-resource-dialog">
                         <div class="dialog-form">
-                            <h2>Unshare Resource</h2>
+                            <h2><slot name="unshare-resource-title">Unshare Resource</slot></h2>
                             <div class="fields">
                                 <slot name="unshare-resource-message">Are you sure you want to stop the currently selected user from accessing this resource?</slot>
                             </div>

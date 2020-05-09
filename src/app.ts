@@ -32,6 +32,10 @@ document.addEventListener("DOMContentLoaded", function (e) {
         (e: CustomEvent) => console.log('[YXRME]: Create Resource', e.detail)
     );
     yanuxResourceManagementElement.addEventListener(
+        'rename-resource',
+        (e: CustomEvent) => console.log('[YXRME]: Rename Resource', e.detail)
+    );
+    yanuxResourceManagementElement.addEventListener(
         'share-resource',
         (e: CustomEvent) => console.log('[YXRME]: Share Resource', e.detail)
     );
