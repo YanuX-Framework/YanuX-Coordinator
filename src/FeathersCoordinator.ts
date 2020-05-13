@@ -13,7 +13,7 @@ import BaseEntity from './BaseEntity';
 import User from './User';
 import Client from './Client';
 import Credentials from './Credentials';
-import BaseResource from './BaseResource';
+import Resource from './Resource';
 import Proxemics from './Proxemics';
 import Instance from './Instance';
 import SharedResource from './SharedResource';
@@ -35,7 +35,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public user: BaseEntity;
     public client: Client;
     public device: BaseEntity;
-    public resource: BaseResource;
+    public resource: Resource;
     public proxemics: Proxemics;
     public instance: Instance;
     public cachedInstances: Map<string, Instance>;
@@ -83,7 +83,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         //TODO: Perhaps I should create a dedicated "Device" class and expand each of the other service entity classes to encompass all that returned from the server.
         this.device = new BaseEntity();
         this.credentials = credentials;
-        this.resource = new BaseResource();
+        this.resource = new Resource();
         this.proxemics = new Proxemics();
         this.instance = new Instance();
         this.cachedInstances = new Map<string, Instance>();
@@ -265,7 +265,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    private getResource(resourceId: string = this.subscribedResourceId): Promise<BaseResource> {
+    private getResource(resourceId: string = this.subscribedResourceId): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const retrieveResource = () => {
                 let query: any;
@@ -275,7 +275,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.resourcesService.find({ query }).then((resources: any) => {
                     if ((<Array<any>>resources).length === 1) {
                         const resource = (<any>resources)[0];
-                        if (resourceId) { resolve(new BaseResource(resource)); }
+                        if (resourceId) { resolve(new Resource(resource)); }
                         else { this.updateResource(resource); resolve(this.resource); }
                     } else if (!resourceId) {
                         this.resourcesService.create({ user: this.user.id, client: this.client.id, default: true })
@@ -294,7 +294,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(resource => {
                 if (resource) {
                     this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
-                    if (resourceId) { resolve(new BaseResource(resource)); }
+                    if (resourceId) { resolve(new Resource(resource)); }
                     else { this.updateResource(resource); resolve(this.resource); }
                 } else { retrieveResource() }
             }).catch(e => retrieveResource());
@@ -370,7 +370,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.resourcesService.get(resourceId),
                 this.usersService.find({ $limit: 1, query: { email: userEmail } })
             ]).then(results => {
-                let [resource, users] = results;
+                const [resource, users] = results;
                 if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
                 else { return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
@@ -419,9 +419,18 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public getInstances(extraConditions: any): Promise<any> {
-        const query: any = { $populate: 'device', user: this.user.id, client: this.client.id };
-        Object.assign(query, extraConditions);
-        return this.instancesService.find({ query })
+        return new Promise((resolve, reject) => {
+            this.getResource().then(resource => {
+                const query: any = {
+                    $populate: 'device', $or: [
+                        { user: this.user.id },
+                        { sharedWith: [resource.userId, ...resource.sharedWithIds] },
+                    ], client: this.client.id
+                };
+                Object.assign(query, extraConditions);
+                resolve(this.instancesService.find({ query }));
+            }).catch(e => reject(e));
+        })
     }
 
     public getActiveInstances(): Promise<any> {
@@ -507,7 +516,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.user && (this.user.id === resource.user ||
                     (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
                 this.updateResource(resource);
-                subscriberFunction(new SharedResource(resource).data, eventType);
+                const baseResource = new Resource(resource);
+                this.updateDynamicSharing(baseResource).then(() => {
+                    subscriberFunction(baseResource.data, eventType);
+                }).catch(e => console.error('[YXC] subscribeResource - updateInstanceResourceSharing Error:', e))
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
@@ -516,7 +528,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
         this.subscribeResourceFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
-        return this.updateResourceSubscription();
+        return Promise.all([this.updateResourceSubscription(), this.updateDynamicSharing()]);
     }
 
     public unsubscribeResource(): void {
@@ -591,6 +603,21 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
+    private updateDynamicSharing(r?: Resource): Promise<any> {
+        return new Promise((resolve, reject) => {
+            let resourcePromise: Promise<Resource>;
+            if (r) { resourcePromise = Promise.resolve(r) }
+            else { resourcePromise = this.getResource(this.subscribedResourceId) }
+            resourcePromise.then(resource => {
+                const sharedWith = resource.sharedWithIds ? [resource.userId, ...resource.sharedWithIds] : [];
+                return Promise.all([
+                    this.instancesService.patch(this.instance.id, { sharedWith }),
+                    this.proxemicsService.patch(this.proxemics.id, { sharedWith })
+                ]);
+            }).then(instance => resolve(instance)).catch(e => reject(e));
+        });
+    }
+
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (proxemics: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Proxemics:', proxemics, 'Event Type:', eventType);
@@ -626,14 +653,16 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
-            if (this.user && this.user.id === instance.user &&
-                this.client && this.client.id === instance.client) {
-                if (this.instance.id === newInstance.id) {
-                    this.instance = newInstance;
-                }
+            if (this.client && this.client.id === instance.client &&
+                this.user && (this.user.id === instance.user
+                    || (instance.sharedWith && instance.sharedWith.some((u: any) => u === this.user.id))
+                    || (instance.prevSharedWith && instance.prevSharedWith.some((u: any) => u === this.user.id))
+                )
+            ) {
+                if (this.instance.id === newInstance.id) { this.instance = newInstance; }
                 if (eventType === 'removed' || !newInstance.equals(this.cachedInstances.get(newInstance.id))) {
                     subscriberFunction(instance, eventType);
-                }
+                } else { console.error('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance); }
                 this.cachedInstances.set(newInstance.id, newInstance);
                 this.cleanUpCachedInstances();
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }

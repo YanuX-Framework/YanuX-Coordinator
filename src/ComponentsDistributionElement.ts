@@ -17,7 +17,9 @@ class ComponentsDistributionElement extends LitElement {
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
         instanceId !== currInstanceId &&
         this.componentsDistribution[instanceId] &&
-        instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid);
+        (instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid ||
+          instanceDetails.device.name === this.componentsDistribution[instanceId].device.name)
+      );
   }
 
   handleCheckboxClick(instanceId: string, component: string) {
