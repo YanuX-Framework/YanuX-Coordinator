@@ -9,7 +9,7 @@ export default class Client extends BaseEntity{
     }
 
     update(client: any): any {
-        this.clientId = client.id;
         super.update(client);
+        this.clientId = client.id;
     }
 }

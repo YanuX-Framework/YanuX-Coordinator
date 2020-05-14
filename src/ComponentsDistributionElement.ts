@@ -16,7 +16,7 @@ class ComponentsDistributionElement extends LitElement {
     return Object.entries(this.componentsDistribution)
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
         instanceId !== currInstanceId &&
-        this.componentsDistribution[instanceId] &&
+        this.componentsDistribution[instanceId] && instanceDetails.device &&
         (instanceDetails.device.uuid === this.componentsDistribution[instanceId].device.uuid ||
           instanceDetails.device.name === this.componentsDistribution[instanceId].device.name)
       );

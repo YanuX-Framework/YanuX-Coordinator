@@ -1,4 +1,3 @@
-import { isEqual } from 'lodash';
 import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
 import jsrsasign from 'jsrsasign';
@@ -9,9 +8,9 @@ import socketio from '@feathersjs/socketio-client';
 import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
-import BaseEntity from './BaseEntity';
 import User from './User';
 import Client from './Client';
+import Device from './Device';
 import Credentials from './Credentials';
 import Resource from './Resource';
 import Proxemics from './Proxemics';
@@ -30,15 +29,20 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
-    private static CACHED_INSTANCES_MAX_AGE: Number = 10000;
 
-    public user: BaseEntity;
+    public user: User;
     public client: Client;
-    public device: BaseEntity;
+    public device: Device;
     public resource: Resource;
+    //TODO: Add cached resources?
+
     public proxemics: Proxemics;
+    private cachedProxemics: Map<string, Proxemics>;
+
     public instance: Instance;
-    public cachedInstances: Map<string, Instance>;
+    private cachedInstances: Map<string, Instance>;
+
+    //TODO: Add ResourceSubscription
 
     private localDeviceUrl: string;
     private credentials: Credentials;
@@ -81,10 +85,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.user = new User();
         this.client = new Client(clientId);
         //TODO: Perhaps I should create a dedicated "Device" class and expand each of the other service entity classes to encompass all that returned from the server.
-        this.device = new BaseEntity();
+        this.device = new Device();
         this.credentials = credentials;
         this.resource = new Resource();
+
         this.proxemics = new Proxemics();
+        this.cachedProxemics = new Map<string, Proxemics>();
+
         this.instance = new Instance();
         this.cachedInstances = new Map<string, Instance>();
 
@@ -222,9 +229,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                         client: this.client.id,
                         device: this.device.id
                     });
-                } else {
-                    throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found.');
-                }
+                } else { throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found.'); }
             }).then((instance: any) => {
                 this.instance.update(instance);
                 console.log('[YXC] Initialized Instance:', instance);
@@ -320,7 +325,15 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                  */
                 query: { $populate: ['user', 'sharedWith'], client: this.client.id, $or: orCondition, $sort: { default: -1 } }
             }).then((resources: any) => {
-                resolve(resources.map((r: any) => new SharedResource(r)));
+                resolve(resources.map((r: any) => {
+                    if (this.user && this.client && r &&
+                        this.user.id === r.user &&
+                        this.client.id === r.client &&
+                        r.default === true) {
+                        this.resource.update(r);
+                    }
+                    return new SharedResource(r)
+                }));
             }).catch((e: Error) => reject(e));
         });
     }
@@ -395,26 +408,26 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public getProxemicsState(): Promise<any> {
-        return this.getProxemics().then(proxemics => proxemics.state).catch((e: Error) => Promise.reject(e));
+        return this.getProxemics().then(proxemics => {
+            return Object.assign({}, ...proxemics.map(p => p.state))
+        }).catch((e: Error) => Promise.reject(e));
     }
 
-    private getProxemics(): Promise<Proxemics> {
+    private getProxemics(): Promise<Proxemics[]> {
         return new Promise((resolve, reject) => {
-            this.proxemicsService.find({ query: { $limit: 1, user: this.user.id } })
-                .then((proxemics: any) => {
-                    if ((<Array<any>>proxemics).length === 1) {
-                        this.proxemics.update((<any>proxemics)[0]);
-                        return resolve(this.proxemics);
-                    } else {
-                        this.proxemicsService.create({ user: this.user.id })
-                            .then((proxemics: any) => {
-                                this.proxemics.update(proxemics)
-                                return resolve(this.proxemics);
-                            }).catch((e: Error) => {
-                                if (!(e instanceof Conflict)) { reject(e); }
-                            });
-                    }
-                }).catch((e: Error) => reject(e));
+            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then(results => {
+                const proxemics = results.data && results.data.length === 1 ? results.data[0] : results.length === 1 ? results[0] : {};
+                this.proxemics.update(proxemics);
+                return this.getResource();
+            }).then(resource => this.proxemicsService.find({
+                query: { $or: [{ user: this.user.id }, { sharedWith: [resource.userId, ...resource.sharedWithIds] }] }
+            })).then(results => {
+                const proxemicses = results.data ? results.data : results;
+                resolve(proxemicses.map((p: any) => {
+                    if (this.user && this.user === p.user) { this.proxemics.update(p); }
+                    return new Proxemics(p)
+                }));
+            }).catch((e: Error) => reject(e));
         });
     }
 
@@ -513,8 +526,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             if (this.subscribedResourceId === resource._id &&
                 this.client && this.client.id === resource.client &&
-                this.user && (this.user.id === resource.user ||
-                    (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
+                this.user && (this.user.id === resource.user || (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
                 this.updateResource(resource);
                 const baseResource = new Resource(resource);
                 this.updateDynamicSharing(baseResource).then(() => {
@@ -528,6 +540,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeResourceFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
         this.subscribeResourceFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.resourcesService, this.subscribeResourceFunctions);
+
         return Promise.all([this.updateResourceSubscription(), this.updateDynamicSharing()]);
     }
 
@@ -543,8 +556,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             if (this.client && this.client.id === resource.client &&
-                this.user && (this.user.id === resource.user ||
-                    (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
+                this.user && (this.user.id === resource.user || (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
                 subscriberFunction(new SharedResource(resource), eventType);
             } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
@@ -621,15 +633,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (proxemics: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Proxemics:', proxemics, 'Event Type:', eventType);
+            const newProxemics = new Proxemics(proxemics);
+            const owner = this.user && this.user.id === proxemics.user
+            const sharedWith = this.user && proxemics.sharedWith && proxemics.sharedWith.some((u: any) => u === this.user.id);
+            const prevSharedWith = this.user && proxemics.prevSharedWith && proxemics.prevSharedWith.some((u: any) => u === this.user.id)
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
-            if (this.proxemics && this.proxemics.id === proxemics._id &&
-                this.user && this.user.id === proxemics.user) {
-                if (!isEqual(proxemics.state, this.proxemics.state)) {
-                    this.proxemics.update(proxemics);
-                    subscriberFunction(this.proxemics.state, eventType);
+            if (this.proxemics && this.proxemics.id === proxemics._id && (owner || sharedWith || prevSharedWith)) {
+                if (this.proxemics.id === newProxemics.id) { this.proxemics = newProxemics; }
+                if (eventType === 'removed' || !newProxemics.equals(this.cachedProxemics.get(newProxemics.id))) {
+                    if (eventType === 'removed' || (prevSharedWith && !sharedWith)) {
+                        this.cachedProxemics.delete(newProxemics.id);
+                    } else { this.cachedProxemics.set(newProxemics.id, newProxemics); }
+                    subscriberFunction(newProxemics, eventType);
+                } else {
+                    this.cachedProxemics.set(newProxemics.id, newProxemics);
+                    console.log('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Instance:', proxemics);
                 }
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
@@ -649,22 +670,25 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         const eventListener = (instance: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Instance:', instance, 'Event Type:', eventType);
             const newInstance = new Instance(instance);
+            const owner = this.user && this.user.id === instance.user
+            const sharedWith = this.user && instance.sharedWith && instance.sharedWith.some((u: any) => u === this.user.id);
+            const prevSharedWith = this.user && instance.prevSharedWith && instance.prevSharedWith.some((u: any) => u === this.user.id)
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
-            if (this.client && this.client.id === instance.client &&
-                this.user && (this.user.id === instance.user
-                    || (instance.sharedWith && instance.sharedWith.some((u: any) => u === this.user.id))
-                    || (instance.prevSharedWith && instance.prevSharedWith.some((u: any) => u === this.user.id))
-                )
-            ) {
+            if (this.client && this.client.id === instance.client && (owner || sharedWith || prevSharedWith)) {
                 if (this.instance.id === newInstance.id) { this.instance = newInstance; }
+
                 if (eventType === 'removed' || !newInstance.equals(this.cachedInstances.get(newInstance.id))) {
-                    subscriberFunction(instance, eventType);
-                } else { console.error('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance); }
-                this.cachedInstances.set(newInstance.id, newInstance);
-                this.cleanUpCachedInstances();
+                    if (eventType === 'removed' || (prevSharedWith && !sharedWith)) {
+                        this.cachedInstances.delete(newInstance.id);
+                    } else { this.cachedInstances.set(newInstance.id, newInstance); }
+                    subscriberFunction(newInstance, eventType);
+                } else {
+                    this.cachedInstances.set(newInstance.id, newInstance);
+                    console.log('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance);
+                }
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
         this.unsubscribeInstances();
@@ -677,14 +701,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public unsubscribeInstances(): void {
         this.unsubscribeService(this.instancesService, this.subscribeInstancesFunctions);
-    }
-
-    private cleanUpCachedInstances(): void {
-        this.cachedInstances.forEach((instance: Instance) => {
-            if (new Date().getTime() - instance.timestamp.getTime() > FeathersCoordinator.CACHED_INSTANCES_MAX_AGE) {
-                this.cachedInstances.delete(instance.id);
-            }
-        });
     }
 
     public subscribeEvents(subscriberFunction: (data: any, eventType: string) => void): void {
