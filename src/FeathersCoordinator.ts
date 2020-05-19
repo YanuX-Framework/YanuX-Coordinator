@@ -486,7 +486,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public emitEvent(value: any, name: string): Promise<any> {
-        return this.eventsService.create({ value, name });
+        return this.eventsService.create({ value, name, resource: this.subscribedResourceId });
     }
 
     private subscribeService(
@@ -622,10 +622,12 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             else { resourcePromise = this.getResource(this.subscribedResourceId) }
             resourcePromise.then(resource => {
                 const sharedWith = resource.sharedWithIds ? [resource.userId, ...resource.sharedWithIds] : [];
-                return Promise.all([
-                    this.instancesService.patch(this.instance.id, { sharedWith }),
-                    this.proxemicsService.patch(this.proxemics.id, { sharedWith })
-                ]);
+                if (this.instance && this.proxemics && this.instance.id && this.proxemics.id) {
+                    return Promise.all([
+                        this.instancesService.patch(this.instance.id, { sharedWith }),
+                        this.proxemicsService.patch(this.proxemics.id, { sharedWith })
+                    ]);
+                } else { resolve() }
             }).then(instance => resolve(instance)).catch(e => reject(e));
         });
     }
