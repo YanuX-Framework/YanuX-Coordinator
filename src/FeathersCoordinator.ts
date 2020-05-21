@@ -531,7 +531,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 const baseResource = new Resource(resource);
                 this.updateDynamicSharing(baseResource).then(() => {
                     subscriberFunction(baseResource.data, eventType);
-                }).catch(e => console.error('[YXC] subscribeResource - updateInstanceResourceSharing Error:', e))
+                }).catch(e => console.error('[YXC] subscribeResource - updateDynamicSharing Error:', e))
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
@@ -681,7 +681,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
              */
             if (this.client && this.client.id === instance.client && (owner || sharedWith || prevSharedWith)) {
                 if (this.instance.id === newInstance.id) { this.instance = newInstance; }
-
                 if (eventType === 'removed' || !newInstance.equals(this.cachedInstances.get(newInstance.id))) {
                     if (eventType === 'removed' || (prevSharedWith && !sharedWith)) {
                         this.cachedInstances.delete(newInstance.id);
