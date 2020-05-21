@@ -38,8 +38,8 @@
     "@feathersjs/socketio-client": "^4.5.4",
     "@polymer/paper-dialog": "^3.0.1",
     "@types/jsonwebtoken": "^8.5.0",
-    "@types/jsrsasign": "^8.0.2",
-    "@types/lodash": "^4.14.151",
+    "@types/jsrsasign": "^8.0.3",
+    "@types/lodash": "^4.14.152",
     "@types/socket.io-client": "^1.4.33",
     "cross-fetch": "^3.0.4",
     "html-webpack-plugin": "^4.3.0",
@@ -53,7 +53,7 @@
     "source-map-loader": "^0.2.4",
     "svg-inline-loader": "^0.8.2",
     "ts-loader": "^7.0.4",
-    "typescript": "^3.9.2",
+    "typescript": "^3.9.3",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   }
