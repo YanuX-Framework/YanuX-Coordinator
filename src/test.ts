@@ -19,7 +19,7 @@ async function testFeathersCoordinator() {
     console.log('Testing FeathersCoordinator');
 
     const brokerUrl: string = 'http://localhost:3002';
-    const localDeviceUrl: string = 'http://localhost:3003';
+    const localDeviceUrl: string = 'http://localhost:3023';
     const clientId = 'yanux-coordinator-test';
 
     /**
@@ -28,63 +28,36 @@ async function testFeathersCoordinator() {
      * http://localhost:3001/oauth2/authorize?client_id=yanux-coordinator-test&client_secret=topsecret_client_secret&response_type=token&redirect_uri=http://localhost:3003/
      */
     const credentials: Credentials = new Credentials('yanux', [
-        '',
+        'rIjArcZ6Y8jO1pEOwBJmg4IpWoc2XMvwNPM9rYiWcRGTbW1kRwK8Q3Q4PWQIKlTU82LRhDk0N9zzVHnL2BS5vw4KMT8zaRup2uROWvWBO2dSSpWIDIgseuiHe0v3qeKyEaOyMPNZ7FVXGcqswisTtC3DinjbQYfkUiBuxXfqTJWtQ2fsiRNBsO81KYeJ7evLctbyiKM24aOvtaDJKAUyW2nSx1xpFXqFHgIfKdNqCImoOhdPFWrNIkPuyxCygT1f',
         clientId
     ]);
 
-    const brokerPublicKey: string =
-        `-----BEGIN PUBLIC KEY-----
-    MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAw/YczpxmtzaEh853mdJ+
-    HDKXi1IFqMcoIV1m75TcB9oBpAOPpdnwlDAij9dla76ZgAnJE3XoXpSsNVMObMuQ
-    7p7HwMI/JqhBJy+tX+HSB0pFiNO9MDqnZRqQZDapnmV2biZ11PFY//YIlqKeoh7x
-    mHmD1fykBw3pj+l71Cjyzr4lXjXnq1460pBTS5/T5gGjE09spMzP/ZlSAydZDXht
-    ycmbDV6mCoM6qkpNNt7hjZl6eE9py3WrZPp8mcT5GLGB3H1o2mr160hOpto+Z8mF
-    WIExf3FVq0IzLQAyYpkPYz7Z/ejEquuAxRjMJMG9cht+yIOmc4H04lIOPcDuPAKa
-    D4IZkWSkMw2lbsYU2NBrWObLVjeE7U3sGRH9/Jznnyr4FH2pW924jy2YYX9r5Qgj
-    nW2E5Kx6hFAHGEAQi9SEvqKsbCp5t4g3F44mA197a1GEmsJ8sagkaF+4sJG4p6H7
-    HGyyDp7wfya4Ay/+JnlNA2htfppdys/wcYmyRfR8ekAxHhiF21UPej+rkEAnjar6
-    vg7brx4fc0jqoKUWECiNB3j/x7E9i60ZEvhtG7AjY8Qq3nkyqWJ1ivrkna8KdpMn
-    WLa5mpfMdi8e2E0wSdw+oL3mmP5nb8Zu6HmjnkK+OYGIwisZHyM/Q92wOehi7yUD
-    MrAGsRdOJYBH9RnGc6m9UgUCAwEAAQ==
-    -----END PUBLIC KEY-----
-    `;
-
-    console.log('Loaded the following broker public key:', brokerPublicKey);
-    const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials, brokerPublicKey);
-    const resourceId = '5ec32079ea2fd5765ebd5803';
-
+    const coordinator: FeathersCoordinator = new FeathersCoordinator(brokerUrl, localDeviceUrl, clientId, credentials);
     coordinator.subscribeResources((data, eventType) => console.log(`Resource ${eventType}:`, data));
-    coordinator.subscribeResource((data, eventType) => console.log(`Data ${eventType}:`, data), resourceId);
     coordinator.subscribeEvents((data, eventType) => console.log(`Event ${eventType}:`, data))
-
+    // const resourceId = '5ec32079ea2fd5765ebd5803';
+    // coordinator.subscribeResource((data, eventType) => console.log(`Data ${eventType}:`, data), resourceId);
     try {
         const result = await coordinator.init();
         console.log('--- init ---:\n', result);
-        console.log('--- getResources ---:\n', await coordinator.getResources(true, true));
-        console.log('--- getResourceData ---:\n', await coordinator.getResourceData(resourceId));
-        console.log('--- setResourceData ---:\n', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
-        console.log('--- shareResource ---:\n', await coordinator.shareResource('test_developer_0@yanux.org', resourceId));
-        console.log('--- emitEvent ---:\n', await coordinator.emitEvent({ test: 'Hello World' }, 'test-event'));
-        const newResource = await coordinator.createResource('Bottled Message');
-        console.log('--- createResource ---:\n', newResource);
-        console.log('--- unshareResource ---:\n', await coordinator.unshareResource('test_developer_0@yanux.org', resourceId));
-        console.log('--- deleteResource ---:\n', await coordinator.deleteResource(newResource.id));
-    } catch (e) {
-        console.error(e);
-    }
+        // console.log('--- getResources ---:\n', await coordinator.getResources(true, true));
+        // console.log('--- getResourceData ---:\n', await coordinator.getResourceData(resourceId));
+        // console.log('--- setResourceData ---:\n', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));
+        // console.log('--- shareResource ---:\n', await coordinator.shareResource('test_developer_0@yanux.org', resourceId));
+        // console.log('--- emitEvent ---:\n', await coordinator.emitEvent({ test: 'Hello World' }, 'test-event'));
+        // const newResource = await coordinator.createResource('Bottled Message');
+        // console.log('--- createResource ---:\n', newResource);
+        // console.log('--- unshareResource ---:\n', await coordinator.unshareResource('test_developer_0@yanux.org', resourceId));
+        // console.log('--- deleteResource ---:\n', await coordinator.deleteResource(newResource.id));
+    } catch (e) { console.error(e); }
 }
-
 
 async function testComponentsRuleEngine() {
     console.log('Testing ComponentsRuleEngine');
     class ObjectId {
         public id: string;
-        constructor(id: string) {
-            this.id = id;
-        }
-        toString() {
-            return this.id;
-        }
+        constructor(id: string) { this.id = id; }
+        toString() { return this.id; }
     }
     const localInstanceUuid = '0ea41404-86a7-42d7-980c-f343ef66df10';
     const localDeviceUuid = '3d42affa-3685-47f2-97d0-bd4ff46de5c6';

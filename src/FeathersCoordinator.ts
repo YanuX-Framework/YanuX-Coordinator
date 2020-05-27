@@ -41,9 +41,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public instance: Instance;
     private cachedInstances: Map<string, Instance>;
-
     //TODO: Add ResourceSubscription
 
+    private brokerUrl: string;
     private localDeviceUrl: string;
     private credentials: Credentials;
     private socket: SocketIOClient.Socket;
@@ -75,7 +75,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         localDeviceUrl: string,
         clientId: string = 'default',
         credentials: Credentials = null,
-        brokerPublicKey: string = null,
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
         onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
@@ -95,7 +94,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.instance = new Instance();
         this.cachedInstances = new Map<string, Instance>();
 
-        this.socket = io(brokerUrl, { transports: ['websocket'], forceNew: true });
+        this.brokerUrl = brokerUrl;
+        this.socket = io(this.brokerUrl, { transports: ['websocket'], forceNew: true });
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
         this.feathersClient.configure(socketio(this.socket, { timeout: 5000 }));
@@ -108,14 +108,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
-        this.brokerPublicKey = brokerPublicKey;
-
         if ((typeof window === 'undefined' || window === null) ||
             (typeof window.localStorage === 'undefined' || window.localStorage === null)) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
         } else { this.storage = window.localStorage; }
-
 
         this.subscribeResourcesFunctions = {};
         this.subscribeResourceSubscriptionFunctions = {};
@@ -182,11 +179,26 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then((auth: any) => {
                 return this.feathersClient.authenticate(auth);
             }).then((response: any) => {
-                if (this.brokerPublicKey) {
+                return new Promise((resolve, reject) => {
                     const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split('.')[0]));
-                    const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, this.brokerPublicKey, { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] });
-                    if (!isJwtValid) { throw new InvalidBrokerJwtError('The JWT is not valid.'); }
-                }
+                    if (header.jku && header.jku.startsWith(this.brokerUrl) && header.kid) {
+                        //TODO: Perhaps I should cache the JKU URL contents and corresponding KeyStore for better performance.
+                        fetch(header.jku).then(response => response.json()).then(json => {
+                            const key = (json.keys || []).find((k: any) => header.kid === k.kid);
+                            if (key) {
+                                const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(
+                                    response.accessToken,
+                                    //@ts-ignore
+                                    jsrsasign.KEYUTIL.getKey(key),
+                                    { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] }
+                                );
+                                if (isJwtValid) { resolve(response); }
+                                else { reject(new InvalidBrokerJwtError('The JWT is not valid.')); }
+                            } else { reject(new InvalidBrokerJwtError('"kid" not found on the provided "jku" URL')); }
+                        }).catch(e => reject(e));
+                    } else { reject(new InvalidBrokerJwtError('"jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
+                });
+            }).then((response: any) => {
                 return Promise.all([
                     this.feathersClient.service('users').get(response.user ? response.user._id : response.authentication.payload.user._id),
                     this.feathersClient.service('clients').get(response.client ? response.client._id : response.authentication.payload.client._id)
