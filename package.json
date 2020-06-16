@@ -28,7 +28,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "serve": "^11.3.1"
+    "serve": "^11.3.2"
   },
   "devDependencies": {
     "@feathersjs/authentication": "^4.5.3",
@@ -38,11 +38,11 @@
     "@feathersjs/socketio-client": "^4.5.4",
     "@polymer/paper-dialog": "^3.0.1",
     "@types/jsrsasign": "^8.0.3",
-    "@types/lodash": "^4.14.153",
+    "@types/lodash": "^4.14.155",
     "@types/socket.io-client": "^1.4.33",
-    "cross-fetch": "^3.0.4",
+    "cross-fetch": "^3.0.5",
     "html-webpack-plugin": "^4.3.0",
-    "jsrsasign": "^8.0.15",
+    "jsrsasign": "^8.0.16",
     "lit-element": "^2.3.1",
     "lodash": "^4.17.15",
     "node-localstorage": "^2.1.6",
@@ -52,7 +52,7 @@
     "source-map-loader": "^1.0.0",
     "svg-inline-loader": "^0.8.2",
     "ts-loader": "^7.0.5",
-    "typescript": "^3.9.3",
+    "typescript": "^3.9.5",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
   }
