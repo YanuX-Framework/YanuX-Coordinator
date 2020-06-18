@@ -120,12 +120,12 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
-            name: 'Use the default configuration if the local device is not present, if its instance is not active or if its instance is the only one active',
+            name: 'Use the default configuration if the local device is not present or if its instance is not active.',
+            //or if its instance is the only one active',
             priority: 1,
             condition: function (R: any) {
-                R.when(!this.proxemics[this.localDeviceUuid]
-                    || !this.activeInstances.some((i: any) => i.device.deviceUuid === this.localDeviceUuid)
-                    || this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid));
+                R.when(!this.proxemics[this.localDeviceUuid] || !this.activeInstances.some((i: any) => i.device.deviceUuid === this.localDeviceUuid))
+                //|| this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid));
             },
             consequence: function (R: any) {
                 this.componentsConfig = this.defaultComponentsConfig;

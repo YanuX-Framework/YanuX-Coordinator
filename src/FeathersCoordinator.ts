@@ -192,8 +192,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                                     jsrsasign.KEYUTIL.getKey(key),
                                     { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] }
                                 );
-                                if (isJwtValid) { resolve(response); }
-                                else { reject(new InvalidBrokerJwtError('The JWT is not valid.')); }
+                                if (isJwtValid) { resolve(response); } else { reject(new InvalidBrokerJwtError('The JWT is not valid.')); }
                             } else { reject(new InvalidBrokerJwtError('"kid" not found on the provided "jku" URL')); }
                         }).catch(e => reject(e));
                     } else { reject(new InvalidBrokerJwtError('"jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
