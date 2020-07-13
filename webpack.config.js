@@ -3,12 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   entry: { lib: './src/index.ts', app: './src/app.ts' },
-  entry: './src/index.ts',
   mode: 'development',
   devtool: 'source-map',
   output: {
     filename: '[name].js',
-    filename: 'lib.js',
     path: path.resolve(__dirname, 'dist'),
     library: ['yanux-coordinator', '[name]'],
     libraryTarget: 'umd'
