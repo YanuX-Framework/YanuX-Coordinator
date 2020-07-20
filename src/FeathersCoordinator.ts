@@ -57,7 +57,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
-    private brokerPublicKey: string;
     private storage: Storage;
 
     private subscribeResourcesFunctions: { [eventType: string]: (resource: any) => void };
@@ -184,14 +183,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     if (header.jku && header.jku.startsWith(this.brokerUrl) && header.kid) {
                         //TODO: Perhaps I should cache the JKU URL contents and corresponding KeyStore for better performance.
                         fetch(header.jku).then(response => response.json()).then(json => {
-                            const key = (json.keys || []).find((k: any) => header.kid === k.kid);
-                            if (key) {
-                                const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(
-                                    response.accessToken,
-                                    //@ts-ignore
-                                    jsrsasign.KEYUTIL.getKey(key),
-                                    { alg: [header.alg] } as { alg: string[]; aud: string[]; iss: string[]; sub: string[] }
-                                );
+                            const jwk = (json.keys || []).find((k: any) => header.kid === k.kid);
+                            if (jwk) {
+                                const key: any = jsrsasign.KEYUTIL.getKey(jwk);
+                                const acceptField: any = { alg: [header.alg], gracePeriod: 1 * 60 * 60 };
+                                const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, key, acceptField);
                                 if (isJwtValid) { resolve(response); } else { reject(new InvalidBrokerJwtError('The JWT is not valid.')); }
                             } else { reject(new InvalidBrokerJwtError('"kid" not found on the provided "jku" URL')); }
                         }).catch(e => reject(e));
@@ -210,7 +206,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     return this.feathersClient.service('clients').find({ query: { $limit: 1, id: this.client.clientId } });
                 }
             }).then((results: any) => {
-                const clients = (results as any).data ? (results as any).data : results;
+                const clients: any[] | any = (results as any).data ? (results as any).data : results;
                 if (Array.isArray(clients)) {
                     if (clients.length === 1) {
                         return clients[0];
@@ -232,7 +228,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     }
                 });
             }).then((results: any) => {
-                const devices = (results as any).data ? (results as any).data : results;
+                const devices: any[] = (results as any).data ? (results as any).data : results;
                 if (devices.length === 1) {
                     this.device.update(devices[0]);
                     return this.instancesService.create({
@@ -381,7 +377,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.resourcesService.get(resourceId),
                 this.usersService.find({ query: { $limit: 1, email: userEmail } })
             ]).then(results => {
-                let [resource, users] = results;
+                let [resource, users]: [any, any[]] = results as any;
                 if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
                 else { return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
@@ -394,7 +390,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.resourcesService.get(resourceId),
                 this.usersService.find({ $limit: 1, query: { email: userEmail } })
             ]).then(results => {
-                const [resource, users] = results;
+                const [resource, users]: [any, any[]] = results as any;;
                 if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
                 else { return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
@@ -411,7 +407,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private getResourceSubscription(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.resourceSubscriptionService.find({ query: { $limit: 1, user: this.user.id, client: this.client.id } })
-                .then(resourceSubscriptions => {
+                .then((resourceSubscriptions: any) => {
                     if (resourceSubscriptions.length === 1) { resolve(resourceSubscriptions[0]); }
                     else if (resourceSubscriptions.length === 0) { resolve(); }
                 }).catch(e => reject(e));
@@ -433,7 +429,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(resource => this.proxemicsService.find({
                 query: { $or: [{ user: this.user.id }, { sharedWith: [resource.userId, ...resource.sharedWithIds] }] }
             })).then(results => {
-                const proxemicses = results.data ? results.data : results;
+                const proxemicses: any[] = results.data ? results.data : results as any;
                 resolve(proxemicses.map((p: any) => {
                     if (this.user && this.user === p.user) { this.proxemics.update(p); }
                     return new Proxemics(p)
