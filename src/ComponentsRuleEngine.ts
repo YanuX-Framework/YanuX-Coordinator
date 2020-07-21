@@ -180,7 +180,12 @@ export default class ComponentsRuleEngine {
                     });
                     return this.capabilities;
                 });
-                Object.entries(this.proxemics).forEach(expandCapabilities);
+                Object.entries(this.proxemics)
+                    //Maybe it's not always necessary to have this check,
+                    //but I'm just making sure that ignore the proxemics of devices with non-active instances.
+                    .filter(([deviceUuid, capabilities]: [string, any]) =>
+                        this.activeInstances.some((i: any) => i.device.deviceUuid === deviceUuid)
+                    ).forEach(expandCapabilities);
                 this.localDeviceCapabilities = this.capabilities[this.localDeviceUuid];
                 R.next();
             }
@@ -196,18 +201,22 @@ export default class ComponentsRuleEngine {
                 const matchComponents = (component: string, componentRestrictions: any, deviceCapabilities: any, strictMatching: boolean = true): boolean => {
                     const fallbackCheck = (enforce: boolean = true): boolean => {
                         let fallback = false;
-                        if (enforce === false && strictMatching) {
-                            fallback = !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
-                                if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                                    return matchComponents(component, componentRestrictions, this.capabilities[d], false);
-                                } else {
-                                    return false;
-                                }
-                            });
-                            console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
+                        if (strictMatching) {
+                            //If the local device is the only present just fallback by default.
+                            if(Object.keys(this.capabilities).every(d => d === this.localDeviceUuid)) {
+                                return true;
+                            } else if (enforce === false) {
+                                fallback = !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
+                                    if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
+                                        return matchComponents(component, componentRestrictions, this.capabilities[d], false);
+                                    } else { return false; }
+                                });
+                                console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
+                            } 
                         }
                         return fallback;
                     };
+                    //TODO: Add support for interval matching. For instance, I want a device with a screen size between a and b.
                     const matchCondition = (condition: any, capability: any): boolean => {
                         const matchConditionAux = (condition: any, operator: string = 'AND', enforce: boolean = true): any => {
                             if (isArray(condition)) {
@@ -281,9 +290,7 @@ export default class ComponentsRuleEngine {
                             }
                             if (condition == capability || (condition === true && (!isUndefined(capability) || !isNull(capability)))) {
                                 return true;
-                            } else {
-                                return false;
-                            }
+                            } else { return false; }
                         }
                         return matchConditionAux(condition);
                     }

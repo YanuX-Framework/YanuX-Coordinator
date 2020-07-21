@@ -97,7 +97,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.socket = io(this.brokerUrl, { transports: ['websocket'], forceNew: true });
         this.localDeviceUrl = localDeviceUrl;
         this.feathersClient = feathers();
-        this.feathersClient.configure(socketio(this.socket, { timeout: 5000 }));
+        this.feathersClient.configure(socketio(this.socket, { timeout: 20000 }));
 
         this.usersService = this.feathersClient.service('users');
         this.devicesService = this.feathersClient.service('devices');
@@ -623,6 +623,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     private updateDynamicSharing(r?: Resource): Promise<any> {
+        console.log('[YXC] Update Dynamic Sharing');
         return new Promise((resolve, reject) => {
             let resourcePromise: Promise<Resource>;
             if (r) { resourcePromise = Promise.resolve(r) }
@@ -653,13 +654,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             if (this.proxemics && this.proxemics.id === proxemics._id && (owner || sharedWith || prevSharedWith)) {
                 if (this.proxemics.id === newProxemics.id) { this.proxemics = newProxemics; }
                 if (eventType === 'removed' || !newProxemics.equals(this.cachedProxemics.get(newProxemics.id))) {
-                    if (eventType === 'removed' || (prevSharedWith && !sharedWith)) {
+                    if (prevSharedWith && !sharedWith) {
                         this.cachedProxemics.delete(newProxemics.id);
                     } else { this.cachedProxemics.set(newProxemics.id, newProxemics); }
                     subscriberFunction(newProxemics, eventType);
                 } else {
                     this.cachedProxemics.set(newProxemics.id, newProxemics);
-                    console.log('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Instance:', proxemics);
+                    console.log('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Proxemics:', proxemics);
                 }
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
