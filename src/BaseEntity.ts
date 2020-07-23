@@ -5,6 +5,7 @@ export default class BaseEntity {
     public brokerName: string;
     public createdAt: Date;
     public updatedAt: Date;
+    public timestamp: Date;
 
     public get _id(): string {
         return this.id;
@@ -30,6 +31,7 @@ export default class BaseEntity {
         this.brokerName = entity.brokerName;
         this.createdAt = new Date(entity.createdAt);
         this.updatedAt = new Date(entity.updatedAt);
+        this.timestamp = new Date();
         //this._raw = entity;
     }
 

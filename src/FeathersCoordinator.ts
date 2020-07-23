@@ -1,3 +1,5 @@
+import { isEqual, sortedUniq } from 'lodash';
+
 import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
 import jsrsasign from 'jsrsasign';
@@ -24,6 +26,8 @@ import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFoundError from './errors/UserNotFoundError';
+import { resources } from './examples';
+import BaseEntity from './BaseEntity';
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -34,7 +38,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public client: Client;
     public device: Device;
     public resource: Resource;
-    //TODO: Add cached resources?
+    private cachedResources: Map<string, SharedResource>;
 
     public proxemics: Proxemics;
     private cachedProxemics: Map<string, Proxemics>;
@@ -85,7 +89,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         //TODO: Perhaps I should create a dedicated "Device" class and expand each of the other service entity classes to encompass all that returned from the server.
         this.device = new Device();
         this.credentials = credentials;
+
         this.resource = new Resource();
+        this.cachedResources = new Map<string, SharedResource>();
 
         this.proxemics = new Proxemics();
         this.cachedProxemics = new Map<string, Proxemics>();
@@ -536,9 +542,9 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 this.user && (this.user.id === resource.user || (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
                 this.updateResource(resource);
                 const baseResource = new Resource(resource);
-                this.updateDynamicSharing(baseResource).then(() => {
-                    subscriberFunction(baseResource.data, eventType);
-                }).catch(e => console.error('[YXC] subscribeResource - updateDynamicSharing Error:', e))
+                subscriberFunction(baseResource.data, eventType);
+                this.updateDynamicSharing(baseResource)
+                    .catch(e => console.error('[YXC] subscribeResource - updateDynamicSharing Error:', e))
             } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
@@ -558,13 +564,24 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     public subscribeResources(subscriberFunction: (data: any, eventType: string) => void): void {
         const eventListener = (resource: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Resources:', resource, 'Event Type:', eventType);
+            const newResource = new SharedResource(resource);
             /**
              * TODO: This should be enforced at the Broker level.
              * [Read the similar comment on the 'subscribeResource' method for an explanation.]
              */
             if (this.client && this.client.id === resource.client &&
                 this.user && (this.user.id === resource.user || (resource.sharedWith && resource.sharedWith.some((u: any) => u === this.user.id)))) {
-                subscriberFunction(new SharedResource(resource), eventType);
+                if (this.resource.id === newResource.id) { this.resource = newResource; }
+                if (eventType === 'removed' || !newResource.equals(this.cachedResources.get(newResource.id))) {
+                    if (eventType === 'removed') {
+                        this.cachedResources.delete(newResource.id);
+                    } else { this.cachedResources.set(newResource.id, newResource); }
+                    subscriberFunction(newResource, eventType);
+                } else {
+                    this.cachedResources.set(newResource.id, newResource);
+                    console.log('[YXC] subscribeResources - Ignored Cached Event Type:', eventType, 'on Resource:', resource);
+                }
+                FeathersCoordinator.cacheCleanup(this.cachedResources);
             } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
 
@@ -629,11 +646,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             if (r) { resourcePromise = Promise.resolve(r) }
             else { resourcePromise = this.getResource(this.subscribedResourceId) }
             resourcePromise.then(resource => {
-                const sharedWith = resource.sharedWithIds ? [resource.userId, ...resource.sharedWithIds] : [];
+                const sharedWith = sortedUniq((resource.sharedWithIds ? [resource.userId, ...resource.sharedWithIds] : []).sort());
                 if (this.instance && this.proxemics && this.instance.id && this.proxemics.id) {
                     return Promise.all([
-                        this.instancesService.patch(this.instance.id, { sharedWith }),
-                        this.proxemicsService.patch(this.proxemics.id, { sharedWith })
+                        isEqual(this.cachedInstances.has(this.instance.id) ? this.cachedInstances.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.instancesService.patch(this.instance.id, { sharedWith }),
+                        isEqual(this.cachedProxemics.has(this.instance.id) ? this.cachedProxemics.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith })
                     ]);
                 } else { resolve() }
             }).then(instance => resolve(instance)).catch(e => reject(e));
@@ -662,6 +679,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.cachedProxemics.set(newProxemics.id, newProxemics);
                     console.log('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Proxemics:', proxemics);
                 }
+                FeathersCoordinator.cacheCleanup(this.cachedProxemics);
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
         this.unsubscribeProxemics();
@@ -698,6 +716,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this.cachedInstances.set(newInstance.id, newInstance);
                     console.log('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance);
                 }
+                FeathersCoordinator.cacheCleanup(this.cachedInstances);
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
         this.unsubscribeInstances();
@@ -733,5 +752,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public unsubscribeReconnects(): void {
         this.subscribeReconnectsFunction = null;
+    }
+
+    public static cacheCleanup(cache: Map<string, BaseEntity>, maxCacheSize = 10, maxCacheAge = 5 * 1000 * 1000) {
+        for (const [id, entity] of cache) {
+            if (cache.size > maxCacheSize || new Date().getTime() - entity.timestamp.getTime() > maxCacheAge) {
+                cache.delete(id);
+            }
+        }
     }
 }

@@ -38,7 +38,7 @@
     "@feathersjs/socketio-client": "^4.5.6",
     "@polymer/paper-dialog": "^3.0.1",
     "@types/jsrsasign": "^8.0.4",
-    "@types/lodash": "^4.14.157",
+    "@types/lodash": "^4.14.158",
     "@types/socket.io-client": "^1.4.33",
     "cross-fetch": "^3.0.5",
     "html-webpack-plugin": "^4.3.0",

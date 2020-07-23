@@ -12,7 +12,6 @@ export default class Instance extends BaseEntity {
     public name: string;
     public active: Boolean;
     public componentsDistribution: ComponentsDistribution;
-    public timestamp: Date;
 
     constructor(instance: any = {}) {
         super(instance);
@@ -29,7 +28,6 @@ export default class Instance extends BaseEntity {
         this.name = instance.name;
         this.active = instance.active;
         this.componentsDistribution = new ComponentsDistribution(instance.componentsDistribution);
-        this.timestamp = new Date();
     }
 
     public equals(instance: any): boolean {
