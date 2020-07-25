@@ -31,11 +31,11 @@
     "serve": "^11.3.2"
   },
   "devDependencies": {
-    "@feathersjs/authentication": "^4.5.6",
-    "@feathersjs/authentication-client": "^4.5.6",
-    "@feathersjs/errors": "^4.5.5",
-    "@feathersjs/feathers": "^4.5.5",
-    "@feathersjs/socketio-client": "^4.5.6",
+    "@feathersjs/authentication": "^4.5.7",
+    "@feathersjs/authentication-client": "^4.5.7",
+    "@feathersjs/errors": "^4.5.7",
+    "@feathersjs/feathers": "^4.5.7",
+    "@feathersjs/socketio-client": "^4.5.7",
     "@polymer/paper-dialog": "^3.0.1",
     "@types/jsrsasign": "^8.0.4",
     "@types/lodash": "^4.14.158",
@@ -53,7 +53,7 @@
     "svg-inline-loader": "^0.8.2",
     "ts-loader": "^8.0.1",
     "typescript": "^3.9.7",
-    "webpack": "^4.43.0",
+    "webpack": "^4.44.0",
     "webpack-cli": "^3.3.12"
   }
 }
