@@ -265,7 +265,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public isConnected(): boolean { return this.socket.connected; }
 
-    public getResourceData(resourceId: string = null): Promise<any> {
+    public getResourceData(resourceId: string = this.subscribedResourceId): Promise<any> {
         return this.getResource(resourceId).then(resource => resource.data);
     }
 
@@ -314,7 +314,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
                     if (resourceId) { resolve(new Resource(resource)); }
                     else { this.updateResource(resource); resolve(this.resource); }
-                } else { retrieveResource() }
+                }
             }).catch(e => retrieveResource());
         });
     }
@@ -404,7 +404,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     private updateResource(resource: any): void {
-        if (this.resource && (!this.resource.id || this.resource.id === resource._id)) {
+        if (this.resource && (!this.resource.id || this.resource.id === resource._id) && resource.default === true) {
             this.resource.update(resource);
             if (!this.subscribedResourceId) { this._subscribedResourceId = this.resource.id; }
         }

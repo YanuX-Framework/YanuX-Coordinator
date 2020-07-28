@@ -304,16 +304,24 @@ export default class ComponentsRuleEngine {
             priority: 1,
             consequence: function (R: any) {
                 Object.entries(this.restrictions).forEach(([component, componentRestrictions]) => {
-                    const shownOnOtherDevice = Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
+                    if (this.defaultComponentsConfig[component] && !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
                         if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                            return ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, this.capabilities[d], this);
+                            return ComponentsRuleEngine.matchComponentAndRestrictions(
+                                component,
+                                componentRestrictions,
+                                this.capabilities[d],
+                                this
+                            );
                         } else { return false; }
-                    });
-                    const shownOnLocalDevice = ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, this.localDeviceCapabilities, this);
-                    if (this.defaultComponentsConfig[component] && !shownOnOtherDevice) {
-                        this.componentsConfig[component] = true;
-                    } else { this.componentsConfig[component] = shownOnLocalDevice; }
-
+                    })) { this.componentsConfig[component] = true; }
+                    else {
+                        this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
+                            component,
+                            componentRestrictions,
+                            this.localDeviceCapabilities,
+                            this
+                        );
+                    }
                 });
                 R.stop();
             }

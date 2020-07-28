@@ -35,6 +35,7 @@ export default class BaseEntity {
         //this._raw = entity;
     }
 
+    //TODO: Add specific equals implementations to all child classes
     public equals(entity: any): boolean {
         return !isNil(entity) && (this.id === entity.id || this.id === entity._id)
     }

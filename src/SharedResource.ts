@@ -15,6 +15,5 @@ export default class SharedResource extends Resource {
         this.user = new User(resource.user);
         this.owner = this.user.email;
         this.sharedWith = resource.sharedWith.map((u: any) => new User(u));
-
     }
 }
