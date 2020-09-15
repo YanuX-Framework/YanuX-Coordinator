@@ -428,7 +428,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     private getProxemics(): Promise<Proxemics[]> {
         return new Promise((resolve, reject) => {
-            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then(results => {
+            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then((results : any[] | any) => {
                 const proxemics = results.data && results.data.length === 1 ? results.data[0] : results.length === 1 ? results[0] : {};
                 this.proxemics.update(proxemics);
                 return this.getResource();
