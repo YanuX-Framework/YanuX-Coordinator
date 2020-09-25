@@ -251,6 +251,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 console.log('[YXC] Updated Instance Activeness:', updatedInstance);
                 return Promise.all([this.getResource(), this.getProxemicsState()]);
             }).then((results: any) => {
+                console.log('[YXC] Resource + Proxemic State:', results);
                 const [resource, proxemics] = results;
                 this.updateResourceSubscription()
                     .then(() => resolve([resource.data, proxemics, resource.id]))
@@ -314,7 +315,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
                     if (resourceId) { resolve(new Resource(resource)); }
                     else { this.updateResource(resource); resolve(this.resource); }
-                }
+                } else { retrieveResource(); }
             }).catch(e => retrieveResource());
         });
     }

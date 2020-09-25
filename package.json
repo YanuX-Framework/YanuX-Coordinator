@@ -42,7 +42,7 @@
     "@types/socket.io-client": "^1.4.33",
     "cross-fetch": "^3.0.6",
     "html-webpack-plugin": "^4.5.0",
-    "jsrsasign": "^9.1.9",
+    "jsrsasign": "^10.0.0",
     "lit-element": "^2.4.0",
     "lodash": "^4.17.20",
     "node-localstorage": "^2.1.6",
