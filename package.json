@@ -4,6 +4,12 @@
   "description": "YanuX Coordinator",
   "repository": "github:YanuX-Framework/YanuX-Coordinator",
   "private": true,
+  "author": {
+    "name": "Pedro Albuquerque Santos",
+    "email": "pedro@albuquerques.net",
+    "url": "https://pedro.albuquerques.net"
+  },
+  "license": "Apache-2.0",
   "main": "dist/lib.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -21,17 +27,10 @@
     "start": "npm run serve",
     "test": "node lib/_test/test.js"
   },
-  "author": {
-    "name": "Pedro Albuquerque Santos",
-    "email": "pedro@albuquerques.net",
-    "url": "https://pedro.albuquerques.net"
-  },
-  "license": "Apache-2.0",
   "dependencies": {
     "serve": "^11.3.2"
   },
   "devDependencies": {
-    "@feathersjs/authentication": "^4.5.8",
     "@feathersjs/authentication-client": "^4.5.8",
     "@feathersjs/errors": "^4.5.8",
     "@feathersjs/feathers": "^4.5.8",
