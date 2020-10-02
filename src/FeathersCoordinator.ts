@@ -257,7 +257,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     .then(() => resolve([resource.data, proxemics, resource.id]))
                     .catch(e => reject(e));
             }).catch((e: Error) => {
-                if (!(e instanceof Conflict)) { reject(e); }
+                if (!(e instanceof Conflict)) {
+                    this.feathersClient.authentication.removeAccessToken();
+                    reject(e);
+                }
             })
         });
     }
@@ -429,7 +432,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     private getProxemics(): Promise<Proxemics[]> {
         return new Promise((resolve, reject) => {
-            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then((results : any[] | any) => {
+            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then((results: any[] | any) => {
                 const proxemics = results.data && results.data.length === 1 ? results.data[0] : results.length === 1 ? results[0] : {};
                 this.proxemics.update(proxemics);
                 return this.getResource();
