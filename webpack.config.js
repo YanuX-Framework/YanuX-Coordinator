@@ -11,7 +11,18 @@ module.exports = {
     library: ['yanux-coordinator', '[name]'],
     libraryTarget: 'umd'
   },
-  resolve: { extensions: ['.tsx', '.ts', '.jsx', '.js'] },
+  resolve: {
+    extensions: ['.tsx', '.ts', '.jsx', '.js'],
+    fallback: {
+      assert: require.resolve('assert/'),
+      buffer: require.resolve('buffer/'),
+      constants: require.resolve('constants-browserify'),
+      fs: false,
+      path: require.resolve('path-browserify'),
+      stream: require.resolve('stream-browserify'),
+      util: require.resolve('util/')
+    }
+  },
   module: {
     rules: [
       { enforce: 'pre', test: /\.js$/, loader: 'source-map-loader', exclude: [/node_modules/] },
@@ -19,7 +30,6 @@ module.exports = {
       { test: /\.svg$/, loader: 'svg-inline-loader' }
     ]
   },
-  node: { fs: 'empty' },
   plugins: [
     new HtmlWebpackPlugin({
       title: 'YanuX Coordinator Elements',
