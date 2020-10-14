@@ -26,7 +26,6 @@ import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFoundError from './errors/UserNotFoundError';
-import { resources } from './examples';
 import BaseEntity from './BaseEntity';
 
 export default class FeathersCoordinator extends AbstractCoordinator {
