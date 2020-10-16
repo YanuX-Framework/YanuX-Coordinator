@@ -36,7 +36,7 @@
     "@feathersjs/feathers": "^4.5.9",
     "@feathersjs/socketio-client": "^4.5.9",
     "@polymer/paper-dialog": "^3.0.1",
-    "@types/jsrsasign": "^8.0.6",
+    "@types/jsrsasign": "^8.0.7",
     "@types/lodash": "^4.14.162",
     "@types/socket.io-client": "^1.4.34",
     "assert": "^2.0.0",
