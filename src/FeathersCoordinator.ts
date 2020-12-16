@@ -418,7 +418,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             this.resourceSubscriptionService.find({ query: { $limit: 1, user: this.user.id, client: this.client.id } })
                 .then((resourceSubscriptions: any) => {
                     if (resourceSubscriptions.length === 1) { resolve(resourceSubscriptions[0]); }
-                    else if (resourceSubscriptions.length === 0) { resolve(); }
+                    else if (resourceSubscriptions.length === 0) { resolve(null); }
                 }).catch(e => reject(e));
         });
     }
@@ -638,7 +638,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                     //TODO: Create a class representing a ResouceSubscription to wrap the value resturned from server.
                     .then(resourceSubscription => resolve(resourceSubscription))
                     .catch(e => reject(e));
-            } else { resolve() };
+            } else { resolve(null) };
         });
     }
 
@@ -653,10 +653,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (this.instance && this.proxemics && this.instance.id && this.proxemics.id) {
                     return Promise.all([
                         isEqual(this.cachedInstances.has(this.instance.id) ? this.cachedInstances.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.instancesService.patch(this.instance.id, { sharedWith }),
-                        isEqual(this.cachedProxemics.has(this.instance.id) ? this.cachedProxemics.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith })
+                        isEqual(this.cachedProxemics.has(this.proxemics.id) ? this.cachedProxemics.get(this.proxemics.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith })
                     ]);
-                } else { resolve() }
-            }).then(instance => resolve(instance)).catch(e => reject(e));
+                } else { resolve(null) }
+            }).then(result => resolve(result)).catch(e => reject(e));
         });
     }
 
