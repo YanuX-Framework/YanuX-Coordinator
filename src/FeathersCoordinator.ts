@@ -315,8 +315,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
             }).then(resource => {
                 if (resource) {
                     this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
-                    if (resourceId) { resolve(new Resource(resource)); }
-                    else { this.updateResource(resource); resolve(this.resource); }
+                    if (!resourceId) { this.updateResource(resource); }
+                    resolve(new Resource(resource));
                 } else { retrieveResource(); }
             }).catch(e => retrieveResource());
         });
@@ -653,7 +653,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 if (this.instance && this.proxemics && this.instance.id && this.proxemics.id) {
                     return Promise.all([
                         isEqual(this.cachedInstances.has(this.instance.id) ? this.cachedInstances.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.instancesService.patch(this.instance.id, { sharedWith }),
-                        isEqual(this.cachedProxemics.has(this.proxemics.id) ? this.cachedProxemics.get(this.proxemics.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith })
+                        isEqual(this.cachedProxemics.has(this.proxemics.id) ? this.cachedProxemics.get(this.proxemics.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith }),
+                        //this.cachedProxemics.has(this.proxemics.id) ? this.proxemicsService.patch(null, { sharedWith }, {
+                        //    query: { sharedWith: this.cachedProxemics.get(this.proxemics.id).sharedWithIds }
+                        //}) : null
                     ]);
                 } else { resolve(null) }
             }).then(result => resolve(result)).catch(e => reject(e));
