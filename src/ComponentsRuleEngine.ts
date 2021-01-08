@@ -5,7 +5,8 @@ import {
     isArray,
     isObjectLike,
     flatten,
-    flattenDeep
+    flattenDeep,
+    omit
 } from 'lodash';
 
 import RuleEngine from 'node-rules';
@@ -112,14 +113,16 @@ export default class ComponentsRuleEngine {
             let fallback = false;
             if (strictMatching) {
                 //If the local device is the only present just fallback by default.
-                if (Object.keys(facts.capabilities).every(d => d === facts.localDeviceUuid)) {
-                    return true;
-                } else if (enforce === false) {
-                    fallback = !Object.keys(facts.capabilities).filter(d => d !== facts.localDeviceUuid).some((d: any) => {
-                        if (facts.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                            return ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, facts.capabilities[d], facts, false);
-                        } else { return false; }
-                    });
+                //if (Object.keys(facts.capabilities).every(d => d === facts.localDeviceUuid)) { return true; } else
+                if (enforce === false) {
+                    const nonLocalDeviceUuids = Object.keys(facts.capabilities).filter(d => d !== facts.localDeviceUuid);
+                    if (nonLocalDeviceUuids.length === 0) { return true; } else {
+                        fallback = !nonLocalDeviceUuids.some((d: any) => {
+                            if (facts.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
+                                return ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, facts.capabilities[d], facts, false);
+                            } else { return false; }
+                        });
+                    }
                     console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
                 }
             }
@@ -154,34 +157,26 @@ export default class ComponentsRuleEngine {
                         const capabilityValue = flattenDeep([capability[entryKey]]);
                         const conditionValue = flattenDeep([entryValue.value]);
                         const fallback = fallbackCheck(entryValue.enforce)
-                        console.log('>>>>', entryValue.operator, ':');
+                        console.log('>>>> Entry Value', entryValue);
                         switch (entryValue.operator) {
                             case '=':
                                 return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] == cn);
                             case '!':
-                                return fallback || conditionValue
-                                    .every((cn: any, i: number): boolean => capabilityValue[i] != cn);
+                                return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] != cn);
                             case '>':
-                                return fallback || conditionValue
-                                    .every((cn: any, i: number): boolean => capabilityValue[i] > cn);
+                                return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] > cn);
                             case '>=':
-                                return fallback || conditionValue
-                                    .every((cn: any, i: number): boolean => capabilityValue[i] >= cn);
+                                return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] >= cn);
                             case '<':
-                                return fallback || conditionValue
-                                    .every((cn: any, i: number): boolean => capabilityValue[i] < cn);
+                                return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] < cn);
                             case '<=':
-                                return fallback || conditionValue
-                                    .every((cn: any, i: number): boolean => capabilityValue[i] <= cn);
+                                return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] <= cn);
                             case 'OR':
-                                return fallback || flatten([entryValue.values]).
-                                    some((v: any): boolean => matchConditionAux({ [entryKey]: v }));
+                                return fallback || flatten([entryValue.values]).some((v: any): boolean => matchConditionAux({ [entryKey]: v }));
                             case 'AND':
-                                return fallback || flatten([entryValue.values])
-                                    .every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
+                                return fallback || flatten([entryValue.values]).every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
                             case 'NOT':
-                                return fallback || flatten([entryValue.values])
-                                    .every((v: any): boolean => !matchConditionAux({ [entryKey]: v }));
+                                return fallback || flatten([entryValue.values]).every((v: any): boolean => !matchConditionAux({ [entryKey]: v }));
                             default:
                                 return fallback || entryValue.every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
                         }
@@ -197,9 +192,7 @@ export default class ComponentsRuleEngine {
                     console.log('>>> Condition - Match Capability Array:', condition, 'Capability:', capability, 'Operator:', operator);
                     return capability.includes(condition);
                 }
-                if (condition == capability || (condition === true && (!isUndefined(capability) || !isNull(capability)))) {
-                    return true;
-                } else { return false; }
+                return fallbackCheck(enforce) || condition == capability || (condition === true && (!isUndefined(capability) || !isNull(capability)));
             }
             return matchConditionAux(condition);
         }
@@ -227,8 +220,7 @@ export default class ComponentsRuleEngine {
                 this.defaultComponentsConfig = {};
                 this.auto = true;
                 Object.keys(this.restrictions).forEach(component => {
-                    this.defaultComponentsConfig[component] = this.restrictions[component].showByDefault ?
-                        this.restrictions[component].showByDefault : false;
+                    this.defaultComponentsConfig[component] = this.restrictions[component].showByDefault === false ? false : true;
                 });
                 R.next();
             }
@@ -280,7 +272,10 @@ export default class ComponentsRuleEngine {
             name: 'When the local device is present build the capabilities object from the available information, filling any information gaps that may exist in the best way possible',
             priority: 1,
             condition: function (R: any) {
-                R.when(this.proxemics[this.localDeviceUuid] && !this.localDeviceCapabilities);
+                R.when(
+                    /*this.proxemics[this.localDeviceUuid] && */
+                    !this.localDeviceCapabilities
+                );
             },
             consequence: function (R: any) {
                 this.capabilities = {};
@@ -291,6 +286,11 @@ export default class ComponentsRuleEngine {
                         this.activeInstances.some((i: any) => i.device.deviceUuid === deviceUuid))
                     .forEach(([deviceUuid, capabilities]: [string, any]) =>
                         this.capabilities[deviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(deviceUuid, capabilities));
+
+                if (!this.capabilities[this.localDeviceUuid] && this.localInstance) {
+                    this.capabilities[this.localDeviceUuid] = this.localInstance.device.capabilities;
+                }
+                
                 this.localDeviceCapabilities = this.capabilities[this.localDeviceUuid];
                 R.next();
             }
@@ -303,25 +303,23 @@ export default class ComponentsRuleEngine {
             },
             priority: 1,
             consequence: function (R: any) {
-                Object.entries(this.restrictions).forEach(([component, componentRestrictions]) => {
+                Object.entries(this.restrictions).forEach(([component, componentRestrictions]: [string, any]) => {
+                    const currentRestrictions = omit(componentRestrictions, ['showByDefault']);
+                    //TODO:
+                    //This was being used to make sure that there was at least one device showing each component. It's still a valid solution.
+                    //However, I have made a few improvements to the overall logic of the distribution engine that make this somewhat redundant/uncessary!
+                    /*
                     if (this.defaultComponentsConfig[component] && !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
                         if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                            return ComponentsRuleEngine.matchComponentAndRestrictions(
-                                component,
-                                componentRestrictions,
-                                this.capabilities[d],
-                                this
-                            );
+                            return ComponentsRuleEngine.matchComponentAndRestrictions(component, currentRestrictions, this.capabilities[d], this);
                         } else { return false; }
                     })) { this.componentsConfig[component] = true; }
                     else {
-                        this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
-                            component,
-                            componentRestrictions,
-                            this.localDeviceCapabilities,
-                            this
-                        );
-                    }
+                    */
+                    this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
+                        component, currentRestrictions, this.localDeviceCapabilities, this
+                    );
+                    //}
                 });
                 R.stop();
             }
@@ -337,8 +335,6 @@ export default class ComponentsRuleEngine {
             proxemics: this.proxemics,
             restrictions: this.restrictions,
         };
-        return new Promise((resolve, reject) => {
-            this.R.execute(facts, function (data: any) { resolve(data); });
-        });
+        return new Promise(resolve => { this.R.execute(facts, function (data: any) { resolve(data); }); });
     }
 }
