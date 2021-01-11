@@ -112,17 +112,11 @@ export default class ComponentsRuleEngine {
         const fallbackCheck = (enforce: boolean = true): boolean => {
             let fallback = false;
             if (strictMatching) {
-                //If the local device is the only present just fallback by default.
-                //if (Object.keys(facts.capabilities).every(d => d === facts.localDeviceUuid)) { return true; } else
                 if (enforce === false) {
                     const nonLocalDeviceUuids = Object.keys(facts.capabilities).filter(d => d !== facts.localDeviceUuid);
-                    if (nonLocalDeviceUuids.length === 0) { return true; } else {
-                        fallback = !nonLocalDeviceUuids.some((d: any) => {
-                            if (facts.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                                return ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, facts.capabilities[d], facts, false);
-                            } else { return false; }
-                        });
-                    }
+                    fallback = !nonLocalDeviceUuids.some((d: any) =>
+                        ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, facts.capabilities[d], facts, false)
+                    );
                     console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
                 }
             }
@@ -178,7 +172,9 @@ export default class ComponentsRuleEngine {
                             case 'NOT':
                                 return fallback || flatten([entryValue.values]).every((v: any): boolean => !matchConditionAux({ [entryKey]: v }));
                             default:
-                                return fallback || entryValue.every((v: any): boolean => matchConditionAux({ [entryKey]: v }));
+                                return fallback || isArray(entryValue) ?
+                                    entryValue.every((v: any): boolean => matchConditionAux({ [entryKey]: v })) :
+                                    matchConditionAux({ [entryKey]: entryValue });
                         }
                     }
                     switch (operator) {
@@ -212,15 +208,17 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Create the default components configuration',
-            priority: 5,
-            condition: function (R: any) {
-                R.when(!this.defaultComponentsConfig);
-            },
+            priority: 4,
+            condition: function (R: any) { R.when(!this.defaultComponentsConfig); },
             consequence: function (R: any) {
                 this.defaultComponentsConfig = {};
                 this.auto = true;
                 Object.keys(this.restrictions).forEach(component => {
-                    this.defaultComponentsConfig[component] = this.restrictions[component].showByDefault === false ? false : true;
+                    if (this.restrictions[component].showByDefault === true) {
+                        this.defaultComponentsConfig[component] = true;
+                    } else if (this.restrictions[component].showByDefault === false) {
+                        this.defaultComponentsConfig[component] = false;
+                    } else { this.defaultComponentsConfig[component] = null; }
                 });
                 R.next();
             }
@@ -228,7 +226,7 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Use the current configuration of the local device\'s instance if there is already a manual component distribition attributed to it',
-            priority: 4,
+            priority: 3,
             condition: function (R: any) {
                 this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
                 R.when(!this.ignoreManual
@@ -246,10 +244,8 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Start with the default components configuration',
-            priority: 3,
-            condition: function (R: any) {
-                R.when(this.defaultComponentsConfig && !this.componentsConfig);
-            },
+            priority: 2,
+            condition: function (R: any) { R.when(this.defaultComponentsConfig && !this.componentsConfig); },
             consequence: function (R: any) {
                 this.componentsConfig = this.defaultComponentsConfig;
                 R.next();
@@ -257,40 +253,23 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
-            name: 'Use the default configuration if the local device instance is the only one active',
-            priority: 2,
-            condition: function (R: any) {
-                R.when(this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid));
-            },
-            consequence: function (R: any) {
-                this.componentsConfig = this.defaultComponentsConfig;
-                R.stop();
-            }
-        });
-
-        this.R.register({
             name: 'When the local device is present build the capabilities object from the available information, filling any information gaps that may exist in the best way possible',
             priority: 1,
-            condition: function (R: any) {
-                R.when(
-                    /*this.proxemics[this.localDeviceUuid] && */
-                    !this.localDeviceCapabilities
-                );
-            },
+            condition: function (R: any) { R.when(!this.localDeviceCapabilities); },
             consequence: function (R: any) {
                 this.capabilities = {};
                 Object.entries(this.proxemics)
-                    //Maybe it's not always necessary to have this check,
-                    //but I'm just making sure that ignore the proxemics of devices with non-active instances.
-                    .filter(([deviceUuid]: [string, any]) =>
-                        this.activeInstances.some((i: any) => i.device.deviceUuid === deviceUuid))
+                    //Making sure to ignore the proxemics of devices with non-active instances.
+                    .filter(([deviceUuid]: [string, any]) => this.activeInstances.some((i: any) => i.device.deviceUuid === deviceUuid))
                     .forEach(([deviceUuid, capabilities]: [string, any]) =>
-                        this.capabilities[deviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(deviceUuid, capabilities));
+                        this.capabilities[deviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(deviceUuid, capabilities)
+                    );
 
                 if (!this.capabilities[this.localDeviceUuid] && this.localInstance) {
-                    this.capabilities[this.localDeviceUuid] = this.localInstance.device.capabilities;
+                    this.capabilities = {};
+                    this.capabilities[this.localDeviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(this.localDeviceUuid, this.localInstance.device.capabilities);
                 }
-                
+
                 this.localDeviceCapabilities = this.capabilities[this.localDeviceUuid];
                 R.next();
             }
@@ -298,28 +277,17 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'When device capabilities are available determine the components configuration.',
-            condition: function (R: any) {
-                R.when(this.localDeviceCapabilities && this.capabilities);
-            },
-            priority: 1,
+            condition: function (R: any) { R.when(this.localDeviceCapabilities && this.capabilities); },
+            priority: 0,
             consequence: function (R: any) {
+                const isLocalDeviceTheOnlyActiveDevice = this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid);
                 Object.entries(this.restrictions).forEach(([component, componentRestrictions]: [string, any]) => {
                     const currentRestrictions = omit(componentRestrictions, ['showByDefault']);
-                    //TODO:
-                    //This was being used to make sure that there was at least one device showing each component. It's still a valid solution.
-                    //However, I have made a few improvements to the overall logic of the distribution engine that make this somewhat redundant/uncessary!
-                    /*
-                    if (this.defaultComponentsConfig[component] && !Object.keys(this.capabilities).filter(d => d !== this.localDeviceUuid).some((d: any) => {
-                        if (this.activeInstances.find((i: any) => i.device.deviceUuid === d)) {
-                            return ComponentsRuleEngine.matchComponentAndRestrictions(component, currentRestrictions, this.capabilities[d], this);
-                        } else { return false; }
-                    })) { this.componentsConfig[component] = true; }
-                    else {
-                    */
-                    this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
-                        component, currentRestrictions, this.localDeviceCapabilities, this
-                    );
-                    //}
+                    if (this.componentsConfig[component] === null || !isLocalDeviceTheOnlyActiveDevice) {
+                        this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
+                            component, currentRestrictions, this.localDeviceCapabilities, this
+                        );
+                    }
                 });
                 R.stop();
             }
@@ -331,7 +299,7 @@ export default class ComponentsRuleEngine {
             localInstanceUuid: this.localInstanceUuid,
             localDeviceUuid: this.localDeviceUuid,
             ignoreManual,
-            activeInstances: this.instances.filter(i => i.active),
+            activeInstances: this.instances.filter(i => i.active === true),
             proxemics: this.proxemics,
             restrictions: this.restrictions,
         };
