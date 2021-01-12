@@ -9,6 +9,11 @@ import powerWhiteIcon from './assets/icons/power-white.svg';
 
 @customElement('yanux-components-distribution')
 class ComponentsDistributionElement extends LitElement {
+  async performUpdate() {
+    await new Promise((resolve) => setTimeout(resolve));
+    super.performUpdate();
+  }
+
   @property({ type: String, reflect: true }) instanceId: string;
   @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution;
 

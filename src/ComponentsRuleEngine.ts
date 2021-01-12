@@ -11,6 +11,8 @@ import {
 
 import RuleEngine from 'node-rules';
 
+import memoize from 'fast-memoize'
+
 export default class ComponentsRuleEngine {
     private _localInstanceUuid: string;
     private _localDeviceUuid: string;
@@ -70,7 +72,8 @@ export default class ComponentsRuleEngine {
         this._R = R;
     }
 
-    private static expandDeviceCapabilities = (deviceUuid: string, capabilities: any): Array<any> => {
+    private static expandDeviceCapabilities: Function = memoize(ComponentsRuleEngine.__expandDeviceCapabilities);
+    private static __expandDeviceCapabilities(deviceUuid: string, capabilities: any): Array<any> {
         const expandCapability = (capability: any): any => {
             if (!capability.orientiation) {
                 capability.orientiation = 'landscape';
@@ -108,7 +111,8 @@ export default class ComponentsRuleEngine {
         return capabilities;
     };
 
-    private static matchComponentAndRestrictions(component: string, componentRestrictions: any, deviceCapabilities: any, facts: any, strictMatching: boolean = true): boolean {
+    private static matchComponentAndRestrictions: Function = memoize(ComponentsRuleEngine.__matchComponentAndRestrictions);
+    private static __matchComponentAndRestrictions(component: string, componentRestrictions: any, deviceCapabilities: any, facts: any, strictMatching: boolean = true): boolean {
         const fallbackCheck = (enforce: boolean = true): boolean => {
             let fallback = false;
             if (strictMatching) {
@@ -208,17 +212,17 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Create the default components configuration',
-            priority: 4,
-            condition: function (R: any) { R.when(!this.defaultComponentsConfig); },
+            priority: 3,
+            condition: function (R: any) { R.when(!this.componentsConfig); },
             consequence: function (R: any) {
-                this.defaultComponentsConfig = {};
+                this.componentsConfig = {};
                 this.auto = true;
                 Object.keys(this.restrictions).forEach(component => {
                     if (this.restrictions[component].showByDefault === true) {
-                        this.defaultComponentsConfig[component] = true;
+                        this.componentsConfig[component] = true;
                     } else if (this.restrictions[component].showByDefault === false) {
-                        this.defaultComponentsConfig[component] = false;
-                    } else { this.defaultComponentsConfig[component] = null; }
+                        this.componentsConfig[component] = false;
+                    } else { this.componentsConfig[component] = null; }
                 });
                 R.next();
             }
@@ -226,7 +230,7 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Use the current configuration of the local device\'s instance if there is already a manual component distribition attributed to it',
-            priority: 3,
+            priority: 2,
             condition: function (R: any) {
                 this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
                 R.when(!this.ignoreManual
@@ -239,16 +243,6 @@ export default class ComponentsRuleEngine {
                 this.componentsConfig = this.localInstance.componentsDistribution.components;
                 this.auto = false;
                 R.stop();
-            }
-        });
-
-        this.R.register({
-            name: 'Start with the default components configuration',
-            priority: 2,
-            condition: function (R: any) { R.when(this.defaultComponentsConfig && !this.componentsConfig); },
-            consequence: function (R: any) {
-                this.componentsConfig = this.defaultComponentsConfig;
-                R.next();
             }
         });
 
@@ -293,7 +287,7 @@ export default class ComponentsRuleEngine {
             }
         });
     }
-
+    
     public run(ignoreManual: boolean = false): Promise<any> {
         const facts = {
             localInstanceUuid: this.localInstanceUuid,
@@ -303,6 +297,6 @@ export default class ComponentsRuleEngine {
             proxemics: this.proxemics,
             restrictions: this.restrictions,
         };
-        return new Promise(resolve => { this.R.execute(facts, function (data: any) { resolve(data); }); });
+        return new Promise(resolve => { this.R.execute(facts, function (data: any) { resolve(data); }); })
     }
 }

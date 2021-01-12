@@ -28,6 +28,7 @@
     "test": "node lib/_test/test.js"
   },
   "dependencies": {
+    "fast-memoize": "^2.5.2",
     "serve": "^11.3.2"
   },
   "devDependencies": {

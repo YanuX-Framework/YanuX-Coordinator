@@ -12,6 +12,11 @@ import deleteIcon from './assets/icons/delete-black.svg';
 
 @customElement('yanux-resource-management')
 class ResourceManagermentElement extends LitElement {
+    async performUpdate() {
+        await new Promise((resolve) => setTimeout(resolve));
+        super.performUpdate();
+    }
+
     @property({ type: String, reflect: true }) userId: string;
     @property({ type: String, reflect: true }) selectedResourceId: string;
     @property({ type: Object, reflect: true }) selectedResource: SharedResource

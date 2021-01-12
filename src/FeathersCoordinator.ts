@@ -1,4 +1,4 @@
-import { isEqual, sortedUniq } from 'lodash';
+import { isEqual, sortedUniq, throttle } from 'lodash';
 
 import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
@@ -32,6 +32,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
+    private static PROXEMICS_THROTTLE_WAIT = 3000;
+    private static INSTANCES_THROTTLE_WAIT = 1000;
 
     public user: User;
     public client: Client;
@@ -688,10 +690,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 FeathersCoordinator.cacheCleanup(this.cachedProxemics);
             } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
+        const throttledEventListener = throttle(eventListener, FeathersCoordinator.PROXEMICS_THROTTLE_WAIT);
         this.unsubscribeProxemics();
         this.subscribeProxemicsFunctions['created'] = (resource: any) => eventListener(resource, 'created');
-        this.subscribeProxemicsFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
-        this.subscribeProxemicsFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeProxemicsFunctions['updated'] = (resource: any) => throttledEventListener(resource, 'updated');
+        this.subscribeProxemicsFunctions['patched'] = (resource: any) => throttledEventListener(resource, 'patched');
         this.subscribeProxemicsFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.proxemicsService, this.subscribeProxemicsFunctions);
     }
@@ -725,10 +728,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 FeathersCoordinator.cacheCleanup(this.cachedInstances);
             } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
+        const throttledEventListener = throttle(eventListener, FeathersCoordinator.INSTANCES_THROTTLE_WAIT);
         this.unsubscribeInstances();
         this.subscribeInstancesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
-        this.subscribeInstancesFunctions['updated'] = (resource: any) => eventListener(resource, 'updated');
-        this.subscribeInstancesFunctions['patched'] = (resource: any) => eventListener(resource, 'patched');
+        this.subscribeInstancesFunctions['updated'] = (resource: any) => throttledEventListener(resource, 'updated');
+        this.subscribeInstancesFunctions['patched'] = (resource: any) => throttledEventListener(resource, 'patched');
         this.subscribeInstancesFunctions['removed'] = (resource: any) => eventListener(resource, 'removed');
         this.subscribeService(this.instancesService, this.subscribeInstancesFunctions);
     }
