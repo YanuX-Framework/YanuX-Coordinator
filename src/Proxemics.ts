@@ -27,6 +27,6 @@ export default class Proxemics extends BaseEntity {
             && this.userId === (proxemics.userId || (proxemics.user && proxemics.user._id ? proxemics.user._id : proxemics.user))
             && (isEqual(this.sharedWithIds, proxemics.sharedWith) || isEqual(this.sharedWithIds, proxemics.sharedWithIds))
             && (isEqual(this.prevSharedWithIds, proxemics.prevSharedWith) || isEqual(this.prevSharedWithIds, proxemics.prevSharedWithIds))
-            && isEqual(this.state, proxemics.state)
+            && isEqual(Object.keys(this.state), Object.keys(proxemics.state)) //&& isEqual(this.state, proxemics.state)
     }
 }

@@ -72,7 +72,7 @@ export default class ComponentsRuleEngine {
         this._R = R;
     }
 
-    private static expandDeviceCapabilities: Function = memoize(ComponentsRuleEngine.__expandDeviceCapabilities);
+    private static expandDeviceCapabilities: Function = memoize(ComponentsRuleEngine.__expandDeviceCapabilities, { strategy: memoize.strategies.variadic });
     private static __expandDeviceCapabilities(deviceUuid: string, capabilities: any): Array<any> {
         const expandCapability = (capability: any): any => {
             if (!capability.orientiation) {
@@ -111,15 +111,15 @@ export default class ComponentsRuleEngine {
         return capabilities;
     };
 
-    private static matchComponentAndRestrictions: Function = memoize(ComponentsRuleEngine.__matchComponentAndRestrictions);
-    private static __matchComponentAndRestrictions(component: string, componentRestrictions: any, deviceCapabilities: any, facts: any, strictMatching: boolean = true): boolean {
+    private static matchComponentAndRestrictions: Function = memoize(ComponentsRuleEngine.__matchComponentAndRestrictions, { strategy: memoize.strategies.variadic });
+    private static __matchComponentAndRestrictions(component: string, componentRestrictions: any, localDeviceUuid: string, localDeviceCapabilities: any, capabilities: any, strictMatching: boolean = true): boolean {
         const fallbackCheck = (enforce: boolean = true): boolean => {
             let fallback = false;
             if (strictMatching) {
                 if (enforce === false) {
-                    const nonLocalDeviceUuids = Object.keys(facts.capabilities).filter(d => d !== facts.localDeviceUuid);
+                    const nonLocalDeviceUuids = Object.keys(capabilities).filter(d => d !== localDeviceUuid);
                     fallback = !nonLocalDeviceUuids.some((d: any) =>
-                        ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, facts.capabilities[d], facts, false)
+                        ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, localDeviceUuid, capabilities[d], capabilities, false)
                     );
                     console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
                 }
@@ -199,7 +199,7 @@ export default class ComponentsRuleEngine {
         console.log('> Component:', component);
         return Object.entries(componentRestrictions).every(([type, condition]: [string, any]): boolean => {
             console.log('>> Restrictions:', type);
-            const capability = deviceCapabilities[type];
+            const capability = localDeviceCapabilities[type];
             if (isArray(capability) && capability.some(c => !isString(c))) {
                 return capability.some(c => matchCondition(condition, c));
             }
@@ -279,7 +279,7 @@ export default class ComponentsRuleEngine {
                     const currentRestrictions = omit(componentRestrictions, ['showByDefault']);
                     if (this.componentsConfig[component] === null || !isLocalDeviceTheOnlyActiveDevice) {
                         this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
-                            component, currentRestrictions, this.localDeviceCapabilities, this
+                            component, currentRestrictions, this.localDeviceUuid, this.localDeviceCapabilities, this.capabilities
                         );
                     }
                 });
@@ -287,7 +287,7 @@ export default class ComponentsRuleEngine {
             }
         });
     }
-    
+
     public run(ignoreManual: boolean = false): Promise<any> {
         const facts = {
             localInstanceUuid: this.localInstanceUuid,
