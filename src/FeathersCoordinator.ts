@@ -10,6 +10,7 @@ import socketio from '@feathersjs/socketio-client';
 import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 import AbstractCoordinator from './AbstractCoordinator';
+import BaseEntity from './BaseEntity';
 import User from './User';
 import Client from './Client';
 import Device from './Device';
@@ -18,6 +19,7 @@ import Resource from './Resource';
 import Proxemics from './Proxemics';
 import Instance from './Instance';
 import SharedResource from './SharedResource';
+import ComponentsDistribution from './ComponentsDistribution';
 
 import DeviceNotFoundError from './errors/DeviceNotFoundError';
 import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
@@ -26,7 +28,6 @@ import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFoundError from './errors/UserNotFoundError';
-import BaseEntity from './BaseEntity';
 
 export default class FeathersCoordinator extends AbstractCoordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
@@ -431,16 +432,16 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     private getProxemics(): Promise<Proxemics[]> {
         return new Promise((resolve, reject) => {
-            this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }).then((results: any[] | any) => {
-                const proxemics = results.data && results.data.length === 1 ? results.data[0] : results.length === 1 ? results[0] : {};
-                this.proxemics.update(proxemics);
-                return this.getResource();
-            }).then(resource => this.proxemicsService.find({
-                query: { $or: [{ user: this.user.id }, { sharedWith: [resource.userId, ...resource.sharedWithIds] }] }
+            this.getResource().then(resource => this.proxemicsService.find({
+                query: { $or: [{ user: this.user.id }, { sharedWith: { $in: [resource.userId, ...resource.sharedWithIds] } }] }
             })).then(results => {
                 const proxemicses: any[] = results.data ? results.data : results as any;
+                if (proxemicses.length === 0) { return this.proxemicsService.patch(null, {}, { query: { $limit: 1, user: this.user.id } }) }
+                else { return results };
+            }).then(results => {
+                const proxemicses: any[] = results.data ? results.data : results as any;
                 resolve(proxemicses.map((p: any) => {
-                    if (this.user && this.user === p.user) { this.proxemics.update(p); }
+                    if (this.user && this.user.id === p.user) { this.proxemics.update(p); }
                     return new Proxemics(p)
                 }));
             }).catch((e: Error) => reject(e));
@@ -486,19 +487,20 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     }
 
     public setComponentDistribution(components: any, auto: Boolean = true, instanceId: string = this.instance.id): Promise<any> {
-        return new Promise<any>((resolve, reject) => {
-            if (instanceId) {
-                this.instancesService
-                    .patch(instanceId, { componentsDistribution: { auto, components } })
-                    .then((instance: any) => {
-                        if (this.instance.id === instanceId) {
-                            this.instance.update(instance);
-                        }
-                        resolve(instance)
-                    }).catch((e: Error) => reject(e));
-            } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
-
-        });
+        const componentsDistribution = { auto, components }
+        if (this.instance && this.instance.id === instanceId && isEqual(this.instance.componentsDistribution, new ComponentsDistribution(componentsDistribution))) {
+            return Promise.resolve(this.instance);
+        } else {
+            return new Promise<any>((resolve, reject) => {
+                if (instanceId) {
+                    this.instancesService.patch(instanceId, { componentsDistribution })
+                        .then((instance: any) => {
+                            if (this.instance.id === instanceId) { this.instance.update(instance); }
+                            resolve(instance);
+                        }).catch((e: Error) => reject(e));
+                } else { reject(new UnavailableInstanceId('Unavailable Instance Id')) }
+            });
+        }
     }
 
     public emitEvent(value: any, name: string): Promise<any> {
@@ -652,11 +654,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 const sharedWith = sortedUniq((resource.sharedWithIds ? [resource.userId, ...resource.sharedWithIds] : []).sort());
                 if (this.instance && this.proxemics && this.instance.id && this.proxemics.id) {
                     return Promise.all([
-                        isEqual(this.cachedInstances.has(this.instance.id) ? this.cachedInstances.get(this.instance.id).sharedWithIds : null, sharedWith) ? null : this.instancesService.patch(this.instance.id, { sharedWith }),
-                        isEqual(this.cachedProxemics.has(this.proxemics.id) ? this.cachedProxemics.get(this.proxemics.id).sharedWithIds : null, sharedWith) ? null : this.proxemicsService.patch(this.proxemics.id, { sharedWith }),
-                        //this.cachedProxemics.has(this.proxemics.id) ? this.proxemicsService.patch(null, { sharedWith }, {
-                        //    query: { sharedWith: this.cachedProxemics.get(this.proxemics.id).sharedWithIds }
-                        //}) : null
+                        isEqual(this.cachedInstances.has(this.instance.id) ? this.cachedInstances.get(this.instance.id).sharedWithIds : null, sharedWith) ? null :
+                            this.instancesService.patch(this.instance.id, { sharedWith }),
+                        isEqual(this.cachedProxemics.has(this.proxemics.id) ? this.cachedProxemics.get(this.proxemics.id).sharedWithIds : null, sharedWith) ? null :
+                            this.proxemicsService.patch(this.proxemics.id, { sharedWith }),
                     ]);
                 } else { resolve(null) }
             }).then(result => resolve(result)).catch(e => reject(e));
