@@ -12,15 +12,16 @@ import deleteIcon from './assets/icons/delete-black.svg';
 
 @customElement('yanux-resource-management')
 class ResourceManagermentElement extends LitElement {
-    async performUpdate() {
-        await new Promise((resolve) => setTimeout(resolve));
-        super.performUpdate();
-    }
+    //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
+    // async performUpdate() {
+    //   await new Promise((resolve) => setTimeout(resolve));
+    //   super.performUpdate();
+    // }
 
-    @property({ type: String, reflect: true }) userId: string;
-    @property({ type: String, reflect: true }) selectedResourceId: string;
-    @property({ type: Object, reflect: true }) selectedResource: SharedResource
-    @property({ type: Array, reflect: true }) resources: Array<SharedResource>
+    @property({ type: String, reflect: false }) userId: string;
+    @property({ type: String, reflect: false }) selectedResourceId: string;
+    @property({ type: Object, reflect: false }) selectedResource: SharedResource
+    @property({ type: Array, reflect: false }) resources: Array<SharedResource>
 
     checkIfOwnerAndResourceNameAreUnique(resource: SharedResource): boolean {
         return this.resources.some(r => resource.id !== r.id && resource.owner === r.owner && resource.name === r.name);

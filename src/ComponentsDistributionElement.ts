@@ -9,13 +9,14 @@ import powerWhiteIcon from './assets/icons/power-white.svg';
 
 @customElement('yanux-components-distribution')
 class ComponentsDistributionElement extends LitElement {
-  async performUpdate() {
-    await new Promise((resolve) => setTimeout(resolve));
-    super.performUpdate();
-  }
+  //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
+  // async performUpdate() {
+  //   await new Promise((resolve) => setTimeout(resolve));
+  //   super.performUpdate();
+  // }
 
-  @property({ type: String, reflect: true }) instanceId: string;
-  @property({ type: Object, reflect: true }) componentsDistribution: InstanceComponentsDistribution;
+  @property({ type: String, reflect: false }) instanceId: string;
+  @property({ type: Object, reflect: false }) componentsDistribution: InstanceComponentsDistribution;
 
   checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
     return Object.entries(this.componentsDistribution)
