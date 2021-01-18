@@ -19,6 +19,7 @@ export default class ComponentsRuleEngine {
     private _instances: Array<any>;
     private _proxemics: any;
     private _restrictions: any;
+    private _currentComponentsDistribution: { [key: string]: boolean }
     private _R: any;
 
     constructor(localInstanceUuid: string, localDeviceUuid: string, restrictions: any = {}, proxemics: any = {}, instances: Array<any> = []) {
@@ -27,6 +28,7 @@ export default class ComponentsRuleEngine {
         this.restrictions = restrictions;
         this.proxemics = proxemics;
         this.instances = instances;
+        this.currentComponentsDistribution = {};
         this.initRuleEngine();
     }
 
@@ -63,6 +65,13 @@ export default class ComponentsRuleEngine {
     }
     public set instances(instance: Array<any>) {
         this._instances = instance;
+    }
+
+    public get currentComponentsDistribution(): { [key: string]: boolean } {
+        return this._currentComponentsDistribution;
+    }
+    public set currentComponentsDistribution(currentComponentsDistribution: { [key: string]: boolean }) {
+        this._currentComponentsDistribution = currentComponentsDistribution;
     }
 
     public get R(): any {
@@ -208,11 +217,11 @@ export default class ComponentsRuleEngine {
     }
 
     private initRuleEngine(): void {
+        const self = this;
         this.R = new RuleEngine();
-
         this.R.register({
             name: 'Create the default components configuration',
-            priority: 3,
+            priority: 4,
             condition: function (R: any) { R.when(!this.componentsConfig); },
             consequence: function (R: any) {
                 this.componentsConfig = {};
@@ -230,7 +239,7 @@ export default class ComponentsRuleEngine {
 
         this.R.register({
             name: 'Use the current configuration of the local device\'s instance if there is already a manual component distribition attributed to it',
-            priority: 2,
+            priority: 3,
             condition: function (R: any) {
                 this.localInstance = this.activeInstances.find((i: any) => i.instanceUuid === this.localInstanceUuid && i.device.deviceUuid === this.localDeviceUuid);
                 R.when(!this.ignoreManual
@@ -247,9 +256,19 @@ export default class ComponentsRuleEngine {
         });
 
         this.R.register({
+            name: 'When device local instance is not active.',
+            condition: function (R: any) { R.when(!this.localInstance); },
+            priority: 2,
+            consequence: function (R: any) {
+                this.componentsConfig = self.currentComponentsDistribution;
+                R.stop();
+            }
+        });
+
+        this.R.register({
             name: 'When the local device is present build the capabilities object from the available information, filling any information gaps that may exist in the best way possible',
             priority: 1,
-            condition: function (R: any) { R.when(!this.localDeviceCapabilities); },
+            condition: function (R: any) { R.when(this.localInstance && !this.localDeviceCapabilities); },
             consequence: function (R: any) {
                 this.capabilities = {};
                 Object.entries(this.proxemics)
@@ -259,7 +278,7 @@ export default class ComponentsRuleEngine {
                         this.capabilities[deviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(deviceUuid, capabilities)
                     );
 
-                if (!this.capabilities[this.localDeviceUuid] && this.localInstance) {
+                if (!this.capabilities[this.localDeviceUuid]) {
                     this.capabilities = {};
                     this.capabilities[this.localDeviceUuid] = ComponentsRuleEngine.expandDeviceCapabilities(this.localDeviceUuid, this.localInstance.device.capabilities);
                 }
@@ -297,6 +316,12 @@ export default class ComponentsRuleEngine {
             proxemics: this.proxemics,
             restrictions: this.restrictions,
         };
-        return new Promise(resolve => { this.R.execute(facts, function (data: any) { resolve(data); }); })
+        const self = this;
+        return new Promise(resolve => {
+            this.R.execute(facts, function (data: any) {
+                self.currentComponentsDistribution = data.componentsConfig;
+                resolve(data);
+            });
+        })
     }
 }
