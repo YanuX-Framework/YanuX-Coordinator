@@ -1,6 +1,6 @@
 import BaseEntity from "./BaseEntity";
 
-export default class User extends BaseEntity {
+export class User extends BaseEntity {
     public email: string;
 
     constructor(resource: any = {}) {
@@ -12,3 +12,5 @@ export default class User extends BaseEntity {
         this.email = resource.email;
     }
 }
+
+export default User;

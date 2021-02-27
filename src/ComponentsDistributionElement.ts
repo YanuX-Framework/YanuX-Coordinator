@@ -8,7 +8,7 @@ import powerBlackIcon from './assets/icons/power-black.svg';
 import powerWhiteIcon from './assets/icons/power-white.svg';
 
 @customElement('yanux-components-distribution')
-class ComponentsDistributionElement extends LitElement {
+export class ComponentsDistributionElement extends LitElement {
   //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
   // async performUpdate() {
   //   await new Promise((resolve) => setTimeout(resolve));

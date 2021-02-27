@@ -10,7 +10,6 @@
  */
 
 import Coordinator from "./Coordinator";
-import AbstractCoordinator from "./AbstractCoordinator";
 import FeathersCoordinator from "./FeathersCoordinator";
 import Credentials from "./Credentials";
 import ComponentsRuleEngine from "./ComponentsRuleEngine";
@@ -20,7 +19,6 @@ import InstancesComponentsDistribution from "./InstancesComponentsDistribution";
 
 export {
     Coordinator,
-    AbstractCoordinator,
     FeathersCoordinator,
     Credentials,
     ComponentsRuleEngine,

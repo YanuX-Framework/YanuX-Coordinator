@@ -1,7 +1,7 @@
 import Resource from "./Resource";
 import User from "./User";
 
-export default class SharedResource extends Resource {
+export class SharedResource extends Resource {
     public user: User;
     public owner: string;
     public sharedWith: Array<User>;
@@ -17,3 +17,5 @@ export default class SharedResource extends Resource {
         this.sharedWith = resource.sharedWith.map((u: any) => new User(u));
     }
 }
+
+export default SharedResource;

@@ -1,6 +1,6 @@
 import BaseEntity from './BaseEntity'
 
-export default class Client extends BaseEntity{
+export class Client extends BaseEntity{
     public clientId: string;
 
     constructor(clientId: string, client: any = {}) {
@@ -13,3 +13,5 @@ export default class Client extends BaseEntity{
         this.clientId = client.id;
     }
 }
+
+export default Client;

@@ -1,5 +1,5 @@
 //TODO: Flesh-out this class with other important user properties.
-export default class Credentials {
+export class Credentials {
     private _type : string;
     private _values: Array<string>;
     constructor(type : string, values: Array<string>) {
@@ -19,3 +19,5 @@ export default class Credentials {
         this._values = credentials;
     }
 }
+
+export default Credentials;

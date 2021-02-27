@@ -1,6 +1,6 @@
 import BaseEntity from './BaseEntity'
 
-export default class Device extends BaseEntity{
+export class Device extends BaseEntity{
     public userId: string;
     public deviceUuid: string;
     public name: string;
@@ -18,3 +18,5 @@ export default class Device extends BaseEntity{
         this.name = device.name;
     }
 }
+
+export default Device;

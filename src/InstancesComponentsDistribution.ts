@@ -1,4 +1,4 @@
-class Device {
+export class Device {
     public uuid: string;
     public name: string;
     constructor(uuid: string, name: string) {
@@ -7,14 +7,14 @@ class Device {
     }
 }
 
-class Components {
+export class Components {
     [component: string]: boolean;
     constructor(values: any = {}) {
         Object.assign(this, values);
     }
 }
 
-class Instance {
+export class Instance {
     public name: string;
     public device: Device;
     public auto: boolean;
@@ -27,7 +27,7 @@ class Instance {
     }
 }
 
-export default class InstancesComponentsDistribution {
+export class InstancesComponentsDistribution {
     [instanceId: string]: Instance;
     constructor(instances: any[] = []) {
         instances.forEach(i => {
@@ -39,4 +39,6 @@ export default class InstancesComponentsDistribution {
             )
         });
     }
-} 
+}
+
+export default InstancesComponentsDistribution;

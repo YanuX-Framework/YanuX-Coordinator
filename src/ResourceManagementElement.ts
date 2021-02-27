@@ -11,7 +11,7 @@ import shareIcon from './assets/icons/share-black.svg';
 import deleteIcon from './assets/icons/delete-black.svg';
 
 @customElement('yanux-resource-management')
-class ResourceManagermentElement extends LitElement {
+export class ResourceManagermentElement extends LitElement {
     //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
     // async performUpdate() {
     //   await new Promise((resolve) => setTimeout(resolve));

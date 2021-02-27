@@ -9,7 +9,9 @@ import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads 
 import socketio from '@feathersjs/socketio-client';
 import fetch from 'cross-fetch';
 import io from 'socket.io-client';
-import AbstractCoordinator from './AbstractCoordinator';
+
+import Coordinator from './Coordinator';
+
 import BaseEntity from './BaseEntity';
 import User from './User';
 import Client from './Client';
@@ -29,9 +31,13 @@ import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFoundError from './errors/UserNotFoundError';
 
-export default class FeathersCoordinator extends AbstractCoordinator {
+/**
+ * Concrete implementation of the {@link Coordinator} interface that connects to the YanuX Broker using the Feathers Socket.io Client.
+ */
+export class FeathersCoordinator implements Coordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
+
     private static LOCAL_STORAGE_JWT_ACCESS_TOKEN_KEY: string = 'feathers-jwt';
 
     public user: User;
@@ -45,7 +51,6 @@ export default class FeathersCoordinator extends AbstractCoordinator {
 
     public instance: Instance;
     private cachedInstances: Map<string, Instance>;
-    //TODO: Add ResourceSubscription
 
     private brokerUrl: string;
     private localDeviceUrl: string;
@@ -68,12 +73,27 @@ export default class FeathersCoordinator extends AbstractCoordinator {
     private subscribeResourceFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeProxemicsFunctions: { [eventType: string]: (resource: any) => void };
     private subscribeInstancesFunctions: { [eventType: string]: (resource: any) => void };
+
     private subscribeEventsFunction: (data: any, eventType: string) => void;
-    private subscribeReconnectsFunction: (resourceState: any, proxemics: any, resourceId: any) => void;
+    private subscribeReconnectsFunction: (resourceData: any, proxemics: Proxemics, resourceId: string) => void;
 
     private _subscribedResourceId: string;
     public get subscribedResourceId(): string { return this._subscribedResourceId; }
 
+    /**
+     * Constructor that creates a ready to use {@link FeathersCoordinator} instance.
+     * @param brokerUrl - The URL of the broker that the {@link FeathersCoordinator} should connect to.
+     * @param localDeviceUrl - The URL of that exposes information about the local device (e.g., the Device UUID).
+     * @param clientId - The Client Id used that identifies the application using this {@link FeathersCoordinator} instance 
+     * @param credentials - The authentication credentials used to identify the user and that authorize the access to their data.
+     * @param onAuthenticated - A function that receives the name of the event and that is called when the connection to the broker is authenticated.
+     * A function that simply logs the event is provided by default.
+     * @param onLogout - A function that receives the name of the event and that is called when the user logs out from the broker.
+     * A function that simply logs the event is provided by default.
+     * @param onReAuthenticationError - A function that receives the name of the event and that is called when there is an erro reauthenticating the user.
+     * A function that simply logs the event is provided by default.
+     * @param localStorageLocation - The path where to save the local storage data when running the {@link FeathersCoordinator} on Node.js.
+     */
     constructor(brokerUrl: string,
         localDeviceUrl: string,
         clientId: string = 'default',
@@ -82,7 +102,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         onLogout: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('logout'),
         onReAuthenticationError: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('reauthentication-error'),
         localStorageLocation: string = './data/localstorage') {
-        super();
+        //super();
 
         this.user = new User();
         this.client = new Client(clientId);
@@ -152,11 +172,11 @@ export default class FeathersCoordinator extends AbstractCoordinator {
          */
         feathersSocketClient.io.on('connect_error', (error: any) => { console.error('[YXC] Connection Error:', error); })
         if (typeof document !== 'undefined') {
-            document.addEventListener('visibilitychange', () => { this.setInstanceActiveness(!document.hidden); });
+            document.addEventListener('visibilitychange', () => { this.setInstanceActiveness(document.visibilityState === 'visible'); });
         }
     }
 
-    public init(): Promise<any> {
+    public init(): Promise<[any, Proxemics, string]> {
         return new Promise<any>((resolve, reject) => {
             this.feathersClient.authentication.getAccessToken().then((jwt: any) => {
                 if (jwt) {
@@ -249,10 +269,10 @@ export default class FeathersCoordinator extends AbstractCoordinator {
                 return this.updateInstanceActiveness()
             }).then((updatedInstance: any) => {
                 console.log('[YXC] Updated Instance Activeness:', updatedInstance);
-                return Promise.all([this.getResource(), this.getProxemicsState()]);
+                return Promise.all([this.getResource(null), this.getProxemicsState()]);
             }).then((results: any) => {
                 console.log('[YXC] Resource + Proxemic State:', results);
-                const [resource, proxemics] = results;
+                const [resource, proxemics] : [Resource, Proxemics] = results;
                 this.updateResourceSubscription()
                     .then(() => resolve([resource.data, proxemics, resource.id]))
                     .catch(e => reject(e));
@@ -424,7 +444,8 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public getProxemicsState(): Promise<any> {
+    
+    public getProxemicsState(): Promise<{ [deviceUuid: string]: any }> {
         return this.getProxemics().then(proxemics => {
             return Object.assign({}, ...proxemics.map(p => p.state))
         }).catch((e: Error) => Promise.reject(e));
@@ -448,7 +469,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public getInstances(extraConditions: any): Promise<any> {
+    public getInstances(extraConditions: any): Promise<Array<any>> {
         return new Promise((resolve, reject) => {
             this.getResource().then(resource => {
                 const query: any = {
@@ -463,13 +484,13 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         })
     }
 
-    public getActiveInstances(): Promise<any> {
+    public getActiveInstances(): Promise<Array<any>> {
         return this.getInstances({ active: true });
     }
 
     public updateInstanceActiveness(): Promise<any> {
         if (typeof document !== 'undefined') {
-            return this.setInstanceActiveness(!document.hidden);
+            return this.setInstanceActiveness(document.visibilityState === 'visible');
         } else { return Promise.resolve(); }
     }
 
@@ -486,7 +507,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public setComponentDistribution(components: any, auto: Boolean = true, instanceId: string = this.instance.id): Promise<any> {
+    public setComponentDistribution(components: { [component: string]: boolean }, auto: Boolean = true, instanceId: string = this.instance.id): Promise<any> {
         const componentsDistribution = { auto, components }
         if (this.instance && this.instance.id === instanceId && isEqual(this.instance.componentsDistribution, new ComponentsDistribution(componentsDistribution))) {
             return Promise.resolve(this.instance);
@@ -664,7 +685,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         });
     }
 
-    public subscribeProxemics(subscriberFunction: (data: any, eventType: string) => void): void {
+    public subscribeProxemics(subscriberFunction: (data: Proxemics, eventType: string) => void): void {
         const eventListener = (proxemics: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Proxemics:', proxemics, 'Event Type:', eventType);
             const newProxemics = new Proxemics(proxemics);
@@ -701,7 +722,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.unsubscribeService(this.proxemicsService, this.subscribeProxemicsFunctions);
     }
 
-    public subscribeInstances(subscriberFunction: (data: any, eventType: string) => void): void {
+    public subscribeInstances(subscriberFunction: (data: Instance, eventType: string) => void): void {
         const eventListener = (instance: any, eventType: string = 'updated') => {
             console.log('[YXC] Subscribed Instance:', instance, 'Event Type:', eventType);
             const newInstance = new Instance(instance);
@@ -753,7 +774,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeEventsFunction = null;
     }
 
-    public subscribeReconnects(subscriberFunction: (resourceState: any, proxemics: any, resourceId: any) => void): void {
+    public subscribeReconnects(subscriberFunction: (resourceData: any, proxemics: Proxemics, resourceId: string) => void): void {
         this.subscribeReconnectsFunction = subscriberFunction;
     }
 
@@ -761,7 +782,7 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         this.subscribeReconnectsFunction = null;
     }
 
-    public static cacheCleanup(cache: Map<string, BaseEntity>, maxCacheSize = 10, maxCacheAge = 5 * 1000 * 1000) {
+    private static cacheCleanup(cache: Map<string, BaseEntity>, maxCacheSize = 10, maxCacheAge = 5 * 1000 * 1000) {
         for (const [id, entity] of cache) {
             if (cache.size > maxCacheSize || new Date().getTime() - entity.timestamp.getTime() > maxCacheAge) {
                 cache.delete(id);
@@ -769,3 +790,5 @@ export default class FeathersCoordinator extends AbstractCoordinator {
         }
     }
 }
+
+export default FeathersCoordinator;

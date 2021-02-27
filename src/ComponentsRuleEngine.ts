@@ -13,7 +13,7 @@ import RuleEngine from 'node-rules';
 
 import memoize from 'fast-memoize'
 
-export default class ComponentsRuleEngine {
+export class ComponentsRuleEngine {
     private _localInstanceUuid: string;
     private _localDeviceUuid: string;
     private _instances: Array<any>;
@@ -325,3 +325,5 @@ export default class ComponentsRuleEngine {
         })
     }
 }
+
+export default ComponentsRuleEngine;

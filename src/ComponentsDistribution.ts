@@ -1,4 +1,4 @@
-export default class ComponentsDistribution {
+export class ComponentsDistribution {
     public auto: boolean;
     public components: { [component: string]: boolean };
     constructor(componentsDistribution: any = {}) {
@@ -6,3 +6,5 @@ export default class ComponentsDistribution {
         this.components = componentsDistribution.components;
     }
 } 
+
+export default ComponentsDistribution;

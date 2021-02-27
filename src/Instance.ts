@@ -2,7 +2,7 @@ import { isEqual } from 'lodash';
 import BaseEntity from './BaseEntity';
 import ComponentsDistribution from './ComponentsDistribution'
 
-export default class Instance extends BaseEntity {
+export class Instance extends BaseEntity {
     public userId: string;
     public clientId: string;
     public deviceId: string;
@@ -39,3 +39,5 @@ export default class Instance extends BaseEntity {
             && isEqual(this.componentsDistribution, new ComponentsDistribution(instance.componentsDistribution))
     }
 }
+
+export default Instance;

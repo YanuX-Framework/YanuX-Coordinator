@@ -1,6 +1,6 @@
 import { isNil } from 'lodash';
 
-export default class BaseEntity {
+export class BaseEntity {
     public id: string;
     public brokerName: string;
     public createdAt: Date;
@@ -40,3 +40,5 @@ export default class BaseEntity {
         return !isNil(entity) && (this.id === entity.id || this.id === entity._id)
     }
 }
+
+export default BaseEntity;

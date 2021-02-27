@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import BaseEntity from "./BaseEntity";
 
-export default class Proxemics extends BaseEntity {
+export class Proxemics extends BaseEntity {
     public id: string;
     public userId: string;
     public sharedWithIds: string[];
@@ -30,3 +30,5 @@ export default class Proxemics extends BaseEntity {
             && isEqual(Object.keys(this.state), Object.keys(proxemics.state)) //&& isEqual(this.state, proxemics.state)
     }
 }
+
+export default Proxemics;

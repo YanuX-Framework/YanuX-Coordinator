@@ -2,7 +2,10 @@ import BaseEntity from "./BaseEntity";
 
 import { isEqual } from 'lodash';
 
-export default class Resource extends BaseEntity {
+/**
+ * A class representing a "Resource" on the "Broker".
+ */
+export class Resource extends BaseEntity {
     public userId: string;
     public clientId: string;
     public sharedWithIds: string[];
@@ -33,5 +36,6 @@ export default class Resource extends BaseEntity {
             && this.default === resource.default
             && isEqual(this.data, resource.data)
     }
-
 }
+
+export default Resource;
