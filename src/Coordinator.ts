@@ -132,6 +132,8 @@ export interface Coordinator {
 
     /**
      * Gets the Proxemic state (i.e., the {@link Proxemics.state} value) for the current {@link Coordinator.user | User}.
+     * The state contains the proxemic information and capabilities of a device, i.e., if a device is present in the environment this object should contain a key
+     * with its UUID that points to an object that represents the device capabilities.    
      * @returns A Promise that once resolved constains the Proxemic state (i.e., the {@link Proxemics.state} value) for the current {@link Coordinator.user | User}.
      */
     getProxemicsState(): Promise<{ [deviceUuid: string]: any }>;
@@ -176,7 +178,7 @@ export interface Coordinator {
      * Sets the distribution of components, and whether it was automatically or manually distributed, for the {@link Instance} with the given Id.
      * @param components - An object representing the distribution of components where the keys represent the name of the components
      * and the boolean values represent whether the components is shown (true) or not (false).
-     * @param auto - It indicates if the distribtution was automatically distributed (true) or manually set by a user (false). 
+     * @param auto - It indicates if the distribution was automatically distributed (true) or manually set by a user (false). 
      * The distribution is assumed to be true by default.
      * @param instanceId - The Id of the {@link Instance} for which the distribution of components is being set.
      * The Id of the current instance ({@link Coordinator.instance}) is used by default.

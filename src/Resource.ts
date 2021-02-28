@@ -3,20 +3,47 @@ import BaseEntity from "./BaseEntity";
 import { isEqual } from 'lodash';
 
 /**
- * A class representing a "Resource" on the "Broker".
+ * A class representing a {@link Resource} on the broker.
  */
 export class Resource extends BaseEntity {
+    /**
+     *  The Id of the {@link User} that owns this {@link Resource}.
+     */
     public userId: string;
+    /**
+     * The Id of the {@link Client} application that the {@link Resource} belongs to.
+     */
     public clientId: string;
+    /**
+     * The Id of the {@link User}s with whom this {@link Resource} is shared.
+     */
     public sharedWithIds: string[];
+    /**
+     * The name of the {@link Resource}.
+     */
     public name: string;
+    /**
+     * Whether this is the default {@link Resource} of a given {@link User} and {@link Client} combination.
+     * True if it is, false if it isn't.
+     */
     public default: boolean;
+    /**
+     * The unstructured data that 
+     */
     public data: any;
 
+    /**
+     * A constructor that creates a {@link Resource} object from a plain client object received from the broker.
+     * @param resource - A plain object received from the broker with information about a {@link Resource}.
+     */
     constructor(resource: any = {}) {
         super(resource);
     }
 
+    /**
+     * It updates the current object with information from a plain object received from the broker.
+     * @param resource - A plain object received from the broker with information about a {@link Resource}.
+     */
     public update(resource: any): void {
         super.update(resource);
         this.userId = resource.user && resource.user._id ? resource.user._id : resource.user;
@@ -27,6 +54,10 @@ export class Resource extends BaseEntity {
         this.data = resource.data;
     }
 
+    /**
+     * A method that compares the current object with another object to determine if their values are equivalent.
+     * @param resource - The object to compare to.
+     */
     public equals(resource: any): boolean {
         return super.equals(resource)
             && this.userId === (resource.userId || resource.user || resource.user.id || resource.user._id)

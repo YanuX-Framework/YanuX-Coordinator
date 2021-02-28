@@ -10,24 +10,40 @@ import renameIcon from './assets/icons/rename-black.svg';
 import shareIcon from './assets/icons/share-black.svg';
 import deleteIcon from './assets/icons/delete-black.svg';
 
+/**
+ * A web component (a custom element) that can be fed with information about the resources that a {@link User} has access to.
+ * It can be used to create, edit, delete, share or unshare resources.
+ */
 @customElement('yanux-resource-management')
 export class ResourceManagermentElement extends LitElement {
-    //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
-    // async performUpdate() {
-    //   await new Promise((resolve) => setTimeout(resolve));
-    //   super.performUpdate();
-    // }
+    /**
+     * The Id of the {@link User} that is running the client application.
+     */
+    @property({ type: String, reflect: true }) public userId: string;
+    /**
+     * The Id of the currenrlt selected {@link Resource}.
+     */
+    @property({ type: String, reflect: true }) public selectedResourceId: string;
+    /**
+     * An object with the contents of the currently selected resource.
+     */
+    @property({ type: Object, reflect: true }) public selectedResource: SharedResource
+    /**
+     * An array of the resources that the user has access to.
+     */
+    @property({ type: Array, reflect: true }) public resources: Array<SharedResource>
 
-    @property({ type: String, reflect: false }) userId: string;
-    @property({ type: String, reflect: false }) selectedResourceId: string;
-    @property({ type: Object, reflect: false }) selectedResource: SharedResource
-    @property({ type: Array, reflect: false }) resources: Array<SharedResource>
-
-    checkIfOwnerAndResourceNameAreUnique(resource: SharedResource): boolean {
+    private checkIfOwnerAndResourceNameAreUnique(resource: SharedResource): boolean {
         return this.resources.some(r => resource.id !== r.id && resource.owner === r.owner && resource.name === r.name);
     }
 
-    resourceSelected(e: Event) {
+    /**
+     * A method that is called when a new resource is selected by the user.
+     * @fires `CustomEvent` with the type `resource-selected` and a `detail` property that contains
+     * the `selectedResourceId`, the `resourceId` (a copy of `selectedResourceId`) and `resource` (the value of the `selectedResource`) properties.
+     * @param e - An HTMLSelectElement that triggered this function.
+     */
+    private resourceSelected(e: Event) {
         const resourceSelect = e.target as HTMLSelectElement;
         this.selectedResourceId = resourceSelect.value;
         this.selectedResource = this.resources[resourceSelect.selectedIndex];
@@ -42,13 +58,22 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    updated(_changedProperties: PropertyValues) {
+    /**
+     * Invoked whenever the element is updated.
+     * @param _changedProperties Map of changed properties with old values
+     */
+    protected updated(_changedProperties: PropertyValues) {
         const resourceSelectEl = this.shadowRoot.getElementById('resource-management-select') as HTMLSelectElement;
         this.selectedResource = resourceSelectEl && this.resources ? this.resources[resourceSelectEl.selectedIndex] : null;
         this.selectedResourceId = this.selectedResource ? this.selectedResource.id : this.selectedResourceId;
     }
 
-    createResource(e: Event) {
+    /**
+     * @fires `CustomEvent` with the type `create-resource` and a `detail` property that contains
+     * the property called `resourceName` with the name of the resource that was just created.
+     * @param e - The Event that triggered this method.
+     */
+    private createResource(e: Event) {
         const createResourceDialog = this.shadowRoot.getElementById('create-resource-dialog') as PaperDialogElement;
         createResourceDialog.close();
         const resourceName = (this.shadowRoot.getElementById('create-resource-name') as HTMLInputElement).value;
@@ -57,7 +82,12 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    renameResource(e: Event) {
+    /**
+     * @fires `CustomEvent` with the type `rename-resource-name` and a `detail` property that contains
+     * the `resourceId` (a copy of `selectedResourceId`), `resource` (the value of the `selectedResource`) and `resourceName` (the new name of the resource) properties.
+     * @param e - The Event that triggered this method.
+     */
+    private renameResource(e: Event) {
         const renameResourceDialog = this.shadowRoot.getElementById('rename-resource-dialog') as PaperDialogElement;
         renameResourceDialog.close();
         const resourceName = (this.shadowRoot.getElementById('rename-resource-name') as HTMLInputElement).value;
@@ -72,7 +102,12 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    deleteResource(e: Event) {
+    /**
+     * @fires `CustomEvent` with the type `delete-resource` and a `detail` property that contains
+     * the `resourceId` (a copy of `selectedResourceId`) and `resource` (the value of the `selectedResource`) properties.
+     * @param e - The Event that triggered this method.
+     */
+    private deleteResource(e: Event) {
         const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
         deleteResourceDialog.close();
         console.log('[YXRME - Delete Resource] Event:', e);
@@ -85,7 +120,13 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    shareResource(e: Event) {
+    /**
+     * @fires `CustomEvent` with the type `share-resource-email` and a `detail` property that contains
+     * the `resourceId` (a copy of `selectedResourceId`), `resource` (the value of the `selectedResource`) 
+     * and `userEmail` (the e-mail of the user with whom the resource was shared) properties.
+     * @param e - The Event that triggered this method.
+     */
+    private shareResource(e: Event) {
         const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
         shareResourceDialog.close();
         const userEmail = (this.shadowRoot.getElementById('share-resource-email') as HTMLInputElement).value;
@@ -100,7 +141,13 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    unshareResource(e: Event) {
+    /**
+     * @fires `CustomEvent` with the type `unshare-resource-dialog` and a `detail` property that contains
+     * the `resourceId` (a copy of `selectedResourceId`), `resource` (the value of the `selectedResource`) 
+     * and `userEmail` (the e-mail of the user with whom the resource was unshared) properties.
+     * @param e - The Event that triggered this method.
+     */
+    private unshareResource(e: Event) {
         const unshareResourceDialog = this.shadowRoot.getElementById('unshare-resource-dialog') as PaperDialogElement;
         unshareResourceDialog.close();
         console.log('[YXRME - Unshare Resource] Event:', e);
@@ -118,37 +165,61 @@ export class ResourceManagermentElement extends LitElement {
         this.dispatchEvent(event);
     }
 
-    showCreateResourceDialog(e: Event) {
+    /**
+     * @todo Document private method.
+     * @param e 
+     */
+    private showCreateResourceDialog(e: Event) {
         console.log('[YXRME - Show Create Resource Dialog] Event:', e);
         const createResourceDialog = this.shadowRoot.getElementById('create-resource-dialog') as PaperDialogElement;
         createResourceDialog.open();
     }
 
-    showRenameResourceDialog(e: Event) {
+    /**
+     * @todo Document private method.
+     * @param e 
+     */
+    private showRenameResourceDialog(e: Event) {
         console.log('[YXRME - Show Rename Resource Dialog] Event:', e);
         const renameResourceDialog = this.shadowRoot.getElementById('rename-resource-dialog') as PaperDialogElement;
         renameResourceDialog.open();
     }
 
-    showDeleteResourceDialog(e: Event) {
+    /**
+     * @todo Document private method.
+     * @param e 
+     */
+    private showDeleteResourceDialog(e: Event) {
         console.log('[YXRME - Show Delete Resource Dialog] Event:', e);
         const deleteResourceDialog = this.shadowRoot.getElementById('delete-resource-dialog') as PaperDialogElement;
         deleteResourceDialog.open();
     }
 
-    showShareResourceDialog(e: Event) {
+    /**
+     * @todo Document private method.
+     * @param e 
+     */
+    private showShareResourceDialog(e: Event) {
         console.log('[YXRME - Show Share Resource Dialog] Event:', e);
         const shareResourceDialog = this.shadowRoot.getElementById('share-resource-dialog') as PaperDialogElement;
         shareResourceDialog.open();
     }
 
-    showUnshareResourceDialog(e: Event) {
+    /**
+     * @todo Document private method.
+     * @param e 
+     */
+    private showUnshareResourceDialog(e: Event) {
         console.log('[YXRME - Show Delete Resource Dialog] Event:', e);
         const unshareResourceDialog = this.shadowRoot.getElementById('unshare-resource-dialog') as PaperDialogElement;
         unshareResourceDialog.open();
     }
 
-    static get styles() {
+    /**
+     * A method that returs the CSS styles of the custom elements.
+     * @remarks It should not be used on its own. However, the look of the element can be customized using CSS custom properties.
+     */
+    public static get styles() {
         return css`
         :host {
             --host-font-family: Arial, Helvetica, sans-serif;
@@ -253,7 +324,10 @@ export class ResourceManagermentElement extends LitElement {
         `;
     }
 
-    render(): TemplateResult {
+    /**
+     * Rendering the custom element.
+     */
+    protected render(): TemplateResult {
         if (this.resources) {
             return html`
             <div id="container"

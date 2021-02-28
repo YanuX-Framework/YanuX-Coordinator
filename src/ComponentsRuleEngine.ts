@@ -13,16 +13,55 @@ import RuleEngine from 'node-rules';
 
 import memoize from 'fast-memoize'
 
+/**
+ * A helper class that runs a decision engine that decides what is the correct distribution of UI components given the information about proxemics, device capabilities,
+ * and whether the user has selected to use automatic or manual distribution of the components.
+ */
 export class ComponentsRuleEngine {
+    /**
+     * @todo Document private property.
+     */
     private _localInstanceUuid: string;
+    /**
+     * @todo Document private property.
+     */
     private _localDeviceUuid: string;
+    /**
+     * @todo Document private property.
+     */
     private _instances: Array<any>;
+    /**
+     * @todo Document private property.
+     */
     private _proxemics: any;
+    /**
+     * @todo Document private property.
+     */
     private _restrictions: any;
+    /**
+     * @todo Document private property.
+     */
     private _currentComponentsDistribution: { [key: string]: boolean }
+    /**
+     * @todo Document private property.
+     */
     private _R: any;
 
-    constructor(localInstanceUuid: string, localDeviceUuid: string, restrictions: any = {}, proxemics: any = {}, instances: Array<any> = []) {
+    /**
+     * Constructor that creates a {@link ComponentsRuleEngine} instance.
+     * @param localInstanceUuid - The UUID of the locally running {@link Instance}.
+     * @param localDeviceUuid - The UUID of the local device {@link Device}.
+     * @param restrictions - An object with the set of restrictions that must met when ditributing the UI components automatically. 
+     * If no restrictions are provided, an empty restrictions object is assumed. 
+     * @todo Define a somewhat formal specification of the structure of this object.
+     * @param proxemics - The proxemic information and capabilities of a device, i.e., if a device is present in the environment this object should contain a key
+     * with its UUID that points to an object that represents the device capabilities.
+     * If no proxemics are provided, an empty proxemics object is assumed. 
+     * @todo Formalize the device capabilities object structure.
+     * @param instances - An array of the instances that the user currently has access to.
+     * If no instance are provided, an empty array of instances is assumed.
+     */
+    constructor(localInstanceUuid: string, localDeviceUuid: string, restrictions: any = {}, proxemics: { [deviceUuid: string]: any } = {}, instances: Array<any> = []) {
         this.localInstanceUuid = localInstanceUuid
         this.localDeviceUuid = localDeviceUuid;
         this.restrictions = restrictions;
@@ -32,6 +71,9 @@ export class ComponentsRuleEngine {
         this.initRuleEngine();
     }
 
+    /**
+     * "Getter" and "setter" of the UUID of the locally running {@link Instance}.
+     */
     public get localInstanceUuid(): string {
         return this._localInstanceUuid;
     }
@@ -39,6 +81,9 @@ export class ComponentsRuleEngine {
         this._localInstanceUuid = instanceUuid;
     }
 
+    /**
+     * "Getter" and "setter" of the UUID of the local device {@link Device}. 
+     */
     public get localDeviceUuid(): string {
         return this._localDeviceUuid;
     }
@@ -46,6 +91,9 @@ export class ComponentsRuleEngine {
         this._localDeviceUuid = localDeviceUuid;
     }
 
+    /**
+     * "Getter" and "setter" of the object with the set of restrictions that must met when ditributing the UI components automatically. 
+     */
     public get restrictions(): any {
         return this._restrictions;
     }
@@ -53,6 +101,10 @@ export class ComponentsRuleEngine {
         this._restrictions = restrictions;
     }
 
+    /**
+     * "Getter" and "setter" of the proxemic information and capabilities of a device, i.e., if a device is present in the environment this object should contain a key
+     * with its UUID that points to an object that represents the device capabilities.
+     */
     public get proxemics(): any {
         return this._proxemics;
     }
@@ -60,6 +112,9 @@ export class ComponentsRuleEngine {
         this._proxemics = proxemics;
     }
 
+    /**
+     * "Getter" and "setter" of the array of instances that the user currently has access to.
+     */
     public get instances(): Array<any> {
         return this._instances;
     }
@@ -67,6 +122,10 @@ export class ComponentsRuleEngine {
         this._instances = instance;
     }
 
+    /**
+     * "Getter" and "setter" of an object representing the distribution of components of the local instance where the keys represent the name of the components
+     * and the boolean values represent whether the components is shown (true) or not (false). 
+     */
     public get currentComponentsDistribution(): { [key: string]: boolean } {
         return this._currentComponentsDistribution;
     }
@@ -74,14 +133,27 @@ export class ComponentsRuleEngine {
         this._currentComponentsDistribution = currentComponentsDistribution;
     }
 
-    public get R(): any {
+    /**
+     * "Getter" and "setter" for the internal 'node-rules' engine.
+     */
+    private get R(): any {
         return this._R;
     }
-    public set R(R: any) {
+    private set R(R: any) {
         this._R = R;
     }
 
+    /**
+     * Infer additional device capabilities from the ones that are known.
+     */
     private static expandDeviceCapabilities: Function = memoize(ComponentsRuleEngine.__expandDeviceCapabilities, { strategy: memoize.strategies.variadic });
+    
+    /**
+     * Infer additional device capabilities from the ones that are known.
+     * Unmemoized private version of {@link ComponentsRuleEngine.expandDeviceCapabilities}.
+     * @param deviceUuid - The UUID of the {@link Device} that should have its capabilities expanded.
+     * @param capabilities - The initial capabilities of the device.
+     */
     private static __expandDeviceCapabilities(deviceUuid: string, capabilities: any): Array<any> {
         const expandCapability = (capability: any): any => {
             if (!capability.orientiation) {
@@ -120,7 +192,23 @@ export class ComponentsRuleEngine {
         return capabilities;
     };
 
+    /**
+     * Matches a certain components agains all the information about devices, restrictions and proxemics to determine whether it should be shown (true) or not (false).
+     */
     private static matchComponentAndRestrictions: Function = memoize(ComponentsRuleEngine.__matchComponentAndRestrictions, { strategy: memoize.strategies.variadic });
+    
+    /**
+     * Matches a certain components agains all the information about devices, restrictions and proxemics to determine whether it should be shown (true) or not (false).
+     * Unmemorized version of {@link ComponentsRuleEngine.matchComponentAndRestrictions}
+     * @param component 
+     * @param componentRestrictions 
+     * @param localDeviceUuid 
+     * @param localDeviceCapabilities 
+     * @param capabilities 
+     * @param strictMatching
+     * @return true if the component should be shown, false otherwise.
+     * @todo Document the method parameters.
+     */
     private static __matchComponentAndRestrictions(component: string, componentRestrictions: any, localDeviceUuid: string, localDeviceCapabilities: any, capabilities: any, strictMatching: boolean = true): boolean {
         const fallbackCheck = (enforce: boolean = true): boolean => {
             let fallback = false;
@@ -307,6 +395,15 @@ export class ComponentsRuleEngine {
         });
     }
 
+    /**
+     * Runs the distribution algorithm using the information currently stored on the {@link ComponentsRuleEngine} properties.
+     * @param ignoreManual - Whether it shoud ignore the manual distribution, forcing automatic distribtution to be performed anyway (true).
+     * By default the indication whether the current distribution is ignored is false.
+     * @return A Promise that once resolved contains information about the facts and inference steps that were taken to reach a result.
+     * The value that a developer should most likely be interested in is data of `componentsConfig` which contain a `{ [component: string]: boolean }` object
+     * with information whether a component with a certain key should be shown (true) or hidden (false). 
+     * If an error occurs the Promise will be rejected.
+     */
     public run(ignoreManual: boolean = false): Promise<any> {
         const facts = {
             localInstanceUuid: this.localInstanceUuid,

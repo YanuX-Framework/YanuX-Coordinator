@@ -7,18 +7,31 @@ import InstanceComponentsDistribution from './InstancesComponentsDistribution';
 import powerBlackIcon from './assets/icons/power-black.svg';
 import powerWhiteIcon from './assets/icons/power-white.svg';
 
+/**
+ * A web component (a custom element) that can be fed with information about the distribution of UI components across the instances 
+ * that the current {@link User} has access to. It will display that distribution and if the user tries to make any changes it will
+ * fire events that contain information that can be used to change the distribution of the components.
+ */
 @customElement('yanux-components-distribution')
 export class ComponentsDistributionElement extends LitElement {
-  //NOTE: https://julienrenaux.fr/2019/04/01/lit-element-rendering-strategies-explained/
-  // async performUpdate() {
-  //   await new Promise((resolve) => setTimeout(resolve));
-  //   super.performUpdate();
-  // }
+  /**
+   * It represents the Id of the local running instance.
+   * This property can be passed to the custom element as an HTML attribute.
+   */
+  @property({ type: String, reflect: true }) public instanceId: string;
 
-  @property({ type: String, reflect: false }) instanceId: string;
-  @property({ type: Object, reflect: false }) componentsDistribution: InstanceComponentsDistribution;
+  /**
+   * It represents the complete distribution of elements across the instances that the current {@link User} has access to.
+   * This property can be passed to the custom element as an HTML attribute. 
+   * Since it is an object it should be first converted to a string using `JSON.parse` before setting it.
+   */
+  @property({ type: Object, reflect: true }) public componentsDistribution: InstanceComponentsDistribution;
 
-  checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
+  /**
+   * @todo Document private method.
+   * @param instanceId 
+   */
+  private checkIfDeviceInstanceHasMultipleInstancesRunning(instanceId: string = this.instanceId): boolean {
     return Object.entries(this.componentsDistribution)
       .some(([currInstanceId, instanceDetails]: [string, any]) =>
         instanceId !== currInstanceId &&
@@ -28,7 +41,18 @@ export class ComponentsDistributionElement extends LitElement {
       );
   }
 
-  handleCheckboxClick(instanceId: string, component: string) {
+  /**
+   * Method that returns a function that handles a click in a checkbox representing a given component or a certain instance.
+   * @param instanceId - The Id of the {@link Instance} corresponding to the checkbox.
+   * @param component - The name of the component corresponding to the checkbox.
+   * @fires `CustomEvent` with the type `updated-components-distribution` and a `detail` property that contains
+   * the `instanceId`, the `component`, `checkboxCheckeded` (true if the chebox became chacked, false otherwise) and the updated `componentsDistribution`.
+   * The latter object has  a `components` property where the keys represent the name of the components and the boolean values represent whether the components is 
+   * shown (true) or not (false). It also contains a boolean (`auto`) that indicates whether distribution was automatically distributed (true) 
+   * or manually set by a user (false).
+   * @return A function that handles an `InputEvent`.
+   */
+  private handleCheckboxClick(instanceId: string, component: string) {
     return (e: InputEvent): void => {
       const checkboxChecked = (e.target as HTMLInputElement).checked
       console.log(
@@ -53,7 +77,13 @@ export class ComponentsDistributionElement extends LitElement {
     }
   }
 
-  handleAutoButtonClick(instanceId: string) {
+  /**
+   * Method that returns a function that handles a click in the auto button associated with a certain instance.
+   * @param instanceId - The Id of the {@link Instance} corresponding to the auto button.
+   * @fires `CustomEvent` with the type `reset-auto-components-distribution` and a `detail` property that contains the `instanceId`.
+   * @return A function that handles an `InputEvent`.
+   */
+  private handleAutoButtonClick(instanceId: string) {
     return (e: InputEvent): void => {
       console.log('[YXCDE - Auto Button Clicked] Instance:', instanceId, 'Event:', e);
       if (this.componentsDistribution[instanceId]) {
@@ -65,7 +95,11 @@ export class ComponentsDistributionElement extends LitElement {
     }
   }
 
-  static get styles() {
+  /**
+   * A method that returs the CSS styles of the custom elements.
+   * @remarks It should not be used on its own. However, the look of the element can be customized using CSS custom properties.
+   */
+  public static get styles() {
     return css`
     :host {
       --host-font-family: Arial, Helvetica, sans-serif;
@@ -178,7 +212,10 @@ export class ComponentsDistributionElement extends LitElement {
     `;
   }
 
-  render(): TemplateResult {
+  /**
+   * Rendering the custom element.
+   */
+  protected render(): TemplateResult {
     if (this.instanceId && this.componentsDistribution) {
       const instanceInfo = this.componentsDistribution[this.instanceId];
       const instanceIds = Object.keys(this.componentsDistribution);

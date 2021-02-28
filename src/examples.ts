@@ -1,3 +1,8 @@
+/**
+ * This is just a file with some example values that are used to test the behavior of some components while developing them.
+ * @todo Please ignore it. It will removed/relocated/replaced by something else in the future.
+ */
+
 export const instanceId = '5e1f1f35167afc2aaa1515b0';
 
 export const componentsDistribution = {

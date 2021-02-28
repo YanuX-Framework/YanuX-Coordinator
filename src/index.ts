@@ -9,13 +9,22 @@
  * -----------------------------------------------------------------------------
  */
 
-import Coordinator from "./Coordinator";
-import FeathersCoordinator from "./FeathersCoordinator";
-import Credentials from "./Credentials";
-import ComponentsRuleEngine from "./ComponentsRuleEngine";
-import ResourceManagementElement from "./ResourceManagementElement";
-import ComponentsDistributionElement from "./ComponentsDistributionElement";
-import InstancesComponentsDistribution from "./InstancesComponentsDistribution";
+import Coordinator from './Coordinator';
+import FeathersCoordinator from './FeathersCoordinator';
+import Credentials from './Credentials';
+import ComponentsRuleEngine from './ComponentsRuleEngine';
+import ResourceManagementElement from './ResourceManagementElement';
+import ComponentsDistributionElement from './ComponentsDistributionElement';
+import InstancesComponentsDistribution from './InstancesComponentsDistribution';
+import BaseEntity from './BaseEntity';
+import Client from './Client';
+import Device from './Device';
+import Instance from './Instance';
+import Proxemics from './Proxemics';
+import Resource from './SharedResource';
+import User from './User';
+import ComponentsDistribution from './ComponentsDistribution';
+import * as errors from './errors';
 
 export {
     Coordinator,
@@ -24,5 +33,14 @@ export {
     ComponentsRuleEngine,
     ResourceManagementElement,
     ComponentsDistributionElement,
-    InstancesComponentsDistribution
+    InstancesComponentsDistribution,
+    BaseEntity,
+    Client,
+    Device,
+    Instance,
+    Proxemics,
+    Resource,
+    User,
+    ComponentsDistribution,
+    errors
 };

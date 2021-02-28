@@ -17,7 +17,7 @@
     "compile": "npx tsc && npx tsc -p tsconfig-test.json",
     "package": "npx webpack",
     "serve": "npx serve ./dist -l 3010",
-    "docs": "npx typedoc src/",
+    "docs": "npx typedoc src/index.ts",
     "watch": "npm-run-all --parallel watch:dev watch:docs",
     "watch:dev": "npm-run-all --parallel watch:compile watch:package serve",
     "watch:build": "npm-run-all --parallel watch:compile watch:package",
@@ -25,7 +25,7 @@
     "watch:compile-lib": "npx tsc --watch",
     "watch:compile-test": "npx tsc -p tsconfig-test.json --watch",
     "watch:package": "npx webpack --watch",
-    "watch:docs": "npx typedoc src/ --watch",
+    "watch:docs": "npx typedoc src/index.ts --watch",
     "start": "npm run serve",
     "test": "node lib/_test/test.js"
   },

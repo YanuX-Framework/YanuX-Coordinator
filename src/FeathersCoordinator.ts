@@ -23,13 +23,13 @@ import Instance from './Instance';
 import SharedResource from './SharedResource';
 import ComponentsDistribution from './ComponentsDistribution';
 
-import DeviceNotFoundError from './errors/DeviceNotFoundError';
-import InvalidBrokerJwtError from './errors/InvalidBrokerJwtError';
+import DeviceNotFound from './errors/DeviceNotFound';
+import InvalidBrokerJwt from './errors/InvalidBrokerJwt';
 import UnavailableResourceId from './errors/UnavailableResourceId';
 import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
-import UserNotFoundError from './errors/UserNotFoundError';
+import UserNotFound from './errors/UserNotFound';
 
 /**
  * Concrete implementation of the {@link Coordinator} interface that connects to the YanuX Broker using the Feathers Socket.io Client.
@@ -44,39 +44,111 @@ export class FeathersCoordinator implements Coordinator {
     public client: Client;
     public device: Device;
     public resource: Resource;
+    /**
+     * @todo Document private property.
+     */
     private cachedResources: Map<string, SharedResource>;
 
     public proxemics: Proxemics;
+    /**
+     * @todo Document private property.
+     */ 
     private cachedProxemics: Map<string, Proxemics>;
 
     public instance: Instance;
+    /**
+     * @todo Document private property.
+     */
     private cachedInstances: Map<string, Instance>;
 
+    /**
+     * @todo Document private property.
+     */
     private brokerUrl: string;
+    /**
+     * @todo Document private property.
+     */
     private localDeviceUrl: string;
+    /**
+     * @todo Document private property.
+     */
     private credentials: Credentials;
+    /**
+     * @todo Document private property.
+     */
     private socket: SocketIOClient.Socket;
+    /**
+     * @todo Document private property.
+     */
     private feathersClient: Application<object>;
 
+    /**
+     * @todo Document private property.
+     */
     private usersService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private devicesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private instancesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private resourcesService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private resourceSubscriptionService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private proxemicsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
+    /**
+     * @todo Document private property.
+     */
     private eventsService: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>;
 
+    /**
+     * @todo Document private property.
+     */
     private storage: Storage;
 
+    /**
+     * @todo Document private property.
+     */
     private subscribeResourcesFunctions: { [eventType: string]: (resource: any) => void };
+    /**
+     * @todo Document private property.
+     */
     private subscribeResourceSubscriptionFunctions: { [eventType: string]: (resource: any) => void };
+    /**
+     * @todo Document private property.
+     */
     private subscribeResourceFunctions: { [eventType: string]: (resource: any) => void };
+    /**
+     * @todo Document private property.
+     */
     private subscribeProxemicsFunctions: { [eventType: string]: (resource: any) => void };
+    /**
+     * @todo Document private property.
+     */
     private subscribeInstancesFunctions: { [eventType: string]: (resource: any) => void };
 
+    /**
+     * @todo Document private property.
+     */
     private subscribeEventsFunction: (data: any, eventType: string) => void;
+    /**
+     * @todo Document private property.
+     */
     private subscribeReconnectsFunction: (resourceData: any, proxemics: Proxemics, resourceId: string) => void;
 
+    /**
+     * @todo Document private property.
+     */
     private _subscribedResourceId: string;
     public get subscribedResourceId(): string { return this._subscribedResourceId; }
 
@@ -214,10 +286,10 @@ export class FeathersCoordinator implements Coordinator {
                                 const key: any = jsrsasign.KEYUTIL.getKey(jwk);
                                 const acceptField: any = { alg: [header.alg], gracePeriod: 1 * 60 * 60 };
                                 const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, key, acceptField);
-                                if (isJwtValid) { resolve(response); } else { reject(new InvalidBrokerJwtError('The JWT is not valid.')); }
-                            } else { reject(new InvalidBrokerJwtError('"kid" not found on the provided "jku" URL')); }
+                                if (isJwtValid) { resolve(response); } else { reject(new InvalidBrokerJwt('The JWT is not valid.')); }
+                            } else { reject(new InvalidBrokerJwt('"kid" not found on the provided "jku" URL')); }
                         }).catch(e => reject(e));
-                    } else { reject(new InvalidBrokerJwtError('"jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
+                    } else { reject(new InvalidBrokerJwt('"jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
                 });
             }).then((response: any) => {
                 return Promise.all([
@@ -262,7 +334,7 @@ export class FeathersCoordinator implements Coordinator {
                         client: this.client.id,
                         device: this.device.id
                     });
-                } else { throw new DeviceNotFoundError('A device with the given UUID couldn\'t be found.'); }
+                } else { throw new DeviceNotFound('A device with the given UUID couldn\'t be found.'); }
             }).then((instance: any) => {
                 this.instance.update(instance);
                 console.log('[YXC] Initialized Instance:', instance);
@@ -307,6 +379,10 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
+    /**
+     * @todo Document private method.
+     * @param resourceId 
+     */
     private getResource(resourceId: string = this.subscribedResourceId): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const retrieveResource = () => {
@@ -343,9 +419,6 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
-    //TODO:
-    //I encapsulated the response into something that has a specific type.
-    //However, I should probably look for other places where I used "any" but that can have a specific type.
     public getResources(owned: boolean = true, sharedWith: boolean = true): Promise<Array<SharedResource>> {
         return new Promise((resolve, reject) => {
             const orCondition = [];
@@ -386,8 +459,8 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
-    //TODO: Ensure that only the owner can delete the resource
     public deleteResource(resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
+        //TODO: Ensure that only the owner can delete the resource
         return new Promise((resolve, reject) => {
             this.resourcesService.remove(resourceId)
                 .then((resource: any) => resolve(new SharedResource(resource))).catch((e: Error) => reject(e))
@@ -401,14 +474,14 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
-    public shareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
+    public shareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource>  {
         return new Promise((resolve, reject) => {
             Promise.all([
                 this.resourcesService.get(resourceId),
                 this.usersService.find({ query: { $limit: 1, email: userEmail } })
             ]).then(results => {
                 let [resource, users]: [any, any[]] = results as any;
-                if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
+                if (users.length !== 1) { throw new UserNotFound('Could not find a user with the given e-mail address.'); }
                 else { return this.resourcesService.patch(resource._id, { $addToSet: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
         });
@@ -421,12 +494,16 @@ export class FeathersCoordinator implements Coordinator {
                 this.usersService.find({ $limit: 1, query: { email: userEmail } })
             ]).then(results => {
                 const [resource, users]: [any, any[]] = results as any;;
-                if (users.length !== 1) { throw new UserNotFoundError('Could not find a user with the given e-mail address.'); }
+                if (users.length !== 1) { throw new UserNotFound('Could not find a user with the given e-mail address.'); }
                 else { return this.resourcesService.patch(resource._id, { $pull: { sharedWith: users[0]._id } }); }
             }).then(resource => { resolve(new SharedResource(resource)); }).catch((e: Error) => reject(e))
         });
     }
 
+    /**
+     * @todo Document private method.
+     * @param resource 
+     */
     private updateResource(resource: any): void {
         if (this.resource && (!this.resource.id || this.resource.id === resource._id) && resource.default === true) {
             this.resource.update(resource);
@@ -434,6 +511,9 @@ export class FeathersCoordinator implements Coordinator {
         }
     }
 
+    /**
+     * @todo Document private method.
+     */
     private getResourceSubscription(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.resourceSubscriptionService.find({ query: { $limit: 1, user: this.user.id, client: this.client.id } })
@@ -444,13 +524,15 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
-    
     public getProxemicsState(): Promise<{ [deviceUuid: string]: any }> {
         return this.getProxemics().then(proxemics => {
             return Object.assign({}, ...proxemics.map(p => p.state))
         }).catch((e: Error) => Promise.reject(e));
     }
 
+    /**
+     * @todo Document private method.
+     */
     private getProxemics(): Promise<Proxemics[]> {
         return new Promise((resolve, reject) => {
             this.getResource().then(resource => this.proxemicsService.find({
@@ -528,6 +610,11 @@ export class FeathersCoordinator implements Coordinator {
         return this.eventsService.create({ value, name, resource: this.subscribedResourceId });
     }
 
+    /**
+     * @todo Document private method.
+     * @param service 
+     * @param subscribeFunctions 
+     */
     private subscribeService(
         service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>,
         subscribeFunctions: { [eventType: string]: (entity: any) => void }
@@ -537,6 +624,11 @@ export class FeathersCoordinator implements Coordinator {
         }
     }
 
+    /**
+     * @todo Document private method.
+     * @param service 
+     * @param subscribeFunctions 
+     */
     private unsubscribeService(
         service: ServiceOverloads<any> & ServiceAddons<any> & ServiceMethods<any>,
         subscribeFunctions: { [eventType: string]: (entity: any) => void }
@@ -652,6 +744,9 @@ export class FeathersCoordinator implements Coordinator {
         this.unsubscribeService(this.resourceSubscriptionService, this.subscribeResourceSubscriptionFunctions);
     }
 
+    /**
+     * @todo Document private method.
+     */
     private updateResourceSubscription(): Promise<any> {
         return new Promise((resolve, reject) => {
             if (this.user.id && this.client.id && this.subscribedResourceId) {
@@ -665,6 +760,10 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
+    /**
+     * @todo Document private method.
+     * @param r 
+     */
     private updateDynamicSharing(r?: Resource): Promise<any> {
         console.log('[YXC] Update Dynamic Sharing');
         return new Promise((resolve, reject) => {
@@ -782,6 +881,12 @@ export class FeathersCoordinator implements Coordinator {
         this.subscribeReconnectsFunction = null;
     }
 
+    /**
+     * @todo Document private method.
+     * @param cache 
+     * @param maxCacheSize 
+     * @param maxCacheAge 
+     */
     private static cacheCleanup(cache: Map<string, BaseEntity>, maxCacheSize = 10, maxCacheAge = 5 * 1000 * 1000) {
         for (const [id, entity] of cache) {
             if (cache.size > maxCacheSize || new Date().getTime() - entity.timestamp.getTime() > maxCacheAge) {

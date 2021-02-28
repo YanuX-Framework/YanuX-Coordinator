@@ -1,6 +1,6 @@
 /**
- * TODO: 
- * Perhaps I should create tests using a true testing library.
+ * This is just a file that used to run and test the {@link FeathersCoordinator} and the {@link ComponentsRuleEngine} in isolation by running them directly with/on Node.js.
+ * @todo Perhaps I should create tests using a true testing library.
  * However, it may not be somethign straightforward due to the network/async/browser nature of this library. 
  */
 

@@ -1,3 +1,8 @@
+/**
+ * It is used together with the 'index.html' file to test and develop the custom HTML elements (Web Components).
+ * @todo: Please ignore it. It will removed/relocated/replaced by something else in the future.
+ */
+
 import './ComponentsDistributionElement';
 import './ResourceManagementElement';
 import { componentsDistribution, resources } from './examples';
