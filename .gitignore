@@ -65,4 +65,4 @@ build/
 dist/
 lib/
 data/
-docs/
+#docs/

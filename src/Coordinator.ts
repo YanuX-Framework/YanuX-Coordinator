@@ -64,7 +64,7 @@ export interface Coordinator {
     instance: Instance;
 
     /**
-     * It initializes the broker and returns a promise with useful information.
+     * It initializes the connection to the broker and returns a promise with useful information.
      * @return A Promise that once resolved contains an array with the data of default resource ({@link Coordinator.resource}), 
      * information about the proxemic state and the Id of the default resource.
      */
@@ -121,7 +121,7 @@ export interface Coordinator {
     shareResource(userEmail: string, resourceId?: string): Promise<SharedResource>;
 
     /**
-     * Unshares a {@link Resource} with a given Id with an {@link User} with a certain e-mail address.
+     * Unshares a {@link Resource} with a given Id that was shared with a {@link User} with a certain e-mail address.
      * @param userEmail - The e-mail address of the user with whom the {@link Resource} with the given Id should be unshared.
      * @param resourceId - The Id of the {@link Resource} that should be unshared with the user with the provided e-mail address. 
      * If no Id is provided the Id of the currently subscribed to resource will be used ({@link Coordinator.subscribedResourceId}).
@@ -166,7 +166,7 @@ export interface Coordinator {
     setInstanceActiveness(active: Boolean): Promise<any>;
 
     /**
-     * Sets if the current {@link Coordinator.instance | Instance} is active by automatically deciding if the application using the {@link Coordinator}
+     * Sets if the current {@link Coordinator.instance | Instance} is active by automatically determining if the application instance using the {@link Coordinator}
      * is actively being used by taking the value of "document.visibilityState" into consideration. 
      * @return A Promise that once resolved contains the updated instance as it was returned from the broker. 
      * It should however nearly match the structure of the {@link Instance} class. If an error occurs the Promise will be rejected.
@@ -210,12 +210,12 @@ export interface Coordinator {
     subscribeResource(subscriberFunction: (data: any, eventType: string,) => void, resourceId: string): Promise<any>;
 
     /**
-     * Unsubscribe from any changes made to a {@link Resource}.
+     * Unsubscribe from any changes made to the currently subscribed to {@link Resource}.
      */
     unsubscribeResource(): void;
 
     /**
-     * Subscribe to changes to made to resources that any {@link Resource} that a user has access to (i.e., owned or shared with).
+     * Subscribe to changes to made to {@link Resource} that a user has access to (i.e., owned or shared with).
      * __TIP__: This can be used to know when new resources are added/removed or shared/unshared.
      * @param subscriberFunction - The function that gets called when a change to a {@link Resource} that user has access to is received.
      * The function receives the resource data ({@link Resource.data}) and the type of event (created, updated, patched or removed) that generated the change.
@@ -269,7 +269,7 @@ export interface Coordinator {
     unsubscribeInstances(): void;
 
     /**
-     * Subscribe to events any fired by the {@link Coordinator.user | User} while running the same {@link Coordinator.client | Client}. 
+     * Subscribe to events fired by the {@link Coordinator.user | User} while running the same {@link Coordinator.client | Client}. 
      * @param subscriberFunction - A function that receives a plain object with the information that is associated with the event and string with the type of the event.
      * @todo - Add a type definition that encapsulates the event data.
      */
