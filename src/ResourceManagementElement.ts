@@ -21,7 +21,7 @@ export class ResourceManagermentElement extends LitElement {
      */
     @property({ type: String, reflect: true }) public userId: string;
     /**
-     * The Id of the currenrlt selected {@link Resource}.
+     * The Id of the currently selected {@link Resource}.
      */
     @property({ type: String, reflect: true }) public selectedResourceId: string;
     /**

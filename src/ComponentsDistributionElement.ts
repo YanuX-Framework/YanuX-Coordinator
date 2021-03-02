@@ -46,7 +46,7 @@ export class ComponentsDistributionElement extends LitElement {
    * @param instanceId - The Id of the {@link Instance} corresponding to the checkbox.
    * @param component - The name of the component corresponding to the checkbox.
    * @fires `CustomEvent` with the type `updated-components-distribution` and a `detail` property that contains
-   * the `instanceId`, the `component`, `checkboxCheckeded` (true if the chebox became chacked, false otherwise) and the updated `componentsDistribution`.
+   * the `instanceId`, the `component`, `checkboxChecked` (true if the chebox became chacked, false otherwise) and the updated `componentsDistribution`.
    * The latter object has  a `components` property where the keys represent the name of the components and the boolean values represent whether the components is 
    * shown (true) or not (false). It also contains a boolean (`auto`) that indicates whether distribution was automatically distributed (true) 
    * or manually set by a user (false).
