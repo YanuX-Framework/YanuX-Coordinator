@@ -74,6 +74,7 @@
                 }
             },
             "additionalProperties": {
+                "type": "object",
                 "oneOf": [
                     {
                         "$ref": "#/definitions/restriction_base"
@@ -108,6 +109,7 @@
         "restriction_type": {
             "anyOf": [
                 {
+                    "type": "object",
                     "properties": {
                         "value": {
                             "$ref": "#/definitions/device_types"
@@ -193,6 +195,7 @@
                             "$ref": "#/definitions/restriction_display_dimension"
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "$ref": "#/definitions/restriction_display_dimension"
@@ -229,6 +232,7 @@
                             "minimum": 0
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "type": "number",
@@ -246,38 +250,46 @@
                     "$ref": "#/definitions/restriction"
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce|type|size|orientation|resolution|bitDepth|pixelDensity|pixelRatio|virtualResolution)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/values_display"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
                         },
-                        "type": {
-                            "$ref": "#/definitions/restriction_display_type"
-                        },
-                        "size": {
-                            "$ref": "#/definitions/restriction_display_dimension_type"
-                        },
-                        "orientation": {
-                            "$ref": "#/definitions/restriction_display_orientation"
-                        },
-                        "resolution": {
-                            "$ref": "#/definitions/restriction_display_dimension_type"
-                        },
-                        "bitDepth": {
-                            "$ref": "#/definitions/restriction_display_number_type"
-                        },
-                        "pixelDensity": {
-                            "$ref": "#/definitions/restriction_display_number_type"
-                        },
-                        "pixelRatio": {
-                            "$ref": "#/definitions/restriction_display_number_type"
-                        },
-                        "virtualResolution": {
-                            "$ref": "#/definitions/restriction_display_dimension_type"
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|value|values|enforce|type|size|orientation|resolution|bitDepth|pixelDensity|pixelRatio|virtualResolution)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/values_display"
+                                },
+                                "type": {
+                                    "$ref": "#/definitions/restriction_display_type"
+                                },
+                                "size": {
+                                    "$ref": "#/definitions/restriction_display_dimension_type"
+                                },
+                                "orientation": {
+                                    "$ref": "#/definitions/restriction_display_orientation"
+                                },
+                                "resolution": {
+                                    "$ref": "#/definitions/restriction_display_dimension_type"
+                                },
+                                "bitDepth": {
+                                    "$ref": "#/definitions/restriction_display_number_type"
+                                },
+                                "pixelDensity": {
+                                    "$ref": "#/definitions/restriction_display_number_type"
+                                },
+                                "pixelRatio": {
+                                    "$ref": "#/definitions/restriction_display_number_type"
+                                },
+                                "virtualResolution": {
+                                    "$ref": "#/definitions/restriction_display_dimension_type"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         },
@@ -333,6 +345,7 @@
                             "minimum": 0
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "type": "number",
@@ -350,26 +363,34 @@
                     "$ref": "#/definitions/restriction"
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce|type|channels|bitDepth|samplingRate)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/values_speakers"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
                         },
-                        "type": {
-                            "$ref": "#/definitions/restriction_speakers_type"
-                        },
-                        "channels": {
-                            "$ref": "#/definitions/restriction_speakers_number_type"
-                        },
-                        "bitDepth": {
-                            "$ref": "#/definitions/restriction_speakers_number_type"
-                        },
-                        "samplingRate": {
-                            "$ref": "#/definitions/restriction_speakers_number_type"
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|value|values|enforce|type|channels|bitDepth|samplingRate)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/values_speakers"
+                                },
+                                "type": {
+                                    "$ref": "#/definitions/restriction_speakers_type"
+                                },
+                                "channels": {
+                                    "$ref": "#/definitions/restriction_speakers_number_type"
+                                },
+                                "bitDepth": {
+                                    "$ref": "#/definitions/restriction_speakers_number_type"
+                                },
+                                "samplingRate": {
+                                    "$ref": "#/definitions/restriction_speakers_number_type"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         },
@@ -418,6 +439,7 @@
                             "minimum": 0
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "type": "number",
@@ -435,23 +457,31 @@
                     "$ref": "#/definitions/restriction"
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce|channels|bitDepth|samplingRate)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/values_microphone"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
                         },
-                        "channels": {
-                            "$ref": "#/definitions/restriction_microphone_number_type"
-                        },
-                        "bitDepth": {
-                            "$ref": "#/definitions/restriction_microphone_number_type"
-                        },
-                        "samplingRate": {
-                            "$ref": "#/definitions/restriction_microphone_number_type"
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|value|values|enforce|channels|bitDepth|samplingRate)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/values_microphone"
+                                },
+                                "channels": {
+                                    "$ref": "#/definitions/restriction_microphone_number_type"
+                                },
+                                "bitDepth": {
+                                    "$ref": "#/definitions/restriction_microphone_number_type"
+                                },
+                                "samplingRate": {
+                                    "$ref": "#/definitions/restriction_microphone_number_type"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         },
@@ -510,6 +540,7 @@
                             "minimum": 0
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "type": "number",
@@ -555,6 +586,7 @@
                             "$ref": "#/definitions/restriction_camera_dimension"
                         },
                         {
+                            "type": "object",
                             "properties": {
                                 "value": {
                                     "$ref": "#/definitions/restriction_camera_dimension"
@@ -571,26 +603,34 @@
                     "$ref": "#/definitions/restriction"
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce|type|resolution|bitDepth|refreshRate)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/values_camera"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
                         },
-                        "type": {
-                            "$ref": "#/definitions/restriction_camera_type"
-                        },
-                        "resolution": {
-                            "$ref": "#/definitions/restriction_camera_dimension_type"
-                        },
-                        "bitDepth": {
-                            "$ref": "#/definitions/restriction_camera_number_type"
-                        },
-                        "refreshRate": {
-                            "$ref": "#/definitions/restriction_camera_number_type"
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|value|values|enforce|type|resolution|bitDepth|refreshRate)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/values_camera"
+                                },
+                                "type": {
+                                    "$ref": "#/definitions/restriction_camera_type"
+                                },
+                                "resolution": {
+                                    "$ref": "#/definitions/restriction_camera_dimension_type"
+                                },
+                                "bitDepth": {
+                                    "$ref": "#/definitions/restriction_camera_number_type"
+                                },
+                                "refreshRate": {
+                                    "$ref": "#/definitions/restriction_camera_number_type"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         },
@@ -627,14 +667,25 @@
                     ]
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/restriction_input"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|values|enforce)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/restriction_input"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         },
@@ -673,19 +724,37 @@
                     ]
                 },
                 {
-                    "propertyNames": {
-                        "pattern": "^(operator|value|values|enforce)$"
-                    },
-                    "properties": {
-                        "values": {
-                            "$ref": "#/definitions/restriction_sensors"
+                    "oneOf": [
+                        {
+                            "type": "boolean"
+                        },
+                        {
+                            "type": "array"
+                        },
+                        {
+                            "type": "object",
+                            "propertyNames": {
+                                "pattern": "^(operator|values|enforce)$"
+                            },
+                            "properties": {
+                                "values": {
+                                    "$ref": "#/definitions/restriction_sensors"
+                                }
+                            }
                         }
-                    }
+                    ]
                 }
             ]
         }
     },
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "type": "string"
+        }
+    },
     "additionalProperties": {
+        "type": "object",
         "properties": {
             "showByDefault": {
                 "type": "boolean"

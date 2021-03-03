@@ -382,6 +382,7 @@ export class ComponentsRuleEngine {
             priority: 0,
             consequence: function (R: any) {
                 const isLocalDeviceTheOnlyActiveDevice = this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid);
+                //TODO: Now that we have a schema, it may be worth it to validate the "this.restrictions" before using them.
                 Object.entries(this.restrictions).forEach(([component, componentRestrictions]: [string, any]) => {
                     //Ignore schema key
                     if (component !== '$schema') {
