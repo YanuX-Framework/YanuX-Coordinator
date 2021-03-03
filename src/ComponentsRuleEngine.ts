@@ -147,7 +147,7 @@ export class ComponentsRuleEngine {
      * Infer additional device capabilities from the ones that are known.
      */
     private static expandDeviceCapabilities: Function = memoize(ComponentsRuleEngine.__expandDeviceCapabilities, { strategy: memoize.strategies.variadic });
-    
+
     /**
      * Infer additional device capabilities from the ones that are known.
      * Unmemoized private version of {@link ComponentsRuleEngine.expandDeviceCapabilities}.
@@ -196,7 +196,7 @@ export class ComponentsRuleEngine {
      * Matches a certain components agains all the information about devices, restrictions and proxemics to determine whether it should be shown (true) or not (false).
      */
     private static matchComponentAndRestrictions: Function = memoize(ComponentsRuleEngine.__matchComponentAndRestrictions, { strategy: memoize.strategies.variadic });
-    
+
     /**
      * Matches a certain components agains all the information about devices, restrictions and proxemics to determine whether it should be shown (true) or not (false).
      * Unmemorized version of {@link ComponentsRuleEngine.matchComponentAndRestrictions}
@@ -383,11 +383,14 @@ export class ComponentsRuleEngine {
             consequence: function (R: any) {
                 const isLocalDeviceTheOnlyActiveDevice = this.activeInstances.every((i: any) => i.device.deviceUuid === this.localDeviceUuid);
                 Object.entries(this.restrictions).forEach(([component, componentRestrictions]: [string, any]) => {
-                    const currentRestrictions = omit(componentRestrictions, ['showByDefault']);
-                    if (this.componentsConfig[component] === null || !isLocalDeviceTheOnlyActiveDevice) {
-                        this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
-                            component, currentRestrictions, this.localDeviceUuid, this.localDeviceCapabilities, this.capabilities
-                        );
+                    //Ignore schema key
+                    if (component !== '$schema') {
+                        const currentRestrictions = omit(componentRestrictions, ['showByDefault']);
+                        if (this.componentsConfig[component] === null || !isLocalDeviceTheOnlyActiveDevice) {
+                            this.componentsConfig[component] = ComponentsRuleEngine.matchComponentAndRestrictions(
+                                component, currentRestrictions, this.localDeviceUuid, this.localDeviceCapabilities, this.capabilities
+                            );
+                        }
                     }
                 });
                 R.stop();
