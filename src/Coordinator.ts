@@ -5,6 +5,21 @@ import Resource from "./Resource";
 import SharedResource from "./SharedResource";
 import Proxemics from './Proxemics';
 import Instance from './Instance';
+import Credentials from './Credentials';
+
+/**
+ * The basic interface of a {@link Coordinator} constructor.
+ */
+export interface CoordinatorConstructor {
+    /**
+     * A basic constructor and parameters required to connect to the YanuX Broker.
+     * @param brokerUrl - The URL of the broker that the {@link FeathersCoordinator} should connect to.
+     * @param localDeviceUrl - The URL of that exposes information about the local device (e.g., the Device UUID).
+     * @param clientId - The Client Id used that identifies the application using this {@link FeathersCoordinator} instance 
+     * @param credentials - The authentication credentials used to identify the user and that authorize the access to their data.
+     */
+    new(brokerUrl: string, localDeviceUrl: string, clientId: string, credentials: Credentials): Coordinator;
+}
 
 /**
  * Coordinator interface that is exposed as an API to be used by third-party developers.
@@ -68,7 +83,7 @@ export interface Coordinator {
      * @return A Promise that once resolved contains an array with the data of default resource ({@link Coordinator.resource}), 
      * information about the proxemic state and the Id of the default resource.
      */
-    init(): Promise<[any, Proxemics, string]> 
+    init(): Promise<[any, Proxemics, string]>
 
     /**
      * Get the data contents of the {@link Resource} with the given Id.
@@ -301,7 +316,7 @@ export interface Coordinator {
      * Checks if the {@link Coordinator} is connected to the broker.
      * @return A boolean which indicated if the {@link Coordinator} is connhected (true) or not (false).
      */
-    isConnected(): boolean 
+    isConnected(): boolean
 }
 
 export default Coordinator;

@@ -9,7 +9,7 @@
  * -----------------------------------------------------------------------------
  */
 
-import Coordinator from './Coordinator';
+import { Coordinator, CoordinatorConstructor } from './Coordinator';
 import FeathersCoordinator from './FeathersCoordinator';
 import Credentials from './Credentials';
 import ComponentsRuleEngine from './ComponentsRuleEngine';
@@ -27,7 +27,7 @@ import ComponentsDistribution from './ComponentsDistribution';
 import * as errors from './errors';
 
 export {
-    Coordinator,
+    Coordinator, CoordinatorConstructor,
     FeathersCoordinator,
     Credentials,
     ComponentsRuleEngine,

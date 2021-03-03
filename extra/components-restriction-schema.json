@@ -1,0 +1,117 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "definitions": {
+        "operator": {
+            "type": "string",
+            "enum": [
+                "=",
+                "!",
+                ">",
+                ">=",
+                "<",
+                "<=",
+                "OR",
+                "AND",
+                "NOT"
+            ]
+        },
+        "value": {
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "array"
+                }
+            ]
+        },
+        "values": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "oneOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "$ref": "#/definitions/restriction"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "$ref": "#/definitions/restriction"
+                }
+            ]
+        },
+        "restriction": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "operator": {
+                            "$ref": "#/definitions/operator"
+                        },
+                        "value": {
+                            "$ref": "#/definitions/value"
+                        },
+                        "values": {
+                            "$ref": "#/definitions/values"
+                        },
+                        "enforce": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/definitions/restriction"
+                    }
+                },
+                {
+                    "type": "boolean"
+                }
+            ]
+        }
+    },
+    "additionalProperties": {
+        "properties": {
+            "showByDefault": {
+                "type": "boolean"
+            },
+            "type": {
+                "$ref": "#/definitions/restriction"
+            },
+            "display": {
+                "$ref": "#/definitions/restriction"
+            },
+            "speakers": {
+                "$ref": "#/definitions/restriction"
+            },
+            "microphone": {
+                "$ref": "#/definitions/restriction"
+            },
+            "camera": {
+                "$ref": "#/definitions/restriction"
+            },
+            "input": {
+                "$ref": "#/definitions/restriction"
+            },
+            "sensors": {
+                "$ref": "#/definitions/restriction"
+            }
+        },
+        "additionalProperties": false
+    }
+}

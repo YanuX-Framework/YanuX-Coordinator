@@ -10,7 +10,7 @@ import socketio from '@feathersjs/socketio-client';
 import fetch from 'cross-fetch';
 import io from 'socket.io-client';
 
-import Coordinator from './Coordinator';
+import { Coordinator, CoordinatorConstructor } from './Coordinator';
 
 import BaseEntity from './BaseEntity';
 import User from './User';
@@ -34,7 +34,7 @@ import UserNotFound from './errors/UserNotFound';
 /**
  * Concrete implementation of the {@link Coordinator} interface that connects to the YanuX Broker using the Feathers Socket.io Client.
  */
-export class FeathersCoordinator implements Coordinator {
+export const FeathersCoordinator: CoordinatorConstructor = class FeathersCoordinator implements Coordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
 
@@ -52,7 +52,7 @@ export class FeathersCoordinator implements Coordinator {
     public proxemics: Proxemics;
     /**
      * @todo Document private property.
-     */ 
+     */
     private cachedProxemics: Map<string, Proxemics>;
 
     public instance: Instance;
@@ -344,7 +344,7 @@ export class FeathersCoordinator implements Coordinator {
                 return Promise.all([this.getResource(null), this.getProxemicsState()]);
             }).then((results: any) => {
                 console.log('[YXC] Resource + Proxemic State:', results);
-                const [resource, proxemics] : [Resource, Proxemics] = results;
+                const [resource, proxemics]: [Resource, Proxemics] = results;
                 this.updateResourceSubscription()
                     .then(() => resolve([resource.data, proxemics, resource.id]))
                     .catch(e => reject(e));
@@ -474,7 +474,7 @@ export class FeathersCoordinator implements Coordinator {
         });
     }
 
-    public shareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource>  {
+    public shareResource(userEmail: string, resourceId: string = this.subscribedResourceId): Promise<SharedResource> {
         return new Promise((resolve, reject) => {
             Promise.all([
                 this.resourcesService.get(resourceId),

@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>ComponentsDistribution | @yanux/coordinator</title>
+	<title>CoordinatorConstructor | @yanux/coordinator</title>
 	<meta name="description" content="Documentation for @yanux/coordinator">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -55,10 +55,10 @@
 					<a href="../modules.html">@yanux/coordinator</a>
 				</li>
 				<li>
-					<a href="componentsdistribution.html">ComponentsDistribution</a>
+					<a href="coordinatorconstructor.html">CoordinatorConstructor</a>
 				</li>
 			</ul>
-			<h1>Class ComponentsDistribution</h1>
+			<h1>Interface CoordinatorConstructor</h1>
 		</div>
 	</div>
 </header>
@@ -68,7 +68,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A class that represents the distribution of UI components of a given application instance.</p>
+						<p>The basic interface of a <a href="coordinator.html">Coordinator</a> constructor.</p>
 					</div>
 				</div>
 			</section>
@@ -76,7 +76,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">ComponentsDistribution</span>
+						<span class="target">CoordinatorConstructor</span>
 					</li>
 				</ul>
 			</section>
@@ -87,14 +87,7 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="componentsdistribution.html#constructor" class="tsd-kind-icon">constructor</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Properties</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="componentsdistribution.html#auto" class="tsd-kind-icon">auto</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="componentsdistribution.html#components" class="tsd-kind-icon">components</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-interface"><a href="coordinatorconstructor.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 					</div>
@@ -102,78 +95,54 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-interface">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Components<wbr>Distribution<span class="tsd-signature-symbol">(</span>componentsDistribution<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="componentsdistribution.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentsDistribution</a></li>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-interface">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Coordinator<wbr>Constructor<span class="tsd-signature-symbol">(</span>brokerUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, localDeviceUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, clientId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, credentials<span class="tsd-signature-symbol">: </span><a href="../classes/credentials.html" class="tsd-signature-type" data-tsd-kind="Class">Credentials</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="coordinator.html" class="tsd-signature-type" data-tsd-kind="Interface">Coordinator</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/108bdc6/src/ComponentsDistribution.ts#L13">src/ComponentsDistribution.ts:13</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/108bdc6/src/Coordinator.ts#L13">src/Coordinator.ts:13</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Constructor that creates an object from another object that has the same structure as this <a href="componentsdistribution.html">ComponentsDistribution</a> class.</p>
+									<p>A basic constructor and parameters required to connect to the YanuX Broker.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>componentsDistribution: <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol"> = ...</span></h5>
+									<h5>brokerUrl: <span class="tsd-signature-type">string</span></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>The object to be converted or copied.</p>
+										<p>The URL of the broker that the <a href="../modules.html#featherscoordinator">FeathersCoordinator</a> should connect to.</p>
+									</div>
+								</li>
+								<li>
+									<h5>localDeviceUrl: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The URL of that exposes information about the local device (e.g., the Device UUID).</p>
+									</div>
+								</li>
+								<li>
+									<h5>clientId: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The Client Id used that identifies the application using this <a href="../modules.html#featherscoordinator">FeathersCoordinator</a> instance</p>
+									</div>
+								</li>
+								<li>
+									<h5>credentials: <a href="../classes/credentials.html" class="tsd-signature-type" data-tsd-kind="Class">Credentials</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The authentication credentials used to identify the user and that authorize the access to their data.</p>
 									</div>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="componentsdistribution.html" class="tsd-signature-type" data-tsd-kind="Class">ComponentsDistribution</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="coordinator.html" class="tsd-signature-type" data-tsd-kind="Interface">Coordinator</a></h4>
 						</li>
 					</ul>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="auto" class="tsd-anchor"></a>
-					<h3>auto</h3>
-					<div class="tsd-signature tsd-kind-icon">auto<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">boolean</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/108bdc6/src/ComponentsDistribution.ts#L8">src/ComponentsDistribution.ts:8</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Whether the distribution was determined automatically (true) or not (false).</p>
-						</div>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
-					<a name="components" class="tsd-anchor"></a>
-					<h3>components</h3>
-					<div class="tsd-signature tsd-kind-icon">components<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/108bdc6/src/ComponentsDistribution.ts#L13">src/ComponentsDistribution.ts:13</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>An object representing the distribution of components where the keys represent the name of the components and the boolean values represent whether the components
-							is shown (true) or not (false).</p>
-						</div>
-					</div>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-index-signature">
-								<h5><span class="tsd-signature-symbol">[</span>component: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><span class="tsd-signature-type">boolean</span></h5>
-							</li>
-						</ul>
-					</div>
 				</section>
 			</section>
 		</div>
@@ -188,65 +157,59 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class">
-						<a href="baseentity.html" class="tsd-kind-icon">Base<wbr>Entity</a>
+						<a href="../classes/baseentity.html" class="tsd-kind-icon">Base<wbr>Entity</a>
 					</li>
 					<li class=" tsd-kind-class">
-						<a href="client.html" class="tsd-kind-icon">Client</a>
+						<a href="../classes/client.html" class="tsd-kind-icon">Client</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/componentsdistribution.html" class="tsd-kind-icon">Components<wbr>Distribution</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/componentsdistributionelement.html" class="tsd-kind-icon">Components<wbr>Distribution<wbr>Element</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/componentsruleengine.html" class="tsd-kind-icon">Components<wbr>Rule<wbr>Engine</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/credentials.html" class="tsd-kind-icon">Credentials</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/device.html" class="tsd-kind-icon">Device</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/instance.html" class="tsd-kind-icon">Instance</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/instancescomponentsdistribution.html" class="tsd-kind-icon">Instances<wbr>Components<wbr>Distribution</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/proxemics.html" class="tsd-kind-icon">Proxemics</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/resource.html" class="tsd-kind-icon">Resource</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/resourcemanagementelement.html" class="tsd-kind-icon">Resource<wbr>Management<wbr>Element</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="../classes/user.html" class="tsd-kind-icon">User</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="coordinator.html" class="tsd-kind-icon">Coordinator</a>
 					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-class">
-						<a href="componentsdistribution.html" class="tsd-kind-icon">Components<wbr>Distribution</a>
+					<li class="current tsd-kind-interface">
+						<a href="coordinatorconstructor.html" class="tsd-kind-icon">Coordinator<wbr>Constructor</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="componentsdistribution.html#constructor" class="tsd-kind-icon">constructor</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="componentsdistribution.html#auto" class="tsd-kind-icon">auto</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
-								<a href="componentsdistribution.html#components" class="tsd-kind-icon">components</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-interface">
+								<a href="coordinatorconstructor.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class">
-						<a href="componentsdistributionelement.html" class="tsd-kind-icon">Components<wbr>Distribution<wbr>Element</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="componentsruleengine.html" class="tsd-kind-icon">Components<wbr>Rule<wbr>Engine</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="credentials.html" class="tsd-kind-icon">Credentials</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="device.html" class="tsd-kind-icon">Device</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="instance.html" class="tsd-kind-icon">Instance</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="instancescomponentsdistribution.html" class="tsd-kind-icon">Instances<wbr>Components<wbr>Distribution</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="proxemics.html" class="tsd-kind-icon">Proxemics</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="resource.html" class="tsd-kind-icon">Resource</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="resourcemanagementelement.html" class="tsd-kind-icon">Resource<wbr>Management<wbr>Element</a>
-					</li>
-					<li class=" tsd-kind-class">
-						<a href="user.html" class="tsd-kind-icon">User</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="../interfaces/coordinator.html" class="tsd-kind-icon">Coordinator</a>
-					</li>
-					<li class=" tsd-kind-interface">
-						<a href="../interfaces/coordinatorconstructor.html" class="tsd-kind-icon">Coordinator<wbr>Constructor</a>
-					</li>
 					<li class=" tsd-kind-variable">
 						<a href="../modules.html#featherscoordinator" class="tsd-kind-icon">Feathers<wbr>Coordinator</a>
 					</li>
