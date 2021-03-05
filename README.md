@@ -1,1 +1,11 @@
-Coordinator
+# YanuX Coordinator
+This [__TypeScript__](https://www.typescriptlang.org/) library allows developers to connect their application code the the rest of the [__YanuX Framework__](https://yanux-framework.github.io/), namely the [__YanuX Auth__](https://github.com/YanuX-Framework/YanuX-Auth) and [__YanuX Broker__](https://github.com/YanuX-Framework/YanuX-Broker) components.
+
+It abstracts the communication the [__YanuX Broker__](https://github.com/YanuX-Framework/YanuX-Broker) [__API__](https://yanux-framework.github.io/YanuX-Broker/) and provides tools for the [automatic distribution of UI components based on device capabilities](https://yanux-framework.github.io/YanuX-Coordinator/classes/componentsruleengine.html), [and their manual redistribution](https://yanux-framework.github.io/YanuX-Coordinator/classes/componentsdistributionelement.html), as well as the [management and sharing of running application states](https://yanux-framework.github.io/YanuX-Coordinator/classes/resourcemanagementelement.html).
+
+## Documentation
+- [__API Documentation__](https://yanux-framework.github.io/YanuX-Coordinator/)
+- [__JSON Schema of the Domain Specific Language for Specifying Restrictions on the Placement of UI Components__](extras/components-restriction-language/components-restriction-schema.json)
+
+## License
+This work is licensed under [__Apache License 2.0__](LICENSE)
