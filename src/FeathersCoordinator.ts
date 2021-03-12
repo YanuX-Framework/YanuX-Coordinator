@@ -34,7 +34,7 @@ import UserNotFound from './errors/UserNotFound';
 /**
  * Concrete implementation of the {@link Coordinator} interface that connects to the YanuX Broker using the Feathers Socket.io Client.
  */
-export const FeathersCoordinator: CoordinatorConstructor = class FeathersCoordinator implements Coordinator {
+class FeathersCoordinator implements Coordinator {
     private static GENERIC_EVENT_CALLBACK: (evenType: string) => (event: any) => void
         = (evenType: string) => (event: any) => console.log('[YXC] ' + evenType + ':', event);
 
@@ -896,4 +896,9 @@ export const FeathersCoordinator: CoordinatorConstructor = class FeathersCoordin
     }
 }
 
+/**
+ * Enforcing that the {@link CoordinatorConstructor} is being used by {@link FeathersCoordinator}.
+ */
+const FeathersCoordinatorClassExpression: CoordinatorConstructor = FeathersCoordinator;
+export { FeathersCoordinator, FeathersCoordinatorClassExpression }
 export default FeathersCoordinator;
