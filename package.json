@@ -47,7 +47,7 @@
     "constants-browserify": "^1.0.0",
     "cross-fetch": "^3.0.6",
     "html-webpack-plugin": "^5.2.0",
-    "jsrsasign": "^10.1.11",
+    "jsrsasign": "^10.2.0",
     "lit-element": "^2.4.0",
     "lodash": "^4.17.21",
     "node-localstorage": "^2.1.6",
