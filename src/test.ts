@@ -18,8 +18,8 @@ test();
 async function testFeathersCoordinator() {
     console.log('Testing FeathersCoordinator');
 
-    const brokerUrl: string = 'http://localhost:3002';
-    const localDeviceUrl: string = 'http://localhost:3023';
+    const brokerUrl: string = 'http://192.168.12.1:3002';
+    const localDeviceUrl: string = 'http://192.168.12.1:3003';
     const clientId = 'yanux-coordinator-test';
 
     /**
@@ -28,7 +28,7 @@ async function testFeathersCoordinator() {
      * http://localhost:3001/oauth2/authorize?client_id=yanux-coordinator-test&client_secret=topsecret_client_secret&response_type=token&redirect_uri=http://localhost:3003/
      */
     const credentials: Credentials = new Credentials('yanux', [
-        'rIjArcZ6Y8jO1pEOwBJmg4IpWoc2XMvwNPM9rYiWcRGTbW1kRwK8Q3Q4PWQIKlTU82LRhDk0N9zzVHnL2BS5vw4KMT8zaRup2uROWvWBO2dSSpWIDIgseuiHe0v3qeKyEaOyMPNZ7FVXGcqswisTtC3DinjbQYfkUiBuxXfqTJWtQ2fsiRNBsO81KYeJ7evLctbyiKM24aOvtaDJKAUyW2nSx1xpFXqFHgIfKdNqCImoOhdPFWrNIkPuyxCygT1f',
+        'nxe6ZU2IySJQsOGdB66Axt0RSi8TSZU7cK8uDAHEU7ERJoGZT5kiz8wAgOO9Kq3ss8o1OMeoevQ7IxYdH0A0kpbIEmDhepDkoES6kEvDFAbm1iAyBlcHurv7dN9vyzwcFguulsaUviNwYc00SxHvNm01CH89xxj0GoTMlqM8ClCQDY8qBAVtbM2xVMAAUNThbSCus5UzW9h6iGDhebpmqMK9KRUk1EZX429daZYLJSADowmv889coo8knGwSY41h',
         clientId
     ]);
 
