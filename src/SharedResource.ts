@@ -1,3 +1,4 @@
+import { isArray } from 'lodash';
 import Resource from "./Resource";
 import User from "./User";
 
@@ -42,7 +43,7 @@ export class SharedResource extends Resource {
         super.update(resource);
         this.user = new User(resource.user);
         this.owner = this.user.email;
-        this.sharedWith = resource.sharedWith.map((u: any) => new User(u));
+        this.sharedWith = isArray(resource.sharedWith) ? resource.sharedWith.map((u: any) => new User(u)) : [];
     }
 }
 

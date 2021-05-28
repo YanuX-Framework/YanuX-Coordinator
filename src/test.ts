@@ -28,7 +28,7 @@ async function testFeathersCoordinator() {
      * http://localhost:3001/oauth2/authorize?client_id=yanux-coordinator-test&client_secret=topsecret_client_secret&response_type=token&redirect_uri=http://localhost:3003/
      */
     const credentials: Credentials = new Credentials('yanux', [
-        'nxe6ZU2IySJQsOGdB66Axt0RSi8TSZU7cK8uDAHEU7ERJoGZT5kiz8wAgOO9Kq3ss8o1OMeoevQ7IxYdH0A0kpbIEmDhepDkoES6kEvDFAbm1iAyBlcHurv7dN9vyzwcFguulsaUviNwYc00SxHvNm01CH89xxj0GoTMlqM8ClCQDY8qBAVtbM2xVMAAUNThbSCus5UzW9h6iGDhebpmqMK9KRUk1EZX429daZYLJSADowmv889coo8knGwSY41h',
+        'VQGGhAQxVeiJHk35FJGoNM31G7Ciogh1mDmlYyBap0naXyl1n03l7pTe9AfI1aXAcHdDTraxiTEAp5tO10eK7Ph4f4euDrm3HFJSezoeBwuvxRQlaDOGxfjXIV2RVwYh6s0KCzOckZIc6snC5W2e2fDp2kL2J4ja23PTOXV8UD6k9itrz92evZsyG6Q5NwWO6sDGcCrQdVU2r9WLLm6GUTa0841ZYV03WxpCQsBMFhqRIBZVtPHpfJMCyBroMGZh',
         clientId
     ]);
 
@@ -40,6 +40,7 @@ async function testFeathersCoordinator() {
     try {
         const result = await coordinator.init();
         console.log('--- init ---:\n', result);
+        console.log('--- user ---:\n', coordinator.user);
         // console.log('--- getResources ---:\n', await coordinator.getResources(true, true));
         // console.log('--- getResourceData ---:\n', await coordinator.getResourceData(resourceId));
         // console.log('--- setResourceData ---:\n', await coordinator.setResourceData({ message: 'in a bottle' }, resourceId));

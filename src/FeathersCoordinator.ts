@@ -1,11 +1,11 @@
-import { head, isEqual, sortedUniq } from 'lodash';
+import { isEqual, sortedUniq } from 'lodash';
 
 import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
-import jsrsasign from 'jsrsasign';
 
+//import jsrsasign from 'jsrsasign';
 import { decodeProtectedHeader } from 'jose/util/decode_protected_header'
-import { JWK, parseJwk } from 'jose/jwk/parse'
+import { createRemoteJWKSet } from 'jose/jwks/remote'
 import { jwtVerify } from 'jose/jwt/verify'
 
 import { Conflict } from '@feathersjs/errors';
@@ -283,24 +283,26 @@ class FeathersCoordinator implements Coordinator {
                 return this.feathersClient.authenticate(auth);
             }).then((response: any) => {
                 return new Promise((resolve, reject) => {
+                    //const header: any = jsrsasign.KJUR.jws.JWS.readSafeJSONString(jsrsasign.b64utoutf8(response.accessToken.split('.')[0]));
                     const header: any = decodeProtectedHeader(response.accessToken);
                     console.log('Decoded Token Header:', header);
                     if (header && header.jku && header.jku.startsWith(this.brokerUrl) && header.kid) {
-                        fetch(header.jku).then(response => response.json()).then(json => {
-                            const jwk: JWK = (json.keys || []).find((k: any) => header.kid === k.kid);
-                            if (jwk) { return parseJwk(jwk, header.alg); }
-                            else { reject(new InvalidBrokerJwt('Could not validate the JWT because there is no corresponding key available.')); }
-                        }).then(key => {
-                            return jwtVerify(response.accessToken, key, {
-                                algorithms: [header.alg],
-                                maxTokenAge: 1 * 60 * 60
-                            })
-                        }).then(result => {
+                        // fetch(header.jku).then(response => response.json()).then(json => {
+                        //     const jwk = (json.keys || []).find((k: any) => header.kid === k.kid);
+                        //     if (jwk) {
+                        //         const key: any = jsrsasign.KEYUTIL.getKey(jwk);
+                        //         const acceptField: any = { alg: [header.alg], gracePeriod: 1 * 60 * 60 };
+                        //         const isJwtValid = jsrsasign.KJUR.jws.JWS.verifyJWT(response.accessToken, key, acceptField);
+                        //         if (isJwtValid) { resolve(response); } else { reject(new InvalidBrokerJwt('The JWT is not valid.')); }
+                        //     } else { reject(new InvalidBrokerJwt('"kid" not found on the provided "jku" URL')); }
+                        // }).catch(e => reject(e));
+                        const JWKS = createRemoteJWKSet(new URL(header.jku))
+                        jwtVerify(response.accessToken, JWKS, { algorithms: [header.alg]}).then(result => {
                             if (result && result.protectedHeader && result.payload) {
                                 resolve(response);
                             } else { reject(new InvalidBrokerJwt('The JWT is not valid.')); }
-                        }).catch(e => reject(e));
-                    } else { reject(new InvalidBrokerJwt('The JWT is not valid, or the "jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
+                        }).catch(e => { reject(e); })
+                    } else { reject(new InvalidBrokerJwt('The "jku" is either missing from the token header, points to a an untrusted URL, or the "kid" is missing')); }
                 });
             }).then((response: any) => {
                 return Promise.all([

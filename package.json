@@ -13,12 +13,12 @@
   "main": "dist/lib.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run compile && npm run package && npm run docs",
+    "build": "npm run compile && npm run package",
     "compile": "npx tsc && npx tsc -p tsconfig-test.json",
     "package": "npx webpack",
     "serve": "npx serve ./dist -l 3010",
     "docs": "npx typedoc src/index.ts",
-    "watch": "npm-run-all --parallel watch:dev watch:docs",
+    "watch": "npm run watch:dev",
     "watch:dev": "npm-run-all --parallel watch:compile watch:package serve",
     "watch:build": "npm-run-all --parallel watch:compile watch:package",
     "watch:compile": "npm-run-all --parallel watch:compile-lib watch:compile-test",
@@ -30,7 +30,6 @@
     "test": "node lib/_test/test.js"
   },
   "dependencies": {
-    "jose": "^3.12.2",
     "serve": "^11.3.2"
   },
   "devDependencies": {
@@ -47,6 +46,7 @@
     "cross-fetch": "^3.0.6",
     "fast-memoize": "^2.5.2",
     "html-webpack-plugin": "^5.2.0",
+    "jose": "^3.12.2",
     "lit-element": "^2.4.0",
     "lodash": "^4.17.21",
     "node-localstorage": "^2.1.6",

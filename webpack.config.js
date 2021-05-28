@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
@@ -36,6 +37,10 @@ module.exports = {
       template: 'src/index.html',
       chunks: ['app'],
       inject: 'head'
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ? process.env.NODE_ENV : 'development'),
+      'process.env.NODE_DEBUG': JSON.stringify(process.env.NODE_DEBUG ? process.env.NODE_DEBUG : false),
     })
   ]
 };
