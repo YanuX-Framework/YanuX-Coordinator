@@ -30,7 +30,7 @@
     "test": "node lib/_test/test.js"
   },
   "dependencies": {
-    "serve": "^11.3.2"
+    "serve": "^12.0.0"
   },
   "devDependencies": {
     "@feathersjs/authentication-client": "^4.5.11",
