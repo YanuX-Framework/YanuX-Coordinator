@@ -9,7 +9,7 @@ module.exports = {
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    library: ['yanux-coordinator', '[name]'],
+    library: 'YanuxCoordinator', //['YanuxCoordinator', '[name]'],
     libraryTarget: 'umd'
   },
   resolve: {
