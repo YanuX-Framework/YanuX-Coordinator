@@ -26,10 +26,10 @@ export class Proxemics extends BaseEntity {
      */
     public state: { [deviceUuid: string]: any };
 
-   /**
-     * A constructor that creates a {@link Proxemics} object from a plain client object received from the broker.
-     * @param proxemics - A plain object received from the broker with information about a {@link Proxemics}.
-     */
+    /**
+      * A constructor that creates a {@link Proxemics} object from a plain client object received from the broker.
+      * @param proxemics - A plain object received from the broker with information about a {@link Proxemics}.
+      */
     constructor(proxemics: any = {}) {
         super(proxemics);
         this.update(proxemics);
@@ -56,7 +56,7 @@ export class Proxemics extends BaseEntity {
             && this.userId === (proxemics.userId || (proxemics.user && proxemics.user._id ? proxemics.user._id : proxemics.user))
             && (isEqual(this.sharedWithIds, proxemics.sharedWith) || isEqual(this.sharedWithIds, proxemics.sharedWithIds))
             && (isEqual(this.prevSharedWithIds, proxemics.prevSharedWith) || isEqual(this.prevSharedWithIds, proxemics.prevSharedWithIds))
-            && isEqual(Object.keys(this.state), Object.keys(proxemics.state)) //&& isEqual(this.state, proxemics.state)
+            && isEqual(this.state ? Object.keys(this.state) : null, proxemics.state ? Object.keys(proxemics.state) : null) //&& isEqual(this.state, proxemics.state)
     }
 }
 

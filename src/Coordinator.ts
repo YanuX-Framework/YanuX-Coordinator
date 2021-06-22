@@ -109,6 +109,14 @@ export interface Coordinator {
     getResources(): Promise<Array<SharedResource>>;
 
     /**
+     * It implicitly subscribes to the {@link Resource} with the given Id and returns the most up-to-date data stored by the resource.
+     * @param subscriberFunction - The function that gets called when a change to the subscribed {@link Resource} is received.
+     * The function receives the resource data ({@link Resource.data}) and the type of event (created, updated, patched or removed) that generated the change.
+     * @param resourceId - The Id of the {@link Resource} that should be subscribed to and have its data content retrieved.
+     */
+    selectResource(subscriberFunction: (data: any, eventType: string) => void, resourceId: string): Promise<any>
+
+    /**
      * Creates a new {@link Resource} with the given name that belongs to the current {@link Coordinator.user | User}.
      * @param resourceName The name of the new resource. If a resource name is not provide an empty string will be used.
      * @returns A Promise that once resolved constains the newly created resource in the form an instance of {@link SharedResource} class.

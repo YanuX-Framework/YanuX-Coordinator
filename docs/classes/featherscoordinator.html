@@ -157,6 +157,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#isconnected" class="tsd-kind-icon">is<wbr>Connected</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#logout" class="tsd-kind-icon">logout</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#renameresource" class="tsd-kind-icon">rename<wbr>Resource</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#selectresource" class="tsd-kind-icon">select<wbr>Resource</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#setcomponentdistribution" class="tsd-kind-icon">set<wbr>Component<wbr>Distribution</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#setinstanceactiveness" class="tsd-kind-icon">set<wbr>Instance<wbr>Activeness</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="featherscoordinator.html#setresourcedata" class="tsd-kind-icon">set<wbr>Resource<wbr>Data</a></li>
@@ -194,13 +195,13 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Feathers<wbr>Coordinator<span class="tsd-signature-symbol">(</span>brokerUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, localDeviceUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, clientId<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span>, credentials<span class="tsd-signature-symbol">?: </span><a href="credentials.html" class="tsd-signature-type" data-tsd-kind="Class">Credentials</a>, onAuthenticated<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, onLogout<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, onReAuthenticationError<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, localStorageLocation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="featherscoordinator.html" class="tsd-signature-type" data-tsd-kind="Class">FeathersCoordinator</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Feathers<wbr>Coordinator<span class="tsd-signature-symbol">(</span>brokerUrl<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, localDeviceUrl<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span>, clientId<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span>, credentials<span class="tsd-signature-symbol">?: </span><a href="credentials.html" class="tsd-signature-type" data-tsd-kind="Class">Credentials</a>, onAuthenticated<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, onLogout<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, onReAuthenticationError<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, localStorageLocation<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="featherscoordinator.html" class="tsd-signature-type" data-tsd-kind="Class">FeathersCoordinator</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L157">src/FeathersCoordinator.ts:157</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L157">src/FeathersCoordinator.ts:157</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -217,7 +218,7 @@
 									</div>
 								</li>
 								<li>
-									<h5>localDeviceUrl: <span class="tsd-signature-type">string</span></h5>
+									<h5>localDeviceUrl: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &#x27;http://localhost:3003&#x27;</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>The URL of that exposes information about the local device (e.g., the Device UUID).</p>
 									</div>
@@ -329,7 +330,7 @@
 					<div class="tsd-signature tsd-kind-icon">_subscribed<wbr>Resource<wbr>Id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L156">src/FeathersCoordinator.ts:156</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L156">src/FeathersCoordinator.ts:156</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -346,7 +347,7 @@
 					<div class="tsd-signature tsd-kind-icon">broker<wbr>Url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L71">src/FeathersCoordinator.ts:71</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L71">src/FeathersCoordinator.ts:71</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -363,7 +364,7 @@
 					<div class="tsd-signature tsd-kind-icon">cached<wbr>Instances<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="instance.html" class="tsd-signature-type" data-tsd-kind="Class">Instance</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L66">src/FeathersCoordinator.ts:66</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L66">src/FeathersCoordinator.ts:66</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -380,7 +381,7 @@
 					<div class="tsd-signature tsd-kind-icon">cached<wbr>Proxemics<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="proxemics.html" class="tsd-signature-type" data-tsd-kind="Class">Proxemics</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L60">src/FeathersCoordinator.ts:60</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L60">src/FeathersCoordinator.ts:60</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -397,7 +398,7 @@
 					<div class="tsd-signature tsd-kind-icon">cached<wbr>Resources<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="resource.html" class="tsd-signature-type" data-tsd-kind="Class">Resource</a><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L54">src/FeathersCoordinator.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L54">src/FeathersCoordinator.ts:54</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -415,7 +416,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#client">client</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L48">src/FeathersCoordinator.ts:48</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L48">src/FeathersCoordinator.ts:48</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -430,7 +431,7 @@
 					<div class="tsd-signature tsd-kind-icon">credentials<span class="tsd-signature-symbol">:</span> <a href="credentials.html" class="tsd-signature-type" data-tsd-kind="Class">Credentials</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L79">src/FeathersCoordinator.ts:79</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L79">src/FeathersCoordinator.ts:79</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -448,7 +449,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#device">device</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L49">src/FeathersCoordinator.ts:49</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L49">src/FeathersCoordinator.ts:49</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -464,7 +465,7 @@
 					<div class="tsd-signature tsd-kind-icon">devices<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L96">src/FeathersCoordinator.ts:96</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L96">src/FeathersCoordinator.ts:96</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -481,7 +482,7 @@
 					<div class="tsd-signature tsd-kind-icon">events<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L116">src/FeathersCoordinator.ts:116</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L116">src/FeathersCoordinator.ts:116</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -498,7 +499,7 @@
 					<div class="tsd-signature tsd-kind-icon">feathers<wbr>Client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Application</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">object</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L87">src/FeathersCoordinator.ts:87</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L87">src/FeathersCoordinator.ts:87</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -516,7 +517,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#instance">instance</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L62">src/FeathersCoordinator.ts:62</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L62">src/FeathersCoordinator.ts:62</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -534,7 +535,7 @@
 					<div class="tsd-signature tsd-kind-icon">instances<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L100">src/FeathersCoordinator.ts:100</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L100">src/FeathersCoordinator.ts:100</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -551,7 +552,7 @@
 					<div class="tsd-signature tsd-kind-icon">local<wbr>Device<wbr>Url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L75">src/FeathersCoordinator.ts:75</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L75">src/FeathersCoordinator.ts:75</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -569,7 +570,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#proxemics">proxemics</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L56">src/FeathersCoordinator.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L56">src/FeathersCoordinator.ts:56</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -588,7 +589,7 @@
 					<div class="tsd-signature tsd-kind-icon">proxemics<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L112">src/FeathersCoordinator.ts:112</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L112">src/FeathersCoordinator.ts:112</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -606,7 +607,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#resource">resource</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L50">src/FeathersCoordinator.ts:50</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L50">src/FeathersCoordinator.ts:50</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -625,7 +626,7 @@
 					<div class="tsd-signature tsd-kind-icon">resource<wbr>Subscription<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L108">src/FeathersCoordinator.ts:108</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L108">src/FeathersCoordinator.ts:108</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -642,7 +643,7 @@
 					<div class="tsd-signature tsd-kind-icon">resources<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L104">src/FeathersCoordinator.ts:104</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L104">src/FeathersCoordinator.ts:104</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -659,7 +660,7 @@
 					<div class="tsd-signature tsd-kind-icon">socket<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Socket</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L83">src/FeathersCoordinator.ts:83</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L83">src/FeathersCoordinator.ts:83</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -676,7 +677,7 @@
 					<div class="tsd-signature tsd-kind-icon">storage<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Storage</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L121">src/FeathersCoordinator.ts:121</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L121">src/FeathersCoordinator.ts:121</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -693,7 +694,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Events<wbr>Function<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L147">src/FeathersCoordinator.ts:147</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L147">src/FeathersCoordinator.ts:147</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -727,7 +728,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Instances<wbr>Functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L142">src/FeathersCoordinator.ts:142</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L142">src/FeathersCoordinator.ts:142</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -770,7 +771,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Proxemics<wbr>Functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L138">src/FeathersCoordinator.ts:138</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L138">src/FeathersCoordinator.ts:138</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -813,7 +814,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Reconnects<wbr>Function<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>resourceData<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, proxemics<span class="tsd-signature-symbol">: </span><a href="proxemics.html" class="tsd-signature-type" data-tsd-kind="Class">Proxemics</a>, resourceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L151">src/FeathersCoordinator.ts:151</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L151">src/FeathersCoordinator.ts:151</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -850,7 +851,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Resource<wbr>Functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L134">src/FeathersCoordinator.ts:134</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L134">src/FeathersCoordinator.ts:134</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -893,7 +894,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Resource<wbr>Subscription<wbr>Functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L130">src/FeathersCoordinator.ts:130</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L130">src/FeathersCoordinator.ts:130</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -936,7 +937,7 @@
 					<div class="tsd-signature tsd-kind-icon">subscribe<wbr>Resources<wbr>Functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L126">src/FeathersCoordinator.ts:126</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L126">src/FeathersCoordinator.ts:126</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -980,7 +981,7 @@
 					<aside class="tsd-sources">
 						<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#user">user</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L47">src/FeathersCoordinator.ts:47</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L47">src/FeathersCoordinator.ts:47</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -996,7 +997,7 @@
 					<div class="tsd-signature tsd-kind-icon">users<wbr>Service<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ServiceOverloads</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceAddons</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> &amp; </span><span class="tsd-signature-type">ServiceMethods</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L92">src/FeathersCoordinator.ts:92</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L92">src/FeathersCoordinator.ts:92</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-comment tsd-typography">
@@ -1013,7 +1014,7 @@
 					<div class="tsd-signature tsd-kind-icon">GENERIC_<wbr>EVENT_<wbr>CALLBACK<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">(</span>evenType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol"> = ...</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L42">src/FeathersCoordinator.ts:42</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L42">src/FeathersCoordinator.ts:42</a></li>
 						</ul>
 					</aside>
 					<div class="tsd-type-declaration">
@@ -1062,7 +1063,7 @@
 					<div class="tsd-signature tsd-kind-icon">LOCAL_<wbr>STORAGE_<wbr>JWT_<wbr>ACCESS_<wbr>TOKEN_<wbr>KEY<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> = &#x27;feathers-jwt&#x27;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L45">src/FeathersCoordinator.ts:45</a></li>
+							<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L45">src/FeathersCoordinator.ts:45</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -1080,7 +1081,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscribedresourceid">subscribedResourceId</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L157">src/FeathersCoordinator.ts:157</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L157">src/FeathersCoordinator.ts:157</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1109,7 +1110,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#createresource">createResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L464">src/FeathersCoordinator.ts:464</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L483">src/FeathersCoordinator.ts:483</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1140,7 +1141,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#deleteresource">deleteResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L475">src/FeathersCoordinator.ts:475</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L494">src/FeathersCoordinator.ts:494</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1171,7 +1172,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#emitevent">emitEvent</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L622">src/FeathersCoordinator.ts:622</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L641">src/FeathersCoordinator.ts:641</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1204,7 +1205,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#getactiveinstances">getActiveInstances</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L582">src/FeathersCoordinator.ts:582</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L601">src/FeathersCoordinator.ts:601</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1230,7 +1231,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#getinstances">getInstances</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L567">src/FeathersCoordinator.ts:567</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L586">src/FeathersCoordinator.ts:586</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1260,7 +1261,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L549">src/FeathersCoordinator.ts:549</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L568">src/FeathersCoordinator.ts:568</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1285,7 +1286,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#getproxemicsstate">getProxemicsState</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L540">src/FeathersCoordinator.ts:540</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L559">src/FeathersCoordinator.ts:559</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1310,7 +1311,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L399">src/FeathersCoordinator.ts:399</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L399">src/FeathersCoordinator.ts:399</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1343,7 +1344,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#getresourcedata">getResourceData</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L377">src/FeathersCoordinator.ts:377</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L377">src/FeathersCoordinator.ts:377</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1372,7 +1373,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L530">src/FeathersCoordinator.ts:530</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L549">src/FeathersCoordinator.ts:549</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1397,7 +1398,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#getresources">getResources</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L435">src/FeathersCoordinator.ts:435</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L438">src/FeathersCoordinator.ts:438</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1430,7 +1431,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#init">init</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L255">src/FeathersCoordinator.ts:255</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L255">src/FeathersCoordinator.ts:255</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1455,7 +1456,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#isconnected">isConnected</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L375">src/FeathersCoordinator.ts:375</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L375">src/FeathersCoordinator.ts:375</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1479,7 +1480,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#logout">logout</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L373">src/FeathersCoordinator.ts:373</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L373">src/FeathersCoordinator.ts:373</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1501,7 +1502,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L483">src/FeathersCoordinator.ts:483</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L502">src/FeathersCoordinator.ts:502</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1518,6 +1519,59 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="selectresource" class="tsd-anchor"></a>
+					<h3>select<wbr>Resource</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">select<wbr>Resource<span class="tsd-signature-symbol">(</span>subscriberFunction<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span>, resourceId<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#selectresource">selectResource</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L467">src/FeathersCoordinator.ts:467</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>It implicitly subscribes to the <a href="resource.html">Resource</a> with the given Id and returns the most up-to-date data stored by the resource.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>subscriberFunction: <span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span></h5>
+									<ul class="tsd-parameters">
+										<li class="tsd-parameter-signature">
+											<ul class="tsd-signatures tsd-kind-type-literal">
+												<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span>, eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+											</ul>
+											<ul class="tsd-descriptions">
+												<li class="tsd-description">
+													<h4 class="tsd-parameters-title">Parameters</h4>
+													<ul class="tsd-parameters">
+														<li>
+															<h5>data: <span class="tsd-signature-type">any</span></h5>
+														</li>
+														<li>
+															<h5>eventType: <span class="tsd-signature-type">string</span></h5>
+														</li>
+													</ul>
+													<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+												</li>
+											</ul>
+										</li>
+									</ul>
+								</li>
+								<li>
+									<h5>resourceId: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="setcomponentdistribution" class="tsd-anchor"></a>
 					<h3>set<wbr>Component<wbr>Distribution</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -1528,7 +1582,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#setcomponentdistribution">setComponentDistribution</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L605">src/FeathersCoordinator.ts:605</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L624">src/FeathersCoordinator.ts:624</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1570,7 +1624,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#setinstanceactiveness">setInstanceActiveness</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L592">src/FeathersCoordinator.ts:592</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L611">src/FeathersCoordinator.ts:611</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1601,7 +1655,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#setresourcedata">setResourceData</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L381">src/FeathersCoordinator.ts:381</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L381">src/FeathersCoordinator.ts:381</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1634,7 +1688,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#shareresource">shareResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L490">src/FeathersCoordinator.ts:490</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L509">src/FeathersCoordinator.ts:509</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1670,7 +1724,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscribeevents">subscribeEvents</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L874">src/FeathersCoordinator.ts:874</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L893">src/FeathersCoordinator.ts:893</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1720,7 +1774,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscribeinstances">subscribeInstances</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L837">src/FeathersCoordinator.ts:837</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L856">src/FeathersCoordinator.ts:856</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1771,7 +1825,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscribeproxemics">subscribeProxemics</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L800">src/FeathersCoordinator.ts:800</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L819">src/FeathersCoordinator.ts:819</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1822,7 +1876,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscribereconnects">subscribeReconnects</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L889">src/FeathersCoordinator.ts:889</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L908">src/FeathersCoordinator.ts:908</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1875,7 +1929,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscriberesource">subscribeResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L655">src/FeathersCoordinator.ts:655</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L674">src/FeathersCoordinator.ts:674</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1930,7 +1984,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscriberesourcesubscription">subscribeResourceSubscription</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L731">src/FeathersCoordinator.ts:731</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L750">src/FeathersCoordinator.ts:750</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1980,7 +2034,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#subscriberesources">subscribeResources</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L695">src/FeathersCoordinator.ts:695</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L714">src/FeathersCoordinator.ts:714</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2030,7 +2084,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L631">src/FeathersCoordinator.ts:631</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L650">src/FeathersCoordinator.ts:650</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2089,7 +2143,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unshareresource">unshareResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L503">src/FeathersCoordinator.ts:503</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L522">src/FeathersCoordinator.ts:522</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2125,7 +2179,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscribeevents">unsubscribeEvents</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L884">src/FeathersCoordinator.ts:884</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L903">src/FeathersCoordinator.ts:903</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2148,7 +2202,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscribeinstances">unsubscribeInstances</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L870">src/FeathersCoordinator.ts:870</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L889">src/FeathersCoordinator.ts:889</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2171,7 +2225,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscribeproxemics">unsubscribeProxemics</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L833">src/FeathersCoordinator.ts:833</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L852">src/FeathersCoordinator.ts:852</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2194,7 +2248,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscribereconnects">unsubscribeReconnects</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L893">src/FeathersCoordinator.ts:893</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L912">src/FeathersCoordinator.ts:912</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2217,7 +2271,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscriberesource">unsubscribeResource</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L691">src/FeathersCoordinator.ts:691</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L710">src/FeathersCoordinator.ts:710</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2240,7 +2294,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscriberesourcesubscription">unsubscribeResourceSubscription</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L756">src/FeathersCoordinator.ts:756</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L775">src/FeathersCoordinator.ts:775</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2263,7 +2317,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#unsubscriberesources">unsubscribeResources</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L727">src/FeathersCoordinator.ts:727</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L746">src/FeathersCoordinator.ts:746</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2285,7 +2339,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L645">src/FeathersCoordinator.ts:645</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L664">src/FeathersCoordinator.ts:664</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2343,7 +2397,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L780">src/FeathersCoordinator.ts:780</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L799">src/FeathersCoordinator.ts:799</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2376,7 +2430,7 @@
 							<aside class="tsd-sources">
 								<p>Implementation of <a href="../interfaces/coordinator.html">Coordinator</a>.<a href="../interfaces/coordinator.html#updateinstanceactiveness">updateInstanceActiveness</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L586">src/FeathersCoordinator.ts:586</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L605">src/FeathersCoordinator.ts:605</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2401,7 +2455,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L520">src/FeathersCoordinator.ts:520</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L539">src/FeathersCoordinator.ts:539</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2433,7 +2487,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L763">src/FeathersCoordinator.ts:763</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L782">src/FeathersCoordinator.ts:782</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2457,7 +2511,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/8878ffb/src/FeathersCoordinator.ts#L903">src/FeathersCoordinator.ts:903</a></li>
+									<li>Defined in <a href="https://github.com/YanuX-Framework/YanuX-Coordinator/blob/47543ab/src/FeathersCoordinator.ts#L922">src/FeathersCoordinator.ts:922</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -2669,6 +2723,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="featherscoordinator.html#renameresource" class="tsd-kind-icon">rename<wbr>Resource</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="featherscoordinator.html#selectresource" class="tsd-kind-icon">select<wbr>Resource</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="featherscoordinator.html#setcomponentdistribution" class="tsd-kind-icon">set<wbr>Component<wbr>Distribution</a>

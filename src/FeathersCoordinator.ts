@@ -171,7 +171,7 @@ class FeathersCoordinator implements Coordinator {
      * @param localStorageLocation - The path where to save the local storage data when running the {@link FeathersCoordinator} on Node.js.
      */
     constructor(brokerUrl: string,
-        localDeviceUrl: string,
+        localDeviceUrl: string = 'http://localhost:3003',
         clientId: string = 'default',
         credentials: Credentials = null,
         onAuthenticated: (event: any) => void = FeathersCoordinator.GENERIC_EVENT_CALLBACK('authenticated'),
@@ -297,7 +297,7 @@ class FeathersCoordinator implements Coordinator {
                         //     } else { reject(new InvalidBrokerJwt('"kid" not found on the provided "jku" URL')); }
                         // }).catch(e => reject(e));
                         const JWKS = createRemoteJWKSet(new URL(header.jku))
-                        jwtVerify(response.accessToken, JWKS, { algorithms: [header.alg]}).then(result => {
+                        jwtVerify(response.accessToken, JWKS, { algorithms: [header.alg] }).then(result => {
                             if (result && result.protectedHeader && result.payload) {
                                 resolve(response);
                             } else { reject(new InvalidBrokerJwt('The JWT is not valid.')); }
@@ -418,17 +418,20 @@ class FeathersCoordinator implements Coordinator {
                     } else { reject(new ResourceNotFound('Resource Not Found')); }
                 }).catch((e: Error) => reject(e));
             }
-            this.getResourceSubscription().then(resourceSubscription => {
-                if (resourceSubscription && resourceSubscription.resource) {
-                    return this.resourcesService.get(resourceSubscription.resource)
-                } else { return Promise.resolve(); }
-            }).then(resource => {
-                if (resource) {
-                    this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
-                    if (!resourceId) { this.updateResource(resource); }
-                    resolve(new Resource(resource));
-                } else { retrieveResource(); }
-            }).catch(e => retrieveResource());
+            if (resourceId) { retrieveResource(); }
+            else {
+                this.getResourceSubscription().then(resourceSubscription => {
+                    if (resourceSubscription && resourceSubscription.resource) {
+                        return this.resourcesService.get(resourceSubscription.resource)
+                    } else { return Promise.resolve(); }
+                }).then(resource => {
+                    if (resource) {
+                        this._subscribedResourceId = this.subscribedResourceId ? this.subscribedResourceId : resource._id;
+                        this.updateResource(resource);
+                        resolve(new Resource(resource));
+                    } else { retrieveResource(); }
+                }).catch(e => retrieveResource());
+            }
         });
     }
 
@@ -458,6 +461,22 @@ class FeathersCoordinator implements Coordinator {
                     return new SharedResource(r)
                 }));
             }).catch((e: Error) => reject(e));
+        });
+    }
+
+    public selectResource(subscriberFunction: (data: any, eventType: string) => void, resourceId: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            this.getResourceData(resourceId).then(data => {
+                console.log('[YXC] Selected Resource Id', resourceId, 'Data:', data);
+                return Promise.all([Promise.resolve(data), this.subscribeResource(subscriberFunction, resourceId)]);
+            }).then(results => {
+                const [data, resourceSubscription] = results;
+                console.log('[YXC] Resource Selected Subscription:', resourceSubscription, 'Data:', data);
+                resolve(data);
+            }).catch(err => {
+                console.error('[YXC] Error Selecting Resource:', err);
+                reject(err);
+            })
         });
     }
 
