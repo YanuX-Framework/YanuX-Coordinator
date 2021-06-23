@@ -359,7 +359,7 @@ export class ComponentsRuleEngine {
             condition: function (R: any) { R.when(this.localInstance && !this.localDeviceCapabilities); },
             consequence: function (R: any) {
                 this.capabilities = {};
-                Object.entries(this.proxemics)
+                Object.entries(this.proxemics || {})
                     //Making sure to ignore the proxemics of devices with non-active instances.
                     .filter(([deviceUuid]: [string, any]) => this.activeInstances.some((i: any) => i.device.deviceUuid === deviceUuid))
                     .forEach(([deviceUuid, capabilities]: [string, any]) =>

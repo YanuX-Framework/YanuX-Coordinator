@@ -695,7 +695,7 @@ class FeathersCoordinator implements Coordinator {
                 subscriberFunction(baseResource.data, eventType);
                 this.updateDynamicSharing(baseResource)
                     .catch(e => console.error('[YXC] subscribeResource - updateDynamicSharing Error:', e))
-            } else { console.error('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
+            } else { console.warn('[YXC] subscribeResource - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
         this.unsubscribeResource();
         this.subscribeResourceFunctions['created'] = (resource: any) => eventListener(resource, 'created');
@@ -729,10 +729,10 @@ class FeathersCoordinator implements Coordinator {
                     subscriberFunction(newResource, eventType);
                 } else {
                     this.cachedResources.set(newResource.id, newResource);
-                    console.log('[YXC] subscribeResources - Ignored Cached Event Type:', eventType, 'on Resource:', resource);
+                    console.warn('[YXC] subscribeResources - Ignored Cached Event Type:', eventType, 'on Resource:', resource);
                 }
                 FeathersCoordinator.cacheCleanup(this.cachedResources);
-            } else { console.error('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
+            } else { console.warn('[YXC] subscribeResources - Ignored Event Type:', eventType, 'on Resource:', resource); }
         };
 
         this.unsubscribeResources();
@@ -762,7 +762,7 @@ class FeathersCoordinator implements Coordinator {
                 //TODO: Perhaps I should create ResourceSubscription class to wrap around the value returned from the broker.
                 currentResourceSubscription = resourceSubscription;
                 subscriberFunction(currentResourceSubscription, eventType);
-            } else { console.error('[YXC] subscribeResourceSubscriptions - Ignored Event Type:', eventType, 'on ResourceSubscription:', resourceSubscription); }
+            } else { console.warn('[YXC] subscribeResourceSubscriptions - Ignored Event Type:', eventType, 'on ResourceSubscription:', resourceSubscription); }
         };
         this.unsubscribeResourceSubscription();
         this.subscribeResourceSubscriptionFunctions['created'] = (resource: any) => eventListener(resource, 'created');
@@ -836,10 +836,10 @@ class FeathersCoordinator implements Coordinator {
                     subscriberFunction(newProxemics, eventType);
                 } else {
                     this.cachedProxemics.set(newProxemics.id, newProxemics);
-                    console.log('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Proxemics:', proxemics);
+                    console.warn('[YXC] subscribeProxemics - Ignored Cached Event Type:', eventType, 'on Proxemics:', proxemics);
                 }
                 FeathersCoordinator.cacheCleanup(this.cachedProxemics);
-            } else { console.error('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
+            } else { console.warn('[YXC] subscribeProxemics - Ignored Event Type:', eventType, 'on Proxemics:', proxemics); }
         };
         this.unsubscribeProxemics();
         this.subscribeProxemicsFunctions['created'] = (resource: any) => eventListener(resource, 'created');
@@ -873,10 +873,10 @@ class FeathersCoordinator implements Coordinator {
                     subscriberFunction(newInstance, eventType);
                 } else {
                     this.cachedInstances.set(newInstance.id, newInstance);
-                    console.log('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance);
+                    console.warn('[YXC] subscribeInstances - Ignored Cached Event Type:', eventType, 'on Instance:', instance);
                 }
                 FeathersCoordinator.cacheCleanup(this.cachedInstances);
-            } else { console.error('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
+            } else { console.warn('[YXC] subscribeInstances - Ignored Event Type:', eventType, 'on Instance:', instance); }
         };
         this.unsubscribeInstances();
         this.subscribeInstancesFunctions['created'] = (resource: any) => eventListener(resource, 'created');
