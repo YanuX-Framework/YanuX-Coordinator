@@ -34,6 +34,9 @@ import UnavailableInstanceId from './errors/UnavailableInstanceId';
 import ResourceNotFound from './errors/ResourceNotFound';
 import UnsupportedConfiguration from './errors/UnsupportedConfiguration'
 import UserNotFound from './errors/UserNotFound';
+import ComponentsRuleEngine from './ComponentsRuleEngine';
+import InstancesComponentsDistribution from './InstancesComponentsDistribution';
+import ComponentsDistributionElement from './ComponentsDistributionElement';
 
 /**
  * Concrete implementation of the {@link Coordinator} interface that connects to the YanuX Broker using the Feathers Socket.io Client.
@@ -924,6 +927,60 @@ class FeathersCoordinator implements Coordinator {
             if (cache.size > maxCacheSize || new Date().getTime() - entity.timestamp.getTime() > maxCacheAge) {
                 cache.delete(id);
             }
+        }
+    }
+
+    //---- HELPER METHODS ----
+    public async updateComponentsDistribution(
+        componentsDistributionElement: ComponentsDistributionElement,
+        componentsRuleEngine: ComponentsRuleEngine,
+        ignoreManual = false,
+        instanceId = this.instance.id,
+        configureComponents: (cd: ComponentsDistribution) => void) {
+        console.log('[YXC] Update Components Distribution -- ignoreManual:', ignoreManual)
+        try {
+            const activeInstances = await this.getActiveInstances();
+            componentsDistributionElement.instanceId = instanceId;
+            const instancesComponentsDistribution = new InstancesComponentsDistribution(activeInstances);
+            componentsDistributionElement.componentsDistribution = instancesComponentsDistribution;
+
+            componentsRuleEngine.instances = activeInstances;
+            componentsRuleEngine.proxemics = this.proxemics.state;
+
+            const result = await componentsRuleEngine.run(ignoreManual);
+            const instance = await this.setComponentDistribution(
+                instanceId === this.instance.id ? result.componentsConfig : {}, result.auto, instanceId)
+            console.log('[YXC] Updated Components Distribution Result:', result, 'Instance:', instance);
+            if (instanceId === this.instance.id) {
+                configureComponents(instance.componentsDistribution);
+            }
+        } catch (e) { console.error('[YXC] Error Updating Components Distribution:', e) }
+    }
+
+    public async distributeComponents(e: CustomEvent) {
+        console.log('[YXC] Updating Components Distribution:', e.detail);
+        const componentsDistribution = e && e.detail && e.detail.componentsDistribution ? e.detail.componentsDistribution : null
+        if (componentsDistribution) {
+            try {
+                const results = await Promise.all(Object.keys(componentsDistribution).map(instanceId =>
+                    this.setComponentDistribution(
+                        componentsDistribution[instanceId].components,
+                        componentsDistribution[instanceId].auto,
+                        instanceId
+                    )));
+                console.log('[YXC] Updated Components Distribution:', results);
+            } catch (e) { console.log('[YXC] Error Updating Components Distribution:', e); }
+        }
+    }
+
+    public async clearComponentsDistribution(e: CustomEvent) {
+        console.log('[YXC] Clearing Components Distribution:', e.detail);
+        const instanceId = e && e.detail && e.detail.instanceId ? e.detail.instanceId : null
+        if (instanceId) {
+            try {
+                const componentsDistribution = await this.setComponentDistribution({}, false, instanceId);
+                console.log('[YXC] Cleared Components Distribution:', componentsDistribution);
+            } catch (e) { console.log('[YXC] Error Clearing Components Distribution:', e); }
         }
     }
 }

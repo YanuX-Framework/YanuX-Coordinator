@@ -215,10 +215,12 @@ export class ComponentsRuleEngine {
             if (strictMatching) {
                 if (enforce === false) {
                     const nonLocalDeviceUuids = Object.keys(capabilities).filter(d => d !== localDeviceUuid);
-                    fallback = !nonLocalDeviceUuids.some((d: any) =>
-                        ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, localDeviceUuid, capabilities[d], capabilities, false)
-                    );
-                    console.log('>>>>>> Not enforcing condition! Fallback: ', fallback);
+                    console.log('[YXCRD] >>>>>> Fallback Checking Non Local Devices:',nonLocalDeviceUuids )
+                    fallback = nonLocalDeviceUuids.every((d: any) => {
+                        console.log('[YXCRD] >>>>>>> Fallback Checking Device:', d);
+                        return ComponentsRuleEngine.matchComponentAndRestrictions(component, componentRestrictions, localDeviceUuid, capabilities[d], capabilities, false) === false
+                    });
+                    console.log('[YXCRD] >>>>>> Not enforcing condition! Fallback: ', fallback);
                 }
             }
             return fallback;
@@ -227,7 +229,7 @@ export class ComponentsRuleEngine {
         const matchCondition = (condition: any, capability: any): boolean => {
             const matchConditionAux = (condition: any, operator: string = 'AND', enforce: boolean = true): any => {
                 if (isArray(condition)) {
-                    console.log('>>> Condition Array:', condition, 'Capability:', capability, 'Operator:', operator);
+                    console.log('[YXCRD] >>> Condition Array:', condition, 'Capability:', capability, 'Operator:', operator, 'Enforce:', enforce);
                     const checkEachCondition = (c: any): boolean => matchConditionAux(c, operator);
                     const fallback = fallbackCheck(enforce);
                     switch (operator) {
@@ -242,17 +244,17 @@ export class ComponentsRuleEngine {
                         condition.operator = 'AND';
                     }
                     if (isString(condition.operator)) {
-                        console.log('>>> Condition - Values Array & Operator:', condition, 'Capability:', capability, 'Operator:', operator);
+                        console.log('[YXCRD] >>> Condition - Values Array & Operator:', condition, 'Capability:', capability, 'Operator:', operator);
                         return matchConditionAux(flatten([condition.values || condition.value]), condition.operator, condition.enforce);
                     }
                 }
                 if (isObjectLike(condition) && isString(operator)) {
-                    console.log('>>> Condition - Object Operator:', condition, 'Capability:', capability, 'Operator:', operator);
+                    console.log('[YXCRD] >>> Condition - Object Operator:', condition, 'Capability:', capability, 'Operator:', operator);
                     const processConditionEntries = ([entryKey, entryValue]: [string, any]): boolean => {
                         const capabilityValue = flattenDeep([capability[entryKey]]);
                         const conditionValue = flattenDeep([entryValue.value]);
                         const fallback = fallbackCheck(entryValue.enforce)
-                        console.log('>>>> Entry Value', entryValue);
+                        console.log('[YXCRD] >>>> Entry Value', entryValue);
                         switch (entryValue.operator) {
                             case '=':
                                 return fallback || conditionValue.every((cn: any, i: number): boolean => capabilityValue[i] == cn);
@@ -286,16 +288,16 @@ export class ComponentsRuleEngine {
                     }
                 }
                 if (isArray(capability)) {
-                    console.log('>>> Condition - Match Capability Array:', condition, 'Capability:', capability, 'Operator:', operator);
+                    console.log('[YXCRD] >>> Condition - Match Capability Array:', condition, 'Capability:', capability, 'Operator:', operator);
                     return capability.includes(condition);
                 }
                 return fallbackCheck(enforce) || condition == capability || (condition === true && (!isUndefined(capability) || !isNull(capability)));
             }
             return matchConditionAux(condition);
         }
-        console.log('> Component:', component);
+        console.log('[YXCRD] > Component:', component);
         return Object.entries(componentRestrictions).every(([type, condition]: [string, any]): boolean => {
-            console.log('>> Restrictions:', type);
+            console.log('[YXCRD] >> Restrictions:', type);
             const capability = localDeviceCapabilities[type];
             if (isArray(capability) && capability.some(c => !isString(c))) {
                 return capability.some(c => matchCondition(condition, c));
