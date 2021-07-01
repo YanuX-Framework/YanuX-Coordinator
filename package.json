@@ -30,6 +30,8 @@
     "test": "node lib/_test/test.js"
   },
   "dependencies": {
+    "lodash.clonedeep": "^4.5.0",
+    "lodash.isequal": "^4.5.0",
     "serve": "^12.0.0"
   },
   "devDependencies": {
@@ -50,7 +52,7 @@
     "lit-element": "^2.4.0",
     "lodash": "^4.17.21",
     "node-localstorage": "^2.1.6",
-    "node-rules": "^6.2.0",
+    "node-rules": "^7.0.0",
     "npm-run-all": "^4.1.5",
     "path-browserify": "^1.0.1",
     "socket.io-client": "^2.4.0",

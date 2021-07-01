@@ -674,7 +674,7 @@ class FeathersCoordinator implements Coordinator {
         subscribeFunctions = {};
     }
 
-    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, resourceId: string): Promise<any> {
+    public subscribeResource(subscriberFunction: (data: any, eventType: string) => void, resourceId: string = this.subscribedResourceId): Promise<any> {
         if (resourceId) { this._subscribedResourceId = resourceId; }
         else if (this.resource && this.resource.id) {
             this._subscribedResourceId = this.resource.id;
@@ -932,18 +932,14 @@ class FeathersCoordinator implements Coordinator {
 
     //---- HELPER METHODS ----
     public async updateComponentsDistribution(
-        componentsDistributionElement: ComponentsDistributionElement,
         componentsRuleEngine: ComponentsRuleEngine,
-        ignoreManual = false,
+        configureComponents: (cd: ComponentsDistribution) => void,
+        componentsDistributionElement: ComponentsDistributionElement = null,
         instanceId = this.instance.id,
-        configureComponents: (cd: ComponentsDistribution) => void) {
+        ignoreManual = false) {
         console.log('[YXC] Update Components Distribution -- ignoreManual:', ignoreManual)
         try {
             const activeInstances = await this.getActiveInstances();
-            componentsDistributionElement.instanceId = instanceId;
-            const instancesComponentsDistribution = new InstancesComponentsDistribution(activeInstances);
-            componentsDistributionElement.componentsDistribution = instancesComponentsDistribution;
-
             componentsRuleEngine.instances = activeInstances;
             componentsRuleEngine.proxemics = this.proxemics.state;
 
@@ -951,8 +947,14 @@ class FeathersCoordinator implements Coordinator {
             const instance = await this.setComponentDistribution(
                 instanceId === this.instance.id ? result.componentsConfig : {}, result.auto, instanceId)
             console.log('[YXC] Updated Components Distribution Result:', result, 'Instance:', instance);
+
             if (instanceId === this.instance.id) {
                 configureComponents(instance.componentsDistribution);
+            }
+
+            if (componentsDistributionElement) {
+                componentsDistributionElement.instanceId = instanceId;
+                componentsDistributionElement.componentsDistribution = new InstancesComponentsDistribution(await this.getActiveInstances());
             }
         } catch (e) { console.error('[YXC] Error Updating Components Distribution:', e) }
     }
