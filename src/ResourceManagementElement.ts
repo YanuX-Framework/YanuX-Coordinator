@@ -473,10 +473,10 @@ export class ResourceManagermentElement extends LitElement {
                             </div>
                             <div class="buttons">
                                 <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
-                                    <slot name="create-resource-cancel">Cancel</slot>
+                                    <slot name="share-resource-cancel">Cancel</slot>
                                 </button>
                                 <button class="button dialog-button dialog-button-ok" type="submit" autofocus>
-                                    <slot name="create-resource-ok">OK</slot>
+                                    <slot name="share-resource-ok">OK</slot>
                                 </button>
                             </div>
                         </form>
@@ -490,10 +490,10 @@ export class ResourceManagermentElement extends LitElement {
                             </div>
                             <div class="buttons">
                                 <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
-                                    <slot name="create-resource-cancel">Cancel</slot>
+                                    <slot name="delete-resource-cancel">Cancel</slot>
                                 </button>
                                 <button class="button dialog-button dialog-button-ok" type="button" @click="${this.deleteResource}" dialog-confirm autofocus>
-                                    <slot name="create-resource-ok">OK</slot>
+                                    <slot name="delete-resource-ok">OK</slot>
                                 </button>
                             </div>
                         </div>
@@ -507,10 +507,10 @@ export class ResourceManagermentElement extends LitElement {
                             </div>
                             <div class="buttons">
                                 <button class="button dialog-button dialog-button-cancel" type="button" dialog-dismiss>
-                                    <slot name="create-resource-cancel">Cancel</slot>
+                                    <slot name="unshare-resource-cancel">Cancel</slot>
                                 </button>
                                 <button class="button dialog-button dialog-button-ok" type="button" @click="${this.unshareResource}" dialog-confirm autofocus>
-                                    <slot name="create-resource-ok">OK</slot>
+                                    <slot name="unshare-resource-ok">OK</slot>
                                 </button>
                             </div>
                         </div>
