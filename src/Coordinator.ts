@@ -328,14 +328,14 @@ export interface Coordinator {
 
     /**
      * Gets the updated resources from the YanuX Broker that the current user has access to.
-     * If a {@link ResourceManagementElement} is passed it gets updated with the most recent resource information.
+     * If a {@link ResourceManagementElement} is passed, it gets updated with the most recent resource information.
      * @param resourceManagementElement 
      * @return An array of {@link SharedResource} instances that represent the currently available resources that the current user has access to.
      */
     updateResources(resourceManagementElement?: ResourceManagementElement) : Promise<SharedResource[]>
 
     /**
-     * Update the distribution of UI components according to our restrictions by using {@link ComponentsRuleEngine}.
+     * Update the distribution of UI components according to our restrictions by using a {@link ComponentsRuleEngine}.
      * A "configureComponents" function should be passed to be called with the newly determined distribution for the current {@link Instance}.
      * If you are using {@link ComponentsDistributionElement} it can be passed so that it gets automatically updated.
      * 
