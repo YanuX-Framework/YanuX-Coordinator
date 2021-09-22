@@ -13,7 +13,7 @@
   "main": "dist/lib.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run compile && npm run package",
+    "build": "npm run compile && npm run package && npm run docs",
     "compile": "npx tsc && npx tsc -p tsconfig-test.json",
     "package": "npx webpack",
     "serve": "npx serve ./dist -l 3010",

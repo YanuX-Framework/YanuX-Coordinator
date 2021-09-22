@@ -15,13 +15,14 @@ import Credentials from './Credentials';
 import ComponentsRuleEngine from './ComponentsRuleEngine';
 import ResourceManagementElement from './ResourceManagementElement';
 import ComponentsDistributionElement from './ComponentsDistributionElement';
-import InstancesComponentsDistribution from './InstancesComponentsDistribution';
+import { InstancesComponentsDistribution, DeviceInfo, ComponentsInfo, InstanceInfo } from './InstancesComponentsDistribution';
 import BaseEntity from './BaseEntity';
 import Client from './Client';
 import Device from './Device';
 import Instance from './Instance';
 import Proxemics from './Proxemics';
-import Resource from './SharedResource';
+import Resource from './Resource';
+import SharedResource from './SharedResource';
 import User from './User';
 import ComponentsDistribution from './ComponentsDistribution';
 import * as errors from './errors';
@@ -33,13 +34,14 @@ export {
     ComponentsRuleEngine,
     ResourceManagementElement,
     ComponentsDistributionElement,
-    InstancesComponentsDistribution,
+    InstancesComponentsDistribution, DeviceInfo, ComponentsInfo, InstanceInfo,
     BaseEntity,
     Client,
     Device,
     Instance,
     Proxemics,
     Resource,
+    SharedResource,
     User,
     ComponentsDistribution,
     errors

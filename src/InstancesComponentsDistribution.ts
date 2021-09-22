@@ -6,7 +6,7 @@
 /**
  * A class with the basic information about a device.
  */
-class Device {
+export class DeviceInfo {
     /**
      * The device UUID.
      */
@@ -29,7 +29,7 @@ class Device {
 /**
  * A class with the information about whether a UI component should be shown or not.
  */
-class Components {
+ export class ComponentsInfo {
     /**
      * The keys of the object represent the name of the components and the boolean values represent whether the components is shown (true) or not (false).
      */
@@ -46,7 +46,7 @@ class Components {
 /**
  * A class that represents basic information about an instance.
  */
-class Instance {
+ export class InstanceInfo {
     /**
      * The name of the instance.
      */
@@ -54,7 +54,7 @@ class Instance {
     /**
      * The device that is running the instance.
      */
-    public device: Device;
+    public device: DeviceInfo;
     /**
      * Whether the distribution of UI components has been set automatically (true) or not (false).
      */
@@ -62,7 +62,7 @@ class Instance {
     /**
      * The distribution of UI components.
      */
-    public components: Components
+    public components: ComponentsInfo
     /**
      * Constructor that receives each of the property of the class and initializes them.
      * @param name - The name of the instance.
@@ -70,7 +70,7 @@ class Instance {
      * @param auto - Whether the distribution of UI components has been set automatically (true) or not (false).
      * @param components - The distribution of UI components.
      */
-    constructor(name: string, device: Device, auto: boolean, components: Components) {
+    constructor(name: string, device: DeviceInfo, auto: boolean, components: ComponentsInfo) {
         this.name = name;
         this.device = device;
         this.auto = auto;
@@ -86,14 +86,14 @@ export class InstancesComponentsDistribution {
      * The keys of the object represent the UUID of the instances that a user has access to and the values point to objects that represent
      * basic information about an instance and the distribution of its UI components.
      */
-    [instanceId: string]: Instance;
+    [instanceId: string]: InstanceInfo;
     constructor(instances: any[] = []) {
         instances.forEach(i => {
-            this[i._id] = new Instance(
+            this[i._id] = new InstanceInfo(
                 i.name,
-                i.device ? new Device(i.device.deviceUuid, i.device.name) : null,
+                i.device ? new DeviceInfo(i.device.deviceUuid, i.device.name) : null,
                 i.componentsDistribution ? i.componentsDistribution.auto : true,
-                i.componentsDistribution ? new Components(i.componentsDistribution.components) : null
+                i.componentsDistribution ? new ComponentsInfo(i.componentsDistribution.components) : null
             )
         });
     }
