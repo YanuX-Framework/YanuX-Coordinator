@@ -4,9 +4,9 @@ import feathersAuthClient from '@feathersjs/authentication-client';
 import { StorageWrapper } from '@feathersjs/authentication-client/lib/storage';
 
 //import jsrsasign from 'jsrsasign';
-import { decodeProtectedHeader } from 'jose/util/decode_protected_header'
-import { createRemoteJWKSet } from 'jose/jwks/remote'
-import { jwtVerify } from 'jose/jwt/verify'
+import { decodeProtectedHeader } from 'jose'
+import { createRemoteJWKSet } from 'jose'
+import { jwtVerify } from 'jose'
 
 import { Conflict } from '@feathersjs/errors';
 import feathers, { Application, ServiceAddons, ServiceMethods, ServiceOverloads } from '@feathersjs/feathers';
@@ -213,8 +213,7 @@ class FeathersCoordinator implements Coordinator {
         this.proxemicsService = this.feathersClient.service('proxemics');
         this.eventsService = this.feathersClient.service('events');
 
-        if ((typeof window === 'undefined' || window === null) ||
-            (typeof window.localStorage === 'undefined' || window.localStorage === null)) {
+        if ((typeof process !== 'undefined') && (process.release.name === 'node')) {
             let NodeLocalStorage = require('node-localstorage').LocalStorage
             this.storage = new NodeLocalStorage(localStorageLocation);
         } else { this.storage = window.localStorage; }

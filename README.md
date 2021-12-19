@@ -7,5 +7,11 @@ It abstracts the communication the [__YanuX Broker__](https://github.com/YanuX-F
 - [__API Documentation__](https://yanux-framework.github.io/YanuX-Coordinator/)
 - [__JSON Schema of the Domain Specific Language for Specifying Restrictions on the Placement of UI Components__](extras/components-restriction-language/components-restriction-schema.json)
 
+### TO DO:
+- Provide additional documentation.
+- Migrate from **LitElement 2.x**/**lit-html 1.x** to **Lit 2.0** by following this guide: https://lit.dev/docs/releases/upgrade/
+- Migrate to a newer `socket.io-client` package once supported by **Feathers**.
+- Perhaps I should replace `jose` with `jsrsasign` since it may better support pure **JavaScript** environments.
+
 ## License
 This work is licensed under [__Apache License 2.0__](LICENSE)

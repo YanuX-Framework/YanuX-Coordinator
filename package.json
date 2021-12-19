@@ -32,7 +32,7 @@
   "dependencies": {
     "lodash.clonedeep": "^4.5.0",
     "lodash.isequal": "^4.5.0",
-    "serve": "^12.0.0"
+    "serve": "^13.0.2"
   },
   "devDependencies": {
     "@feathersjs/authentication-client": "^4.5.11",
@@ -48,7 +48,7 @@
     "cross-fetch": "^3.0.6",
     "fast-memoize": "^2.5.2",
     "html-webpack-plugin": "^5.2.0",
-    "jose": "^3.12.2",
+    "jose": "^4.3.7",
     "lit-element": "^2.4.0",
     "lodash": "^4.17.21",
     "node-localstorage": "^2.1.6",
