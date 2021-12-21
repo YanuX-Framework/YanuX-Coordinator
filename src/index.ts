@@ -9,6 +9,8 @@
  * -----------------------------------------------------------------------------
  */
 
+import { SimpleCoordinator, SimpleCoordinatorConstructor } from './SimpleCoordinator';
+import SimpleFeathersCoordinator from './SimpleFeathersCoordinator';
 import { Coordinator, CoordinatorConstructor } from './Coordinator';
 import FeathersCoordinator from './FeathersCoordinator';
 import Credentials from './Credentials';
@@ -28,12 +30,11 @@ import ComponentsDistribution from './ComponentsDistribution';
 import * as errors from './errors';
 
 export {
-    Coordinator, CoordinatorConstructor,
-    FeathersCoordinator,
+    SimpleCoordinator, SimpleCoordinatorConstructor, SimpleFeathersCoordinator,
+    Coordinator, CoordinatorConstructor, FeathersCoordinator,
     Credentials,
     ComponentsRuleEngine,
-    ResourceManagementElement,
-    ComponentsDistributionElement,
+    ResourceManagementElement, ComponentsDistributionElement,
     InstancesComponentsDistribution, DeviceInfo, ComponentsInfo, InstanceInfo,
     BaseEntity,
     Client,

@@ -1,11 +1,11 @@
 {
-    "extends": "./tsconfig-base.json",
+    "extends": "./tsconfig.json",
     "files": [
         "src/index.d.ts",
-        "src/test/index.ts"
+        "src/simple/index.ts"
     ],
     "compilerOptions": {
-        "outDir": "lib-test/",
+        "outDir": "js/",
         "target": "ES5"
     }
 }
