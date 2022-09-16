@@ -48,7 +48,7 @@
     "cross-fetch": "^3.0.6",
     "fast-memoize": "^2.5.2",
     "html-webpack-plugin": "^5.2.0",
-    "jose": "^4.3.7",
+    "jose": "^4.9.2",
     "lit-element": "^2.4.0",
     "lodash": "^4.17.21",
     "node-localstorage": "^2.1.6",
